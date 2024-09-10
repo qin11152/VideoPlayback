@@ -1,0 +1,55 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="D:\project\mytest\VideoPlayback\build\VideoPlayback_autogen\mocs_compilation_Debug.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\project\mytest\VideoPlayback\VideoPlayback\main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\project\mytest\VideoPlayback\VideoPlayback\module\AudioPlay\AudioPlay.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\project\mytest\VideoPlayback\VideoPlayback\module\VideoDecoder\VideoDecoder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\project\mytest\VideoPlayback\VideoPlayback\module\VideoInfo\VideoInfoAcqure.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\project\mytest\VideoPlayback\VideoPlayback\ui\OpenGLPreviewWidget\OpenGLPreviewWidget.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\project\mytest\VideoPlayback\VideoPlayback\ui\VideoPlayback.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\project\mytest\VideoPlayback\VideoPlayback\unitest\AudioPlayTest.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\project\mytest\VideoPlayback\VideoPlayback\unitest\VideoDecoderTest.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\project\mytest\VideoPlayback\VideoPlayback\unitest\VideoInfoAcqureTest.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\project\mytest\VideoPlayback\VideoPlayback\unitest\VideoPlaybackTest.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\project\mytest\VideoPlayback\build\VideoPlayback_autogen\mocs_compilation_Release.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\project\mytest\VideoPlayback\build\VideoPlayback_autogen\mocs_compilation_MinSizeRel.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="D:\project\mytest\VideoPlayback\build\VideoPlayback_autogen\mocs_compilation_RelWithDebInfo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="D:\project\mytest\VideoPlayback\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{DBD5624D-9C59-3912-A519-4A6F020ABDF0}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

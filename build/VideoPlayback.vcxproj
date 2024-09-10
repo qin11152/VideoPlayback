@@ -1,0 +1,426 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <PreferredToolArchitecture>x64</PreferredToolArchitecture>
+  </PropertyGroup>
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="MinSizeRel|x64">
+      <Configuration>MinSizeRel</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="RelWithDebInfo|x64">
+      <Configuration>RelWithDebInfo</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{0F03B41E-83E6-39BC-BC7A-0EAE77719CF2}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <WindowsTargetPlatformVersion>10.0.22621.0</WindowsTargetPlatformVersion>
+    <Platform>x64</Platform>
+    <ProjectName>VideoPlayback</ProjectName>
+    <VCProjectUpgraderObjectName>NoUpgrade</VCProjectUpgraderObjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.20506.1</_ProjectFileVersion>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">D:\project\mytest\VideoPlayback\bin\Debug\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">VideoPlayback.dir\Debug\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">VideoPlayback</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.exe</TargetExt>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</LinkIncremental>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</GenerateManifest>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\project\mytest\VideoPlayback\bin\Release\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">VideoPlayback.dir\Release\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">VideoPlayback</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.exe</TargetExt>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkIncremental>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</GenerateManifest>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">D:\project\mytest\VideoPlayback\bin\MinSizeRel\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">VideoPlayback.dir\MinSizeRel\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">VideoPlayback</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">.exe</TargetExt>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkIncremental>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">true</GenerateManifest>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">D:\project\mytest\VideoPlayback\bin\RelWithDebInfo\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">VideoPlayback.dir\RelWithDebInfo\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">VideoPlayback</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">.exe</TargetExt>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</LinkIncremental>
+    <GenerateManifest Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</GenerateManifest>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>D:\project\mytest\VideoPlayback\build;D:\project\mytest\VideoPlayback;D:\project\mytest\VideoPlayback\build\VideoPlayback_autogen\include_Debug;D:\project\mytest\VideoPlayback\include;D:\project\mytest\VideoPlayback\include\ffmpeg;D:\project\mytest\VideoPlayback\include\blackmagic_linux;D:\project\mytest\VideoPlayback\VideoPlayback;D:\project\mytest\VideoPlayback\VideoPlayback\ui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /external:I "D:/developtool/qt/5.15.2/msvc2019_64/include" /external:I "D:/developtool/qt/5.15.2/msvc2019_64/include/QtCore" /external:I "D:/developtool/qt/5.15.2/msvc2019_64/./mkspecs/win32-msvc" /external:I "D:/developtool/qt/5.15.2/msvc2019_64/include/QtGui" /external:I "D:/developtool/qt/5.15.2/msvc2019_64/include/QtANGLE" /external:I "D:/developtool/qt/5.15.2/msvc2019_64/include/QtOpenGL" /external:I "D:/developtool/qt/5.15.2/msvc2019_64/include/QtWidgets" /external:I "D:/developtool/qt/5.15.2/msvc2019_64/include/QtMultimedia" /external:I "D:/developtool/qt/5.15.2/msvc2019_64/include/QtNetwork"</AdditionalOptions>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <ExternalWarningLevel>TurnOffAllWarnings</ExternalWarningLevel>
+      <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
+      <Optimization>Disabled</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <UseFullPaths>false</UseFullPaths>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;QT_CORE_LIB;QT_GUI_LIB;QT_OPENGL_LIB;QT_WIDGETS_LIB;QT_MULTIMEDIA_LIB;QT_NETWORK_LIB;CMAKE_INTDIR="Debug"</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_DEBUG;_WINDOWS;QT_CORE_LIB;QT_GUI_LIB;QT_OPENGL_LIB;QT_WIDGETS_LIB;QT_MULTIMEDIA_LIB;QT_NETWORK_LIB;CMAKE_INTDIR=\"Debug\"</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>D:\project\mytest\VideoPlayback\build;D:\project\mytest\VideoPlayback;D:\project\mytest\VideoPlayback\build\VideoPlayback_autogen\include_Debug;D:\project\mytest\VideoPlayback\include;D:\project\mytest\VideoPlayback\include\ffmpeg;D:\project\mytest\VideoPlayback\include\blackmagic_linux;D:\project\mytest\VideoPlayback\VideoPlayback;D:\project\mytest\VideoPlayback\VideoPlayback\ui;D:\developtool\qt\5.15.2\msvc2019_64\include;D:\developtool\qt\5.15.2\msvc2019_64\include\QtCore;D:\developtool\qt\5.15.2\msvc2019_64\.\mkspecs\win32-msvc;D:\developtool\qt\5.15.2\msvc2019_64\include\QtGui;D:\developtool\qt\5.15.2\msvc2019_64\include\QtANGLE;D:\developtool\qt\5.15.2\msvc2019_64\include\QtOpenGL;D:\developtool\qt\5.15.2\msvc2019_64\include\QtWidgets;D:\developtool\qt\5.15.2\msvc2019_64\include\QtMultimedia;D:\developtool\qt\5.15.2\msvc2019_64\include\QtNetwork;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>D:\project\mytest\VideoPlayback\build;D:\project\mytest\VideoPlayback;D:\project\mytest\VideoPlayback\build\VideoPlayback_autogen\include_Debug;D:\project\mytest\VideoPlayback\include;D:\project\mytest\VideoPlayback\include\ffmpeg;D:\project\mytest\VideoPlayback\include\blackmagic_linux;D:\project\mytest\VideoPlayback\VideoPlayback;D:\project\mytest\VideoPlayback\VideoPlayback\ui;D:\developtool\qt\5.15.2\msvc2019_64\include;D:\developtool\qt\5.15.2\msvc2019_64\include\QtCore;D:\developtool\qt\5.15.2\msvc2019_64\.\mkspecs\win32-msvc;D:\developtool\qt\5.15.2\msvc2019_64\include\QtGui;D:\developtool\qt\5.15.2\msvc2019_64\include\QtANGLE;D:\developtool\qt\5.15.2\msvc2019_64\include\QtOpenGL;D:\developtool\qt\5.15.2\msvc2019_64\include\QtWidgets;D:\developtool\qt\5.15.2\msvc2019_64\include\QtMultimedia;D:\developtool\qt\5.15.2\msvc2019_64\include\QtNetwork;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <PreBuildEvent>
+      <UseUtf8Encoding>Always</UseUtf8Encoding>
+      <Message>Automatic MOC and UIC for target VideoPlayback</Message>
+      <Command>setlocal
+cd D:\project\mytest\VideoPlayback\build
+if %errorlevel% neq 0 goto :cmEnd
+D:
+if %errorlevel% neq 0 goto :cmEnd
+D:\developtool\cmake\bin\cmake.exe -E cmake_autogen D:/project/mytest/VideoPlayback/build/CMakeFiles/VideoPlayback_autogen.dir/AutogenInfo.json Debug
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+    </PreBuildEvent>
+    <Link>
+      <AdditionalDependencies>D:\developtool\qt\5.15.2\msvc2019_64\lib\Qt5OpenGLd.lib;D:\developtool\qt\5.15.2\msvc2019_64\lib\Qt5Widgetsd.lib;D:\developtool\qt\5.15.2\msvc2019_64\lib\Qt5Multimediad.lib;yuv.lib;gtestd.lib;gmockd.lib;avformat.lib;avcodec.lib;avutil.lib;swscale.lib;swresample.lib;D:\developtool\qt\5.15.2\msvc2019_64\lib\Qt5Guid.lib;D:\developtool\qt\5.15.2\msvc2019_64\lib\Qt5Networkd.lib;D:\developtool\qt\5.15.2\msvc2019_64\lib\Qt5Cored.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>D:/project/mytest/VideoPlayback/lib;D:/project/mytest/VideoPlayback/lib/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ImportLibrary>D:/project/mytest/VideoPlayback/build/Debug/VideoPlayback.lib</ImportLibrary>
+      <ProgramDataBaseFile>D:/project/mytest/VideoPlayback/bin/Debug/VideoPlayback.pdb</ProgramDataBaseFile>
+      <SubSystem>Console</SubSystem>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>D:\project\mytest\VideoPlayback\build;D:\project\mytest\VideoPlayback;D:\project\mytest\VideoPlayback\build\VideoPlayback_autogen\include_Release;D:\project\mytest\VideoPlayback\include;D:\project\mytest\VideoPlayback\include\ffmpeg;D:\project\mytest\VideoPlayback\include\blackmagic_linux;D:\project\mytest\VideoPlayback\VideoPlayback;D:\project\mytest\VideoPlayback\VideoPlayback\ui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /external:I "D:/developtool/qt/5.15.2/msvc2019_64/include" /external:I "D:/developtool/qt/5.15.2/msvc2019_64/include/QtCore" /external:I "D:/developtool/qt/5.15.2/msvc2019_64/./mkspecs/win32-msvc" /external:I "D:/developtool/qt/5.15.2/msvc2019_64/include/QtGui" /external:I "D:/developtool/qt/5.15.2/msvc2019_64/include/QtANGLE" /external:I "D:/developtool/qt/5.15.2/msvc2019_64/include/QtOpenGL" /external:I "D:/developtool/qt/5.15.2/msvc2019_64/include/QtWidgets" /external:I "D:/developtool/qt/5.15.2/msvc2019_64/include/QtMultimedia" /external:I "D:/developtool/qt/5.15.2/msvc2019_64/include/QtNetwork"</AdditionalOptions>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <ExternalWarningLevel>TurnOffAllWarnings</ExternalWarningLevel>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <Optimization>MaxSpeed</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <UseFullPaths>false</UseFullPaths>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;QT_CORE_LIB;QT_NO_DEBUG;QT_GUI_LIB;QT_OPENGL_LIB;QT_WIDGETS_LIB;QT_MULTIMEDIA_LIB;QT_NETWORK_LIB;CMAKE_INTDIR="Release"</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <DebugInformationFormat>
+      </DebugInformationFormat>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;QT_CORE_LIB;QT_NO_DEBUG;QT_GUI_LIB;QT_OPENGL_LIB;QT_WIDGETS_LIB;QT_MULTIMEDIA_LIB;QT_NETWORK_LIB;CMAKE_INTDIR=\"Release\"</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>D:\project\mytest\VideoPlayback\build;D:\project\mytest\VideoPlayback;D:\project\mytest\VideoPlayback\build\VideoPlayback_autogen\include_Release;D:\project\mytest\VideoPlayback\include;D:\project\mytest\VideoPlayback\include\ffmpeg;D:\project\mytest\VideoPlayback\include\blackmagic_linux;D:\project\mytest\VideoPlayback\VideoPlayback;D:\project\mytest\VideoPlayback\VideoPlayback\ui;D:\developtool\qt\5.15.2\msvc2019_64\include;D:\developtool\qt\5.15.2\msvc2019_64\include\QtCore;D:\developtool\qt\5.15.2\msvc2019_64\.\mkspecs\win32-msvc;D:\developtool\qt\5.15.2\msvc2019_64\include\QtGui;D:\developtool\qt\5.15.2\msvc2019_64\include\QtANGLE;D:\developtool\qt\5.15.2\msvc2019_64\include\QtOpenGL;D:\developtool\qt\5.15.2\msvc2019_64\include\QtWidgets;D:\developtool\qt\5.15.2\msvc2019_64\include\QtMultimedia;D:\developtool\qt\5.15.2\msvc2019_64\include\QtNetwork;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>D:\project\mytest\VideoPlayback\build;D:\project\mytest\VideoPlayback;D:\project\mytest\VideoPlayback\build\VideoPlayback_autogen\include_Release;D:\project\mytest\VideoPlayback\include;D:\project\mytest\VideoPlayback\include\ffmpeg;D:\project\mytest\VideoPlayback\include\blackmagic_linux;D:\project\mytest\VideoPlayback\VideoPlayback;D:\project\mytest\VideoPlayback\VideoPlayback\ui;D:\developtool\qt\5.15.2\msvc2019_64\include;D:\developtool\qt\5.15.2\msvc2019_64\include\QtCore;D:\developtool\qt\5.15.2\msvc2019_64\.\mkspecs\win32-msvc;D:\developtool\qt\5.15.2\msvc2019_64\include\QtGui;D:\developtool\qt\5.15.2\msvc2019_64\include\QtANGLE;D:\developtool\qt\5.15.2\msvc2019_64\include\QtOpenGL;D:\developtool\qt\5.15.2\msvc2019_64\include\QtWidgets;D:\developtool\qt\5.15.2\msvc2019_64\include\QtMultimedia;D:\developtool\qt\5.15.2\msvc2019_64\include\QtNetwork;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <PreBuildEvent>
+      <UseUtf8Encoding>Always</UseUtf8Encoding>
+      <Message>Automatic MOC and UIC for target VideoPlayback</Message>
+      <Command>setlocal
+cd D:\project\mytest\VideoPlayback\build
+if %errorlevel% neq 0 goto :cmEnd
+D:
+if %errorlevel% neq 0 goto :cmEnd
+D:\developtool\cmake\bin\cmake.exe -E cmake_autogen D:/project/mytest/VideoPlayback/build/CMakeFiles/VideoPlayback_autogen.dir/AutogenInfo.json Release
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+    </PreBuildEvent>
+    <Link>
+      <AdditionalDependencies>D:\developtool\qt\5.15.2\msvc2019_64\lib\Qt5OpenGL.lib;D:\developtool\qt\5.15.2\msvc2019_64\lib\Qt5Widgets.lib;D:\developtool\qt\5.15.2\msvc2019_64\lib\Qt5Multimedia.lib;yuv.lib;gtestd.lib;gmockd.lib;avformat.lib;avcodec.lib;avutil.lib;swscale.lib;swresample.lib;D:\developtool\qt\5.15.2\msvc2019_64\lib\Qt5Gui.lib;D:\developtool\qt\5.15.2\msvc2019_64\lib\Qt5Network.lib;D:\developtool\qt\5.15.2\msvc2019_64\lib\Qt5Core.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>D:/project/mytest/VideoPlayback/lib;D:/project/mytest/VideoPlayback/lib/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ImportLibrary>D:/project/mytest/VideoPlayback/build/Release/VideoPlayback.lib</ImportLibrary>
+      <ProgramDataBaseFile>D:/project/mytest/VideoPlayback/bin/Release/VideoPlayback.pdb</ProgramDataBaseFile>
+      <SubSystem>Console</SubSystem>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>D:\project\mytest\VideoPlayback\build;D:\project\mytest\VideoPlayback;D:\project\mytest\VideoPlayback\build\VideoPlayback_autogen\include_MinSizeRel;D:\project\mytest\VideoPlayback\include;D:\project\mytest\VideoPlayback\include\ffmpeg;D:\project\mytest\VideoPlayback\include\blackmagic_linux;D:\project\mytest\VideoPlayback\VideoPlayback;D:\project\mytest\VideoPlayback\VideoPlayback\ui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /external:I "D:/developtool/qt/5.15.2/msvc2019_64/include" /external:I "D:/developtool/qt/5.15.2/msvc2019_64/include/QtCore" /external:I "D:/developtool/qt/5.15.2/msvc2019_64/./mkspecs/win32-msvc" /external:I "D:/developtool/qt/5.15.2/msvc2019_64/include/QtGui" /external:I "D:/developtool/qt/5.15.2/msvc2019_64/include/QtANGLE" /external:I "D:/developtool/qt/5.15.2/msvc2019_64/include/QtOpenGL" /external:I "D:/developtool/qt/5.15.2/msvc2019_64/include/QtWidgets" /external:I "D:/developtool/qt/5.15.2/msvc2019_64/include/QtMultimedia" /external:I "D:/developtool/qt/5.15.2/msvc2019_64/include/QtNetwork"</AdditionalOptions>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <ExternalWarningLevel>TurnOffAllWarnings</ExternalWarningLevel>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <Optimization>MinSpace</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <UseFullPaths>false</UseFullPaths>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;QT_CORE_LIB;QT_NO_DEBUG;QT_GUI_LIB;QT_OPENGL_LIB;QT_WIDGETS_LIB;QT_MULTIMEDIA_LIB;QT_NETWORK_LIB;CMAKE_INTDIR="MinSizeRel"</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <DebugInformationFormat>
+      </DebugInformationFormat>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;QT_CORE_LIB;QT_NO_DEBUG;QT_GUI_LIB;QT_OPENGL_LIB;QT_WIDGETS_LIB;QT_MULTIMEDIA_LIB;QT_NETWORK_LIB;CMAKE_INTDIR=\"MinSizeRel\"</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>D:\project\mytest\VideoPlayback\build;D:\project\mytest\VideoPlayback;D:\project\mytest\VideoPlayback\build\VideoPlayback_autogen\include_MinSizeRel;D:\project\mytest\VideoPlayback\include;D:\project\mytest\VideoPlayback\include\ffmpeg;D:\project\mytest\VideoPlayback\include\blackmagic_linux;D:\project\mytest\VideoPlayback\VideoPlayback;D:\project\mytest\VideoPlayback\VideoPlayback\ui;D:\developtool\qt\5.15.2\msvc2019_64\include;D:\developtool\qt\5.15.2\msvc2019_64\include\QtCore;D:\developtool\qt\5.15.2\msvc2019_64\.\mkspecs\win32-msvc;D:\developtool\qt\5.15.2\msvc2019_64\include\QtGui;D:\developtool\qt\5.15.2\msvc2019_64\include\QtANGLE;D:\developtool\qt\5.15.2\msvc2019_64\include\QtOpenGL;D:\developtool\qt\5.15.2\msvc2019_64\include\QtWidgets;D:\developtool\qt\5.15.2\msvc2019_64\include\QtMultimedia;D:\developtool\qt\5.15.2\msvc2019_64\include\QtNetwork;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>D:\project\mytest\VideoPlayback\build;D:\project\mytest\VideoPlayback;D:\project\mytest\VideoPlayback\build\VideoPlayback_autogen\include_MinSizeRel;D:\project\mytest\VideoPlayback\include;D:\project\mytest\VideoPlayback\include\ffmpeg;D:\project\mytest\VideoPlayback\include\blackmagic_linux;D:\project\mytest\VideoPlayback\VideoPlayback;D:\project\mytest\VideoPlayback\VideoPlayback\ui;D:\developtool\qt\5.15.2\msvc2019_64\include;D:\developtool\qt\5.15.2\msvc2019_64\include\QtCore;D:\developtool\qt\5.15.2\msvc2019_64\.\mkspecs\win32-msvc;D:\developtool\qt\5.15.2\msvc2019_64\include\QtGui;D:\developtool\qt\5.15.2\msvc2019_64\include\QtANGLE;D:\developtool\qt\5.15.2\msvc2019_64\include\QtOpenGL;D:\developtool\qt\5.15.2\msvc2019_64\include\QtWidgets;D:\developtool\qt\5.15.2\msvc2019_64\include\QtMultimedia;D:\developtool\qt\5.15.2\msvc2019_64\include\QtNetwork;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <PreBuildEvent>
+      <UseUtf8Encoding>Always</UseUtf8Encoding>
+      <Message>Automatic MOC and UIC for target VideoPlayback</Message>
+      <Command>setlocal
+cd D:\project\mytest\VideoPlayback\build
+if %errorlevel% neq 0 goto :cmEnd
+D:
+if %errorlevel% neq 0 goto :cmEnd
+D:\developtool\cmake\bin\cmake.exe -E cmake_autogen D:/project/mytest/VideoPlayback/build/CMakeFiles/VideoPlayback_autogen.dir/AutogenInfo.json MinSizeRel
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+    </PreBuildEvent>
+    <Link>
+      <AdditionalDependencies>D:\developtool\qt\5.15.2\msvc2019_64\lib\Qt5OpenGL.lib;D:\developtool\qt\5.15.2\msvc2019_64\lib\Qt5Widgets.lib;D:\developtool\qt\5.15.2\msvc2019_64\lib\Qt5Multimedia.lib;yuv.lib;gtestd.lib;gmockd.lib;avformat.lib;avcodec.lib;avutil.lib;swscale.lib;swresample.lib;D:\developtool\qt\5.15.2\msvc2019_64\lib\Qt5Gui.lib;D:\developtool\qt\5.15.2\msvc2019_64\lib\Qt5Network.lib;D:\developtool\qt\5.15.2\msvc2019_64\lib\Qt5Core.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>D:/project/mytest/VideoPlayback/lib;D:/project/mytest/VideoPlayback/lib/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ImportLibrary>D:/project/mytest/VideoPlayback/build/MinSizeRel/VideoPlayback.lib</ImportLibrary>
+      <ProgramDataBaseFile>D:/project/mytest/VideoPlayback/bin/MinSizeRel/VideoPlayback.pdb</ProgramDataBaseFile>
+      <SubSystem>Console</SubSystem>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>D:\project\mytest\VideoPlayback\build;D:\project\mytest\VideoPlayback;D:\project\mytest\VideoPlayback\build\VideoPlayback_autogen\include_RelWithDebInfo;D:\project\mytest\VideoPlayback\include;D:\project\mytest\VideoPlayback\include\ffmpeg;D:\project\mytest\VideoPlayback\include\blackmagic_linux;D:\project\mytest\VideoPlayback\VideoPlayback;D:\project\mytest\VideoPlayback\VideoPlayback\ui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /external:I "D:/developtool/qt/5.15.2/msvc2019_64/include" /external:I "D:/developtool/qt/5.15.2/msvc2019_64/include/QtCore" /external:I "D:/developtool/qt/5.15.2/msvc2019_64/./mkspecs/win32-msvc" /external:I "D:/developtool/qt/5.15.2/msvc2019_64/include/QtGui" /external:I "D:/developtool/qt/5.15.2/msvc2019_64/include/QtANGLE" /external:I "D:/developtool/qt/5.15.2/msvc2019_64/include/QtOpenGL" /external:I "D:/developtool/qt/5.15.2/msvc2019_64/include/QtWidgets" /external:I "D:/developtool/qt/5.15.2/msvc2019_64/include/QtMultimedia" /external:I "D:/developtool/qt/5.15.2/msvc2019_64/include/QtNetwork"</AdditionalOptions>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <ExternalWarningLevel>TurnOffAllWarnings</ExternalWarningLevel>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <Optimization>MaxSpeed</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <UseFullPaths>false</UseFullPaths>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;QT_CORE_LIB;QT_NO_DEBUG;QT_GUI_LIB;QT_OPENGL_LIB;QT_WIDGETS_LIB;QT_MULTIMEDIA_LIB;QT_NETWORK_LIB;CMAKE_INTDIR="RelWithDebInfo"</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;QT_CORE_LIB;QT_NO_DEBUG;QT_GUI_LIB;QT_OPENGL_LIB;QT_WIDGETS_LIB;QT_MULTIMEDIA_LIB;QT_NETWORK_LIB;CMAKE_INTDIR=\"RelWithDebInfo\"</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>D:\project\mytest\VideoPlayback\build;D:\project\mytest\VideoPlayback;D:\project\mytest\VideoPlayback\build\VideoPlayback_autogen\include_RelWithDebInfo;D:\project\mytest\VideoPlayback\include;D:\project\mytest\VideoPlayback\include\ffmpeg;D:\project\mytest\VideoPlayback\include\blackmagic_linux;D:\project\mytest\VideoPlayback\VideoPlayback;D:\project\mytest\VideoPlayback\VideoPlayback\ui;D:\developtool\qt\5.15.2\msvc2019_64\include;D:\developtool\qt\5.15.2\msvc2019_64\include\QtCore;D:\developtool\qt\5.15.2\msvc2019_64\.\mkspecs\win32-msvc;D:\developtool\qt\5.15.2\msvc2019_64\include\QtGui;D:\developtool\qt\5.15.2\msvc2019_64\include\QtANGLE;D:\developtool\qt\5.15.2\msvc2019_64\include\QtOpenGL;D:\developtool\qt\5.15.2\msvc2019_64\include\QtWidgets;D:\developtool\qt\5.15.2\msvc2019_64\include\QtMultimedia;D:\developtool\qt\5.15.2\msvc2019_64\include\QtNetwork;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>D:\project\mytest\VideoPlayback\build;D:\project\mytest\VideoPlayback;D:\project\mytest\VideoPlayback\build\VideoPlayback_autogen\include_RelWithDebInfo;D:\project\mytest\VideoPlayback\include;D:\project\mytest\VideoPlayback\include\ffmpeg;D:\project\mytest\VideoPlayback\include\blackmagic_linux;D:\project\mytest\VideoPlayback\VideoPlayback;D:\project\mytest\VideoPlayback\VideoPlayback\ui;D:\developtool\qt\5.15.2\msvc2019_64\include;D:\developtool\qt\5.15.2\msvc2019_64\include\QtCore;D:\developtool\qt\5.15.2\msvc2019_64\.\mkspecs\win32-msvc;D:\developtool\qt\5.15.2\msvc2019_64\include\QtGui;D:\developtool\qt\5.15.2\msvc2019_64\include\QtANGLE;D:\developtool\qt\5.15.2\msvc2019_64\include\QtOpenGL;D:\developtool\qt\5.15.2\msvc2019_64\include\QtWidgets;D:\developtool\qt\5.15.2\msvc2019_64\include\QtMultimedia;D:\developtool\qt\5.15.2\msvc2019_64\include\QtNetwork;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <PreBuildEvent>
+      <UseUtf8Encoding>Always</UseUtf8Encoding>
+      <Message>Automatic MOC and UIC for target VideoPlayback</Message>
+      <Command>setlocal
+cd D:\project\mytest\VideoPlayback\build
+if %errorlevel% neq 0 goto :cmEnd
+D:
+if %errorlevel% neq 0 goto :cmEnd
+D:\developtool\cmake\bin\cmake.exe -E cmake_autogen D:/project/mytest/VideoPlayback/build/CMakeFiles/VideoPlayback_autogen.dir/AutogenInfo.json RelWithDebInfo
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+    </PreBuildEvent>
+    <Link>
+      <AdditionalDependencies>D:\developtool\qt\5.15.2\msvc2019_64\lib\Qt5OpenGL.lib;D:\developtool\qt\5.15.2\msvc2019_64\lib\Qt5Widgets.lib;D:\developtool\qt\5.15.2\msvc2019_64\lib\Qt5Multimedia.lib;yuv.lib;gtestd.lib;gmockd.lib;avformat.lib;avcodec.lib;avutil.lib;swscale.lib;swresample.lib;D:\developtool\qt\5.15.2\msvc2019_64\lib\Qt5Gui.lib;D:\developtool\qt\5.15.2\msvc2019_64\lib\Qt5Network.lib;D:\developtool\qt\5.15.2\msvc2019_64\lib\Qt5Core.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;comdlg32.lib;advapi32.lib</AdditionalDependencies>
+      <AdditionalLibraryDirectories>D:/project/mytest/VideoPlayback/lib;D:/project/mytest/VideoPlayback/lib/$(Configuration);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <ImportLibrary>D:/project/mytest/VideoPlayback/build/RelWithDebInfo/VideoPlayback.lib</ImportLibrary>
+      <ProgramDataBaseFile>D:/project/mytest/VideoPlayback/bin/RelWithDebInfo/VideoPlayback.pdb</ProgramDataBaseFile>
+      <SubSystem>Console</SubSystem>
+    </Link>
+    <ProjectReference>
+      <LinkLibraryDependencies>false</LinkLibraryDependencies>
+    </ProjectReference>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <CustomBuild Include="D:\project\mytest\VideoPlayback\CMakeLists.txt">
+      <UseUtf8Encoding>Always</UseUtf8Encoding>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Building Custom Rule D:/project/mytest/VideoPlayback/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
+D:\developtool\cmake\bin\cmake.exe -SD:/project/mytest/VideoPlayback -BD:/project/mytest/VideoPlayback/build --check-stamp-file D:/project/mytest/VideoPlayback/build/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">D:\developtool\cmake\share\cmake-3.27\Modules\CMakeCInformation.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\CMakeCXXInformation.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\CMakeCommonLanguageInclude.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\CMakeGenericSystem.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\CMakeInitializeConfigs.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\CMakeLanguageInformation.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\CMakeParseArguments.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\CMakeRCInformation.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\CMakeSystemSpecificInformation.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\CMakeSystemSpecificInitialize.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\Compiler\CMakeCommonCompilerMacros.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\Compiler\MSVC-C.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\Compiler\MSVC-CXX.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\Compiler\MSVC.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\Platform\Windows-Initialize.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\Platform\Windows-MSVC-C.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\Platform\Windows-MSVC-CXX.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\Platform\Windows-MSVC.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\Platform\Windows.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\Platform\WindowsPaths.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5\Qt5Config.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5\Qt5ConfigVersion.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5\Qt5ModuleLocation.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Core\Qt5CoreConfig.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Core\Qt5CoreConfigExtras.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Core\Qt5CoreConfigExtrasMkspecDir.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Core\Qt5CoreConfigVersion.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Core\Qt5CoreMacros.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5GuiConfig.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5GuiConfigExtras.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5GuiConfigVersion.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5Gui_QGifPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5Gui_QICNSPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5Gui_QICOPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5Gui_QJpegPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5Gui_QMinimalIntegrationPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5Gui_QOffscreenIntegrationPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5Gui_QSvgIconPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5Gui_QSvgPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5Gui_QTgaPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5Gui_QTiffPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5Gui_QTuioTouchPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5Gui_QVirtualKeyboardPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5Gui_QWbmpPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5Gui_QWebpPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5Gui_QWindowsDirect2DIntegrationPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5Gui_QWindowsIntegrationPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5Gui_QXdgDesktopPortalThemePlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Multimedia\Qt5MultimediaConfig.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Multimedia\Qt5MultimediaConfigVersion.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Multimedia\Qt5Multimedia_AudioCaptureServicePlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Multimedia\Qt5Multimedia_DSServicePlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Multimedia\Qt5Multimedia_QM3uPlaylistPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Multimedia\Qt5Multimedia_QWasapiPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Multimedia\Qt5Multimedia_QWindowsAudioPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Multimedia\Qt5Multimedia_WMFServicePlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Network\Qt5NetworkConfig.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Network\Qt5NetworkConfigVersion.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Network\Qt5Network_QGenericEnginePlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5OpenGL\Qt5OpenGLConfig.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5OpenGL\Qt5OpenGLConfigVersion.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Widgets\Qt5WidgetsConfig.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Widgets\Qt5WidgetsConfigExtras.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Widgets\Qt5WidgetsConfigVersion.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Widgets\Qt5WidgetsMacros.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Widgets\Qt5Widgets_QWindowsVistaStylePlugin.cmake;D:\project\mytest\VideoPlayback\build\CMakeFiles\3.27.7\CMakeCCompiler.cmake;D:\project\mytest\VideoPlayback\build\CMakeFiles\3.27.7\CMakeCXXCompiler.cmake;D:\project\mytest\VideoPlayback\build\CMakeFiles\3.27.7\CMakeRCCompiler.cmake;D:\project\mytest\VideoPlayback\build\CMakeFiles\3.27.7\CMakeSystem.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">D:\project\mytest\VideoPlayback\build\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Building Custom Rule D:/project/mytest/VideoPlayback/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
+D:\developtool\cmake\bin\cmake.exe -SD:/project/mytest/VideoPlayback -BD:/project/mytest/VideoPlayback/build --check-stamp-file D:/project/mytest/VideoPlayback/build/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\developtool\cmake\share\cmake-3.27\Modules\CMakeCInformation.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\CMakeCXXInformation.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\CMakeCommonLanguageInclude.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\CMakeGenericSystem.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\CMakeInitializeConfigs.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\CMakeLanguageInformation.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\CMakeParseArguments.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\CMakeRCInformation.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\CMakeSystemSpecificInformation.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\CMakeSystemSpecificInitialize.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\Compiler\CMakeCommonCompilerMacros.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\Compiler\MSVC-C.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\Compiler\MSVC-CXX.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\Compiler\MSVC.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\Platform\Windows-Initialize.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\Platform\Windows-MSVC-C.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\Platform\Windows-MSVC-CXX.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\Platform\Windows-MSVC.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\Platform\Windows.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\Platform\WindowsPaths.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5\Qt5Config.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5\Qt5ConfigVersion.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5\Qt5ModuleLocation.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Core\Qt5CoreConfig.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Core\Qt5CoreConfigExtras.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Core\Qt5CoreConfigExtrasMkspecDir.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Core\Qt5CoreConfigVersion.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Core\Qt5CoreMacros.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5GuiConfig.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5GuiConfigExtras.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5GuiConfigVersion.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5Gui_QGifPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5Gui_QICNSPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5Gui_QICOPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5Gui_QJpegPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5Gui_QMinimalIntegrationPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5Gui_QOffscreenIntegrationPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5Gui_QSvgIconPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5Gui_QSvgPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5Gui_QTgaPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5Gui_QTiffPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5Gui_QTuioTouchPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5Gui_QVirtualKeyboardPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5Gui_QWbmpPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5Gui_QWebpPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5Gui_QWindowsDirect2DIntegrationPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5Gui_QWindowsIntegrationPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5Gui_QXdgDesktopPortalThemePlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Multimedia\Qt5MultimediaConfig.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Multimedia\Qt5MultimediaConfigVersion.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Multimedia\Qt5Multimedia_AudioCaptureServicePlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Multimedia\Qt5Multimedia_DSServicePlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Multimedia\Qt5Multimedia_QM3uPlaylistPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Multimedia\Qt5Multimedia_QWasapiPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Multimedia\Qt5Multimedia_QWindowsAudioPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Multimedia\Qt5Multimedia_WMFServicePlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Network\Qt5NetworkConfig.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Network\Qt5NetworkConfigVersion.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Network\Qt5Network_QGenericEnginePlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5OpenGL\Qt5OpenGLConfig.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5OpenGL\Qt5OpenGLConfigVersion.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Widgets\Qt5WidgetsConfig.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Widgets\Qt5WidgetsConfigExtras.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Widgets\Qt5WidgetsConfigVersion.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Widgets\Qt5WidgetsMacros.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Widgets\Qt5Widgets_QWindowsVistaStylePlugin.cmake;D:\project\mytest\VideoPlayback\build\CMakeFiles\3.27.7\CMakeCCompiler.cmake;D:\project\mytest\VideoPlayback\build\CMakeFiles\3.27.7\CMakeCXXCompiler.cmake;D:\project\mytest\VideoPlayback\build\CMakeFiles\3.27.7\CMakeRCCompiler.cmake;D:\project\mytest\VideoPlayback\build\CMakeFiles\3.27.7\CMakeSystem.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\project\mytest\VideoPlayback\build\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Building Custom Rule D:/project/mytest/VideoPlayback/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">setlocal
+D:\developtool\cmake\bin\cmake.exe -SD:/project/mytest/VideoPlayback -BD:/project/mytest/VideoPlayback/build --check-stamp-file D:/project/mytest/VideoPlayback/build/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">D:\developtool\cmake\share\cmake-3.27\Modules\CMakeCInformation.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\CMakeCXXInformation.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\CMakeCommonLanguageInclude.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\CMakeGenericSystem.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\CMakeInitializeConfigs.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\CMakeLanguageInformation.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\CMakeParseArguments.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\CMakeRCInformation.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\CMakeSystemSpecificInformation.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\CMakeSystemSpecificInitialize.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\Compiler\CMakeCommonCompilerMacros.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\Compiler\MSVC-C.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\Compiler\MSVC-CXX.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\Compiler\MSVC.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\Platform\Windows-Initialize.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\Platform\Windows-MSVC-C.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\Platform\Windows-MSVC-CXX.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\Platform\Windows-MSVC.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\Platform\Windows.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\Platform\WindowsPaths.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5\Qt5Config.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5\Qt5ConfigVersion.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5\Qt5ModuleLocation.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Core\Qt5CoreConfig.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Core\Qt5CoreConfigExtras.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Core\Qt5CoreConfigExtrasMkspecDir.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Core\Qt5CoreConfigVersion.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Core\Qt5CoreMacros.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5GuiConfig.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5GuiConfigExtras.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5GuiConfigVersion.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5Gui_QGifPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5Gui_QICNSPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5Gui_QICOPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5Gui_QJpegPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5Gui_QMinimalIntegrationPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5Gui_QOffscreenIntegrationPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5Gui_QSvgIconPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5Gui_QSvgPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5Gui_QTgaPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5Gui_QTiffPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5Gui_QTuioTouchPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5Gui_QVirtualKeyboardPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5Gui_QWbmpPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5Gui_QWebpPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5Gui_QWindowsDirect2DIntegrationPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5Gui_QWindowsIntegrationPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5Gui_QXdgDesktopPortalThemePlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Multimedia\Qt5MultimediaConfig.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Multimedia\Qt5MultimediaConfigVersion.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Multimedia\Qt5Multimedia_AudioCaptureServicePlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Multimedia\Qt5Multimedia_DSServicePlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Multimedia\Qt5Multimedia_QM3uPlaylistPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Multimedia\Qt5Multimedia_QWasapiPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Multimedia\Qt5Multimedia_QWindowsAudioPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Multimedia\Qt5Multimedia_WMFServicePlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Network\Qt5NetworkConfig.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Network\Qt5NetworkConfigVersion.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Network\Qt5Network_QGenericEnginePlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5OpenGL\Qt5OpenGLConfig.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5OpenGL\Qt5OpenGLConfigVersion.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Widgets\Qt5WidgetsConfig.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Widgets\Qt5WidgetsConfigExtras.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Widgets\Qt5WidgetsConfigVersion.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Widgets\Qt5WidgetsMacros.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Widgets\Qt5Widgets_QWindowsVistaStylePlugin.cmake;D:\project\mytest\VideoPlayback\build\CMakeFiles\3.27.7\CMakeCCompiler.cmake;D:\project\mytest\VideoPlayback\build\CMakeFiles\3.27.7\CMakeCXXCompiler.cmake;D:\project\mytest\VideoPlayback\build\CMakeFiles\3.27.7\CMakeRCCompiler.cmake;D:\project\mytest\VideoPlayback\build\CMakeFiles\3.27.7\CMakeSystem.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">D:\project\mytest\VideoPlayback\build\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Building Custom Rule D:/project/mytest/VideoPlayback/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">setlocal
+D:\developtool\cmake\bin\cmake.exe -SD:/project/mytest/VideoPlayback -BD:/project/mytest/VideoPlayback/build --check-stamp-file D:/project/mytest/VideoPlayback/build/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">D:\developtool\cmake\share\cmake-3.27\Modules\CMakeCInformation.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\CMakeCXXInformation.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\CMakeCommonLanguageInclude.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\CMakeGenericSystem.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\CMakeInitializeConfigs.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\CMakeLanguageInformation.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\CMakeParseArguments.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\CMakeRCInformation.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\CMakeSystemSpecificInformation.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\CMakeSystemSpecificInitialize.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\Compiler\CMakeCommonCompilerMacros.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\Compiler\MSVC-C.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\Compiler\MSVC-CXX.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\Compiler\MSVC.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\Platform\Windows-Initialize.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\Platform\Windows-MSVC-C.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\Platform\Windows-MSVC-CXX.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\Platform\Windows-MSVC.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\Platform\Windows.cmake;D:\developtool\cmake\share\cmake-3.27\Modules\Platform\WindowsPaths.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5\Qt5Config.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5\Qt5ConfigVersion.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5\Qt5ModuleLocation.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Core\Qt5CoreConfig.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Core\Qt5CoreConfigExtras.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Core\Qt5CoreConfigExtrasMkspecDir.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Core\Qt5CoreConfigVersion.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Core\Qt5CoreMacros.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5GuiConfig.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5GuiConfigExtras.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5GuiConfigVersion.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5Gui_QGifPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5Gui_QICNSPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5Gui_QICOPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5Gui_QJpegPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5Gui_QMinimalIntegrationPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5Gui_QOffscreenIntegrationPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5Gui_QSvgIconPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5Gui_QSvgPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5Gui_QTgaPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5Gui_QTiffPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5Gui_QTuioTouchPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5Gui_QVirtualKeyboardPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5Gui_QWbmpPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5Gui_QWebpPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5Gui_QWindowsDirect2DIntegrationPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5Gui_QWindowsIntegrationPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Gui\Qt5Gui_QXdgDesktopPortalThemePlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Multimedia\Qt5MultimediaConfig.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Multimedia\Qt5MultimediaConfigVersion.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Multimedia\Qt5Multimedia_AudioCaptureServicePlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Multimedia\Qt5Multimedia_DSServicePlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Multimedia\Qt5Multimedia_QM3uPlaylistPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Multimedia\Qt5Multimedia_QWasapiPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Multimedia\Qt5Multimedia_QWindowsAudioPlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Multimedia\Qt5Multimedia_WMFServicePlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Network\Qt5NetworkConfig.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Network\Qt5NetworkConfigVersion.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Network\Qt5Network_QGenericEnginePlugin.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5OpenGL\Qt5OpenGLConfig.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5OpenGL\Qt5OpenGLConfigVersion.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Widgets\Qt5WidgetsConfig.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Widgets\Qt5WidgetsConfigExtras.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Widgets\Qt5WidgetsConfigVersion.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Widgets\Qt5WidgetsMacros.cmake;D:\developtool\qt\5.15.2\msvc2019_64\lib\cmake\Qt5Widgets\Qt5Widgets_QWindowsVistaStylePlugin.cmake;D:\project\mytest\VideoPlayback\build\CMakeFiles\3.27.7\CMakeCCompiler.cmake;D:\project\mytest\VideoPlayback\build\CMakeFiles\3.27.7\CMakeCXXCompiler.cmake;D:\project\mytest\VideoPlayback\build\CMakeFiles\3.27.7\CMakeRCCompiler.cmake;D:\project\mytest\VideoPlayback\build\CMakeFiles\3.27.7\CMakeSystem.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">D:\project\mytest\VideoPlayback\build\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</LinkObjects>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="D:\project\mytest\VideoPlayback\build\VideoPlayback_autogen\mocs_compilation_Debug.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="D:\project\mytest\VideoPlayback\VideoPlayback\main.cpp" />
+    <ClCompile Include="D:\project\mytest\VideoPlayback\VideoPlayback\module\AudioPlay\AudioPlay.cpp" />
+    <ClCompile Include="D:\project\mytest\VideoPlayback\VideoPlayback\module\VideoDecoder\VideoDecoder.cpp" />
+    <ClCompile Include="D:\project\mytest\VideoPlayback\VideoPlayback\module\VideoInfo\VideoInfoAcqure.cpp" />
+    <ClCompile Include="D:\project\mytest\VideoPlayback\VideoPlayback\ui\OpenGLPreviewWidget\OpenGLPreviewWidget.cpp" />
+    <ClCompile Include="D:\project\mytest\VideoPlayback\VideoPlayback\ui\VideoPlayback.cpp" />
+    <ClCompile Include="D:\project\mytest\VideoPlayback\VideoPlayback\unitest\AudioPlayTest.cpp" />
+    <ClCompile Include="D:\project\mytest\VideoPlayback\VideoPlayback\unitest\VideoDecoderTest.cpp" />
+    <ClCompile Include="D:\project\mytest\VideoPlayback\VideoPlayback\unitest\VideoInfoAcqureTest.cpp" />
+    <ClCompile Include="D:\project\mytest\VideoPlayback\VideoPlayback\unitest\VideoPlaybackTest.cpp" />
+    <ClCompile Include="D:\project\mytest\VideoPlayback\build\VideoPlayback_autogen\mocs_compilation_Release.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="D:\project\mytest\VideoPlayback\build\VideoPlayback_autogen\mocs_compilation_MinSizeRel.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+    <ClCompile Include="D:\project\mytest\VideoPlayback\build\VideoPlayback_autogen\mocs_compilation_RelWithDebInfo.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">true</ExcludedFromBuild>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="D:\project\mytest\VideoPlayback\build\ZERO_CHECK.vcxproj">
+      <Project>{E9BDE979-53DC-343A-86FF-3BD86993AC50}</Project>
+      <Name>ZERO_CHECK</Name>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

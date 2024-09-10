@@ -1,0 +1,98 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>qml;cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>qrc;rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="ui">
+      <UniqueIdentifier>{a7f24ce5-6907-4aee-9fca-2cfb28351108}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="unitest">
+      <UniqueIdentifier>{d1705939-6c32-4a5d-8af8-757393e68d8d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="module">
+      <UniqueIdentifier>{0023dc31-2895-4975-9203-5579162f0fb4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="module\VideoInfo">
+      <UniqueIdentifier>{14da333f-c04a-484d-beb2-4792eee81c26}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="module\VideoDecoder">
+      <UniqueIdentifier>{e666386c-5dcc-4358-aa73-70c453f18077}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ui\OpenGLPreviewWidget">
+      <UniqueIdentifier>{cc614ea9-ddf1-4b41-949b-f4b3973b5bd6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="module\AudioPlay">
+      <UniqueIdentifier>{5c0be97d-fb03-4452-b41b-e302a60db5ff}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <QtRcc Include="VideoPlayback.qrc">
+      <Filter>Resource Files</Filter>
+    </QtRcc>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\VideoPlayback.cpp">
+      <Filter>ui</Filter>
+    </ClCompile>
+    <ClCompile Include="unitest\VideoPlaybackTest.cpp">
+      <Filter>unitest</Filter>
+    </ClCompile>
+    <ClCompile Include="module\VideoInfo\VideoInfoAcqure.cpp">
+      <Filter>module\VideoInfo</Filter>
+    </ClCompile>
+    <ClCompile Include="unitest\VideoInfoAcqureTest.cpp">
+      <Filter>unitest</Filter>
+    </ClCompile>
+    <ClCompile Include="module\VideoDecoder\VideoDecoder.cpp">
+      <Filter>module\VideoDecoder</Filter>
+    </ClCompile>
+    <ClCompile Include="unitest\VideoDecoderTest.cpp">
+      <Filter>unitest</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\OpenGLPreviewWidget\OpenGLPreviewWidget.cpp">
+      <Filter>ui\OpenGLPreviewWidget</Filter>
+    </ClCompile>
+    <ClCompile Include="module\AudioPlay\AudioPlay.cpp">
+      <Filter>module\AudioPlay</Filter>
+    </ClCompile>
+    <ClCompile Include="unitest\AudioPlayTest.cpp">
+      <Filter>unitest</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <QtMoc Include="ui\VideoPlayback.h">
+      <Filter>ui</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\OpenGLPreviewWidget\OpenGLPreviewWidget.h">
+      <Filter>ui\OpenGLPreviewWidget</Filter>
+    </QtMoc>
+    <QtMoc Include="module\AudioPlay\AudioPlay.h">
+      <Filter>module\AudioPlay</Filter>
+    </QtMoc>
+  </ItemGroup>
+  <ItemGroup>
+    <QtUic Include="ui\VideoPlayback.ui">
+      <Filter>ui</Filter>
+    </QtUic>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="module\VideoInfo\VideoInfoAcqure.h">
+      <Filter>module\VideoInfo</Filter>
+    </ClInclude>
+    <ClInclude Include="CommonDef.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="module\VideoDecoder\VideoDecoder.h">
+      <Filter>module\VideoDecoder</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
