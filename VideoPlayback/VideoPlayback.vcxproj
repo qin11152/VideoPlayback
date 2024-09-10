@@ -138,6 +138,9 @@
     <ClInclude Include="module\VideoInfo\VideoInfoAcqure.h" />
     <QtMoc Include="ui\OpenGLPreviewWidget\OpenGLPreviewWidget.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\.gitignore" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Condition="Exists('$(QtMsBuild)\qt.targets')">
     <Import Project="$(QtMsBuild)\qt.targets" />
