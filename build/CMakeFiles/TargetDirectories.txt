@@ -1,3 +1,0 @@
-D:/project/mytest/VideoPlayback/build/CMakeFiles/VideoPlayback.dir
-D:/project/mytest/VideoPlayback/build/CMakeFiles/ALL_BUILD.dir
-D:/project/mytest/VideoPlayback/build/CMakeFiles/ZERO_CHECK.dir
