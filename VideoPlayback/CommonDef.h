@@ -1,0 +1,74 @@
+#pragma once
+
+#include <cstdint>
+
+#include <QDebug>
+
+extern "C"
+{
+#include <ffmpeg/libavutil/pixfmt.h>
+#include <ffmpeg/libavutil/samplefmt.h>
+}
+
+constexpr int kOutputVideoWidth = 1920;
+constexpr int kOutputVideoHeight = 1080;
+constexpr int kOutputVideoFormat = AV_PIX_FMT_YUV422P;
+constexpr int kOutputAudioChannels = 2;
+constexpr int kOutputAudioSampleRate = 48000;
+constexpr int kOutputAudioBitDepth = 16;
+constexpr int kOutputAudioFormat = AV_SAMPLE_FMT_S16;
+
+constexpr int kBufferWaterLevel = 20;
+
+constexpr int kmicroSecondsPerSecond = 1000000;
+constexpr int kmilliSecondsPerSecond = 1000;
+
+
+struct MediaInfo
+{
+	int width{ 0 };
+	int height{ 0 };
+	double fps{ 0 };
+	double duration{ 0 };
+	int bitrate{ 0 };
+	int frameCount{ 0 };
+	int audioChannels{ 0 };
+	int audioSampleRate{ 0 };
+	int bitDepth{ 0 };
+	int64_t audioBitrate{ 0 };
+	int audioDuration{ 0 };
+	int audioFrameCount{ 0 };
+	AVPixelFormat videoFormat{ AV_PIX_FMT_NONE };
+	AVSampleFormat audioFormat{ AV_SAMPLE_FMT_NONE };
+};
+
+struct VideoInfo
+{
+	int width{ 0 };
+	int height{ 0 };
+	double fps{ 0 };
+	double duration{ 0 };
+	int bitrate{ 0 };
+	int frameCount{ 0 };
+	AVPixelFormat videoFormat{ AV_PIX_FMT_NONE };
+};
+
+struct AudioInfo
+{
+	int audioChannels{ 0 };
+	int audioSampleRate{ 0 };
+	int bitDepth{ 0 };
+	int64_t audioBitrate{ 0 };
+	int audioDuration{ 0 };
+	int audioFrameCount{ 0 };
+	AVSampleFormat audioFormat{ AV_SAMPLE_FMT_NONE };
+};
+
+enum class ErrorCode
+{
+	NoError=0,
+	AllocateContextError,
+	OpenInputError,
+	FindStreamInfoError,
+	AllocateRsampleError,
+};
