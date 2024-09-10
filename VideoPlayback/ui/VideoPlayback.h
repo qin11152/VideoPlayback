@@ -25,7 +25,7 @@ signals:
 public slots:
     QString onSignalChooseFileClicked();
 
-    void onSignalSliderValueChanged(int vlaue);
+    void onSignalSliderValueChanged(double vlaue);
 
 private:
     bool initConnect();

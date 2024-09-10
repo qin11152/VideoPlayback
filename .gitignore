@@ -2,3 +2,4 @@ bin/audio.pcm
 build/
 bin/VideoPlayback
 .vscode/
+bin/VideoPlayback

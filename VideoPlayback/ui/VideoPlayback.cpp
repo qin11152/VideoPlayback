@@ -2,17 +2,19 @@
 #include "module/VideoInfo/VideoInfoAcqure.h"
 
 #include <QTimer>
+#include <QDebug>
 #include <QDateTime>
 #include <QFileDialog>
 
 VideoPlayback::VideoPlayback(QWidget *parent)
-    : QWidget(parent)
+	: QWidget(parent)
 {
-    ui.setupUi(this);
+	ui.setupUi(this);
 
 	initModule();
 
-	connect(ui.startPushButton, &QPushButton::clicked, this, [=]() {
+	connect(ui.startPushButton, &QPushButton::clicked, this, [=]()
+			{
 		if (m_ptrVideoDecoder)
 		{
 			delete m_ptrVideoDecoder;
@@ -22,14 +24,11 @@ VideoPlayback::VideoPlayback(QWidget *parent)
 		if (initDecoder())
 		{
 			m_ptrVideoDecoder->startDecoder();
-		}
-		});
-	connect(ui.pausePushButton, &QPushButton::clicked, this, [=]() {
-		m_ptrVideoDecoder->pauseDecoder();
-		});
-	connect(ui.continuePushButton, &QPushButton::clicked, this, [=]() {
-		m_ptrVideoDecoder->resumeDecoder();
-		});
+		} });
+	connect(ui.pausePushButton, &QPushButton::clicked, this, [=]()
+			{ m_ptrVideoDecoder->pauseDecoder(); });
+	connect(ui.continuePushButton, &QPushButton::clicked, this, [=]()
+			{ m_ptrVideoDecoder->resumeDecoder(); });
 }
 
 VideoPlayback::~VideoPlayback()
@@ -51,27 +50,27 @@ bool VideoPlayback::initModule()
 {
 	m_ptrVideoDecoder = new VideoDecoder();
 	m_ptrAudioPlay = new AudioPlay(nullptr);
-	return initConnect()&&initAudioOutput();
+	return initConnect() && initAudioOutput();
 }
 
 void VideoPlayback::previewCallback(avframe_ptr framePtr, int64_t currentTime)
 {
-	//将YUV数据发送出去
-	QByteArray data((char*)framePtr->data[0], framePtr->width * framePtr->height * 2);
+	// 将YUV数据发送出去
+	QByteArray data((char *)framePtr->data[0], framePtr->width * framePtr->height * 2);
 	emit signalYUVData(data, framePtr->width, framePtr->height);
 	updateTimeLabel(currentTime, m_stuMediaInfo.duration);
 	updateTimeSliderPosition(currentTime);
 }
 
-void VideoPlayback::AudioPlayCallBack(uint8_t** audioData, uint32_t channelSampleNumber)
+void VideoPlayback::AudioPlayCallBack(uint8_t **audioData, uint32_t channelSampleNumber)
 {
-	QByteArray data((char*)audioData[0], kOutputAudioChannels * channelSampleNumber * av_get_bytes_per_sample((AVSampleFormat)kOutputAudioFormat));
+	QByteArray data((char *)audioData[0], kOutputAudioChannels * channelSampleNumber * av_get_bytes_per_sample((AVSampleFormat)kOutputAudioFormat));
 	m_ptrAudioPlay->inputPcmData(data);
 }
 
 QString VideoPlayback::onSignalChooseFileClicked()
 {
-	//打开一个文件选择框，返回选择的文件，只选择mxf，mp4，mov格式的文件
+	// 打开一个文件选择框，返回选择的文件，只选择mxf，mp4，mov格式的文件
 	QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"), "", tr("Video Files (*.mxf *.mp4 *.mov)"));
 	if (!fileName.isEmpty())
 	{
@@ -81,16 +80,18 @@ QString VideoPlayback::onSignalChooseFileClicked()
 	return fileName;
 }
 
-void VideoPlayback::onSignalSliderValueChanged(int vlaue)
+void VideoPlayback::onSignalSliderValueChanged(double vlaue)
 {
-	//触发时间小于200ms的不处理
-	disconnect(ui.videoTImeSlider, &QSlider::valueChanged, this, &VideoPlayback::onSignalSliderValueChanged);
+	qDebug()<<"vlaue"<<vlaue;
+	// 触发时间小于200ms的不处理
+	disconnect(ui.videoTImeSlider, &MySlider::signalSliderValueChanged, this, &VideoPlayback::onSignalSliderValueChanged);
 	m_bSliderEnableConnect = false;
-	m_ptrVideoDecoder->seekTo(vlaue);
-	QTimer::singleShot(200, this,[=]() {
+	double time = vlaue * ((ui.videoTImeSlider->maximum() - ui.videoTImeSlider->minimum()) + ui.videoTImeSlider->minimum()) / 100.0;
+	m_ptrVideoDecoder->seekTo(time);
+	QTimer::singleShot(100, this, [=]()
+					   {
 		m_bSliderEnableConnect = true;
-		connect(ui.videoTImeSlider, &QSlider::valueChanged, this, &VideoPlayback::onSignalSliderValueChanged);
-		});
+		connect(ui.videoTImeSlider, &MySlider::signalSliderValueChanged, this, &VideoPlayback::onSignalSliderValueChanged); });
 }
 
 bool VideoPlayback::initConnect()
@@ -98,7 +99,7 @@ bool VideoPlayback::initConnect()
 	bool flag = true;
 	flag = flag && connect(ui.choosePushButton, &QPushButton::clicked, this, &VideoPlayback::onSignalChooseFileClicked);
 	flag = flag && connect(this, &VideoPlayback::signalYUVData, ui.openGLWidget, &OpenGLPreviewWidget::onSignalYUVData);
-	flag = flag && connect(ui.videoTImeSlider, &QSlider::valueChanged, this, &VideoPlayback::onSignalSliderValueChanged);
+	flag = flag && connect(ui.videoTImeSlider, &MySlider::signalSliderValueChanged, this, &VideoPlayback::onSignalSliderValueChanged);
 	return flag;
 }
 
@@ -137,7 +138,7 @@ bool VideoPlayback::initDecoder()
 
 void VideoPlayback::updateTimeLabel(const int currentTime, const int totalTime)
 {
-	//把int的秒数转为时分秒字符串
+	// 把int的秒数转为时分秒字符串
 	int currentHour = currentTime / 3600;
 	int currentMinute = (currentTime % 3600) / 60;
 	int currentSecond = currentTime % 60;
@@ -147,27 +148,22 @@ void VideoPlayback::updateTimeLabel(const int currentTime, const int totalTime)
 	int totalSecond = totalTime % 60;
 
 	QString strCurrentTime = QString("%1:%2:%3")
-		.arg(currentHour, 2, 10, QChar('0'))
-		.arg(currentMinute, 2, 10, QChar('0'))
-		.arg(currentSecond, 2, 10, QChar('0'));
+								 .arg(currentHour, 2, 10, QChar('0'))
+								 .arg(currentMinute, 2, 10, QChar('0'))
+								 .arg(currentSecond, 2, 10, QChar('0'));
 
 	QString strTotalTime = QString("%1:%2:%3")
-		.arg(totalHour, 2, 10, QChar('0'))
-		.arg(totalMinute, 2, 10, QChar('0'))
-		.arg(totalSecond, 2, 10, QChar('0'));
+							   .arg(totalHour, 2, 10, QChar('0'))
+							   .arg(totalMinute, 2, 10, QChar('0'))
+							   .arg(totalSecond, 2, 10, QChar('0'));
 
 	ui.timeCodeLabel->setText(strCurrentTime + "/" + strTotalTime);
 }
 
 void VideoPlayback::updateTimeSliderPosition(int64_t currentTime)
 {
-	//QSlider修改值
-	disconnect(ui.videoTImeSlider, &QSlider::valueChanged, this, &VideoPlayback::onSignalSliderValueChanged);
+	// QSlider修改值
 	ui.videoTImeSlider->setValue(currentTime);
-	if (m_bSliderEnableConnect)
-	{
-		connect(ui.videoTImeSlider, &QSlider::valueChanged, this, &VideoPlayback::onSignalSliderValueChanged);
-	}
 }
 
 void VideoPlayback::setTimeSliderRange(int64_t totalTime)
