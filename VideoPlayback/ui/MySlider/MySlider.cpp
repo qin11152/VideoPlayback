@@ -43,4 +43,13 @@ void MySlider::mouseReleaseEvent(QMouseEvent *event)
 
 void MySlider::mouseMoveEvent(QMouseEvent *event)
 {
+    //移动的时候计算下当前的值，设置到滑动条上,不要太频繁的触发
+    if(m_bPressed)
+    {
+        int currentX = event->pos().x();
+        double per = currentX *1.0 /this->width();
+        int value = per*(this->maximum() - this->minimum()) + this->minimum();
+        this->setValue(value);
+        emit signalSliderValueChanged(per*100);
+    }
 }

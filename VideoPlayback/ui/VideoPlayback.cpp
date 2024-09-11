@@ -163,6 +163,10 @@ void VideoPlayback::updateTimeLabel(const int currentTime, const int totalTime)
 
 void VideoPlayback::updateTimeSliderPosition(int64_t currentTime)
 {
+	if(ui.videoTImeSlider->getPressed())
+	{
+		return;
+	}
 	// QSliderÐÞ¸ÄÖµ
 	ui.videoTImeSlider->setValue(currentTime);
 }
