@@ -1,4 +1,5 @@
 #include "VideoPlayback.h"
+#include "ui/MySlider/MySlider.h"
 #include "module/VideoInfo/VideoInfoAcqure.h"
 
 #include <QTimer>
