@@ -47,3 +47,51 @@ elseif(UNIX)
     target_link_libraries(VideoPlayback Qt5::Core Qt5::Gui Qt5::OpenGL Qt5::Widgets Qt5::Multimedia pthread yuv gtest gmock avformat avcodec avutil swscale swresample z X11 fdk-aac openjp2 x264 x265 rtmp dl)
 endif()
 
+cmake_minimum_required(VERSION 3.20)
+
+project(VideoPlayback)
+
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+ 
+#开启qt需要的uic，moc，rcc
+set(CMAKE_AUTOUIC ON)
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
+
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/ffmpeg)
+if(WIN32)
+    include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/blackmagic_linux)
+elseif(UNIX)
+    include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/blackmagic_win)
+endif()
+
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/VideoPlayback)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/VideoPlayback/ui)
+
+link_directories(${CMAKE_CURRENT_SOURCE_DIR}/lib)
+
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
+
+if (WIN32)
+    set(CMAKE_PREFIX_PATH "D:/developtool/qt/5.15.2/msvc2019_64")
+elseif(UNIX)
+    set(CMAKE_PREFIX_PATH "/home/qin/Qt5.14.0/5.14.0/gcc_64")
+endif()
+
+find_package(Qt5 COMPONENTS Core Gui OpenGL Widgets Multimedia REQUIRED)
+
+file(GLOB_RECURSE src_file ${CMAKE_CURRENT_SOURCE_DIR}/VideoPlayback/*.cpp)
+
+if(UNIX)
+    list(APPEND src_file ${CMAKE_CURRENT_SOURCE_DIR}/include/blackmagic_linux/DeckLinkAPIDispatch.cpp)
+endif()
+
+add_executable(VideoPlayback ${src_file})
+
+if(WIN32)
+    target_link_libraries(VideoPlayback Qt5::Core Qt5::Gui Qt5::OpenGL Qt5::Widgets Qt5::Multimedia yuv gtestd gmockd avformat avcodec avutil swscale swresample)
+elseif(UNIX)
+    target_link_libraries(VideoPlayback Qt5::Core Qt5::Gui Qt5::OpenGL Qt5::Widgets Qt5::Multimedia pthread yuv gtest gmock avformat avcodec avutil swscale swresample z X11 va va-x11 va-drm fdk-aac mp3lame openjp2 x264 x265 rtmp vdpau dl)
+endif()
+
