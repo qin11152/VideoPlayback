@@ -20,7 +20,7 @@
    <item>
     <layout class="QHBoxLayout" name="horizontalLayout_3">
      <item>
-      <widget class="QSlider" name="videoTImeSlider">
+      <widget class="MySlider" name="videoTImeSlider">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>
@@ -90,6 +90,11 @@
    <class>OpenGLPreviewWidget</class>
    <extends>QOpenGLWidget</extends>
    <header>ui/OpenGLPreviewWidget/OpenGLPreviewWidget.h</header>
+  </customwidget>
+  <customwidget>
+   <class>MySlider</class>
+   <extends>QSlider</extends>
+   <header>MySlider/MySlider.h</header>
   </customwidget>
  </customwidgets>
  <resources>
