@@ -16,6 +16,7 @@ void MySlider::mousePressEvent(QMouseEvent *event)
     {
         return;
     }
+    qDebug()<<"mousePressEvent";
     m_bPressed = true;
     int currentX = event->pos().x();
 
