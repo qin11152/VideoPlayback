@@ -116,6 +116,7 @@
     <ClCompile Include="module\AudioPlay\AudioPlay.cpp" />
     <ClCompile Include="module\VideoDecoder\VideoDecoder.cpp" />
     <ClCompile Include="module\VideoInfo\VideoInfoAcqure.cpp" />
+    <ClCompile Include="ui\MySlider\MySlider.cpp" />
     <ClCompile Include="ui\OpenGLPreviewWidget\OpenGLPreviewWidget.cpp" />
     <ClCompile Include="ui\VideoPlayback.cpp" />
     <ClCompile Include="unitest\AudioPlayTest.cpp" />
@@ -133,6 +134,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CommonDef.h" />
+    <QtMoc Include="ui\MySlider\MySlider.h" />
     <QtMoc Include="module\AudioPlay\AudioPlay.h" />
     <ClInclude Include="module\VideoDecoder\VideoDecoder.h" />
     <ClInclude Include="module\VideoInfo\VideoInfoAcqure.h" />
