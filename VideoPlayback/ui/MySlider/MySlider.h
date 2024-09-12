@@ -35,4 +35,5 @@ private:
     bool m_bPressed = false;
     bool m_bMoved = false;
     int m_iValue = 0;
+    int m_iLastMoveValue = 0;   //上次移动时的值
 };

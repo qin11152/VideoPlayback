@@ -47,9 +47,15 @@ void MySlider::mouseMoveEvent(QMouseEvent *event)
     if(m_bPressed)
     {
         int currentX = event->pos().x();
+        if(abs(m_iLastMoveValue-currentX)<5)
+        {
+            return;
+        }
+        m_iLastMoveValue = currentX;
         double per = currentX *1.0 /this->width();
         int value = per*(this->maximum() - this->minimum()) + this->minimum();
         this->setValue(value);
+        qDebug()<<"set value"<<value;
         emit signalSliderValueChanged(per*100);
     }
 }
