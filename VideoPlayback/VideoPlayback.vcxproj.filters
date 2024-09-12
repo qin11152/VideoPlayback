@@ -30,6 +30,9 @@
     <Filter Include="module\AudioPlay">
       <UniqueIdentifier>{5c0be97d-fb03-4452-b41b-e302a60db5ff}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ui\MySlider">
+      <UniqueIdentifier>{a29cd20c-80b4-42d0-8ee5-d12622651d88}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <QtRcc Include="VideoPlayback.qrc">
@@ -67,6 +70,9 @@
     <ClCompile Include="unitest\AudioPlayTest.cpp">
       <Filter>unitest</Filter>
     </ClCompile>
+    <ClCompile Include="ui\MySlider\MySlider.cpp">
+      <Filter>ui\MySlider</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="ui\VideoPlayback.h">
@@ -77,6 +83,9 @@
     </QtMoc>
     <QtMoc Include="module\AudioPlay\AudioPlay.h">
       <Filter>module\AudioPlay</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\MySlider\MySlider.h">
+      <Filter>ui\MySlider</Filter>
     </QtMoc>
   </ItemGroup>
   <ItemGroup>
