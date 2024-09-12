@@ -165,20 +165,22 @@ void VideoDecoder::readFrameFromFile()
 				m_bFirstReadedVideoPakcet = true;
 
 				auto midva = (double)r2d(formatContext->streams[videoStreamIndex]->time_base);
-				long long videoPos = m_iSeekTime / midva;
+				long long videoPos = m_dSeekTime / midva;
 
 				midva = (double)r2d(formatContext->streams[audioStreamIndex]->time_base);
-				long long audioPos = m_iSeekTime / midva;
+				long long audioPos = m_dSeekTime / midva;
 
 				int ret = av_seek_frame(formatContext, videoStreamIndex, videoPos, AVSEEK_FLAG_BACKWARD);
 				// ret = av_seek_frame(formatContext, audioStreamIndex, audioPos, AVSEEK_FLAG_BACKWARD);
 
-				m_iTotalVideoSeekTime += m_iSeekTime * kmicroSecondsPerSecond - m_uiVideoCurrentTime;
-				qDebug() << "video seek count" << m_iTotalVideoSeekTime;
-				m_uiVideoCurrentTime = m_iSeekTime * kmicroSecondsPerSecond;
-				m_iTotalAudioSeekTime+=m_iSeekTime*kmicroSecondsPerSecond-m_uiAudioCurrentTime;
-				qDebug() << "audio seek count" << m_iTotalVideoSeekTime;
-				m_uiAudioCurrentTime=m_iSeekTime*kmicroSecondsPerSecond;
+				m_iTotalVideoSeekTime += m_dSeekTime * kmicroSecondsPerSecond - m_uiVideoCurrentTime;
+				LOG_INFO("at seek time,play time:{},seek time{},video changed time:{}", (double)m_uiVideoCurrentTime / kmicroSecondsPerSecond, m_dSeekTime.load(), m_iTotalVideoSeekTime);
+				//qDebug() << "video seek count" << m_iTotalVideoSeekTime;
+				m_uiVideoCurrentTime = m_dSeekTime * kmicroSecondsPerSecond;
+				m_iTotalAudioSeekTime+=m_dSeekTime*kmicroSecondsPerSecond-m_uiAudioCurrentTime;
+				//qDebug() << "audio seek count" << m_iTotalVideoSeekTime;
+				LOG_INFO("at seek time,play time:{},seek time{:.4f},audio changed time:{}", (double)m_uiAudioCurrentTime / kmicroSecondsPerSecond, m_dSeekTime.load(), m_iTotalAudioSeekTime);
+				m_uiAudioCurrentTime=m_dSeekTime*kmicroSecondsPerSecond;
 
 				avcodec_flush_buffers(videoCodecContext);
 				// avcodec_flush_buffers(audioCodecContext);
@@ -216,10 +218,11 @@ void VideoDecoder::readFrameFromFile()
 				// 音频包需要解码
 				std::unique_lock<std::mutex> lck(m_PacketMutex); // 对音频队列锁加锁
 				// qDebug() << "ai pts" << av_q2d(formatContext->streams[audioStreamIndex]->time_base) * packet->pts;
-				if(av_q2d(formatContext->streams[audioStreamIndex]->time_base) * packet->pts<m_iSeekTime)
+				if(av_q2d(formatContext->streams[audioStreamIndex]->time_base) * packet->pts<m_dSeekTime)
 				{
-					av_packet_unref(packet);
-					continue;
+					LOG_INFO("audio frame late,pts:{}",av_q2d(formatContext->streams[audioStreamIndex]->time_base) * packet->pts);
+					// av_packet_unref(packet);
+					// continue;
 				}
 				m_queueAudioFrame.push(*packet); // 把音频包加入队列
 				lck.unlock();
@@ -229,11 +232,10 @@ void VideoDecoder::readFrameFromFile()
 			{ // 视频包需要解码
 				std::unique_lock<std::mutex> lck(m_PacketMutex); // 对视频队列锁加锁
 				//qDebug() << "vi pts" << av_q2d(formatContext->streams[videoStreamIndex]->time_base) * packet->pts;
-				// if(av_q2d(formatContext->streams[videoStreamIndex]->time_base) * packet->pts<m_iSeekTime)
-				// {
-				// 	av_packet_unref(packet);
-				// 	continue;
-				// }
+				if(av_q2d(formatContext->streams[videoStreamIndex]->time_base) * packet->pts<m_dSeekTime)
+				{
+					LOG_INFO("video frame late,pts:{}",av_q2d(formatContext->streams[videoStreamIndex]->time_base) * packet->pts);
+				}
 				m_queueVideoFrame.push(*packet);				 // 把视频包加入队列
 
 				lck.unlock();
@@ -339,7 +341,7 @@ void VideoDecoder::decodeVideo()
 		}
 		else
 		{
-			qDebug()<<"decode failed";
+			LOG_ERROR("video avcodec_send_packet error");
 		}
 		av_packet_unref(&packet);
 	}
@@ -477,7 +479,7 @@ void VideoDecoder::seekTo(double_t time)
 	{
 		return;
 	}
-	m_iSeekTime = time;
+	m_dSeekTime = time;
 	m_bSeekState = true;
 	qDebug() << "seek value" << time;
 	std::unique_lock<std::mutex> lck(m_PacketMutex);

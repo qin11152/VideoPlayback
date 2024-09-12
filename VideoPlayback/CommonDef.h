@@ -1,14 +1,15 @@
 #pragma once
 
-#include <cstdint>
-
-#include <QDebug>
-
 extern "C"
 {
 #include <ffmpeg/libavutil/pixfmt.h>
 #include <ffmpeg/libavutil/samplefmt.h>
 }
+#include <QDebug>
+
+#include "module/LogModule/Log.h"
+
+#include <cstdint>
 
 constexpr int kOutputVideoWidth = 1920;
 constexpr int kOutputVideoHeight = 1080;

@@ -93,7 +93,7 @@ private:
 	std::queue<AVPacket> m_queueAudioFrame;
 
 	std::atomic<bool> m_bSeekState{ false };
-	std::atomic<double_t> m_iSeekTime{ 0 };
+	std::atomic<double_t> m_dSeekTime{ 0 };
 
 	bool m_bInitState{ false };
 	bool m_bRunningState{ false };
