@@ -24,16 +24,16 @@ void MySlider::mousePressEvent(QMouseEvent *event)
     double per = currentX *1.0 /this->width();
 
     //利用算得的百分比得到具体数字
-    int value = per*(this->maximum() - this->minimum()) + this->minimum();
+    double value = per*(this->maximum() - this->minimum()) + this->minimum();
+    
+    //value转为int，四舍五入
+    value = qRound(value);
+
     //设定滑动条位置
     qDebug()<<"set value"<<value;
     this->setValue(value);
 
     emit signalSliderValueChanged(per*100);
-
-    //滑动条移动事件等事件也用到了mousePressEvent,加这句话是为了不对其产生影响，是的Slider能正常相应其他鼠标事件
-    QSlider::mousePressEvent(event);
-
 }
 
 void MySlider::mouseReleaseEvent(QMouseEvent *event)
@@ -47,10 +47,6 @@ void MySlider::mouseMoveEvent(QMouseEvent *event)
     if(m_bPressed)
     {
         int currentX = event->pos().x();
-        if(abs(m_iLastMoveValue-currentX)<5)
-        {
-            return;
-        }
         m_iLastMoveValue = currentX;
         double per = currentX *1.0 /this->width();
         int value = per*(this->maximum() - this->minimum()) + this->minimum();
