@@ -71,7 +71,7 @@
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>$(ProjectDir)/../lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>gtest.lib;gmock.lib;avformat.lib;avcodec.lib;avutil.lib;swscale.lib;swresample.lib;yuv.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gtest.lib;gmock.lib;avformat.lib;avcodec.lib;avutil.lib;swscale.lib;swresample.lib;yuv.lib;spdlog.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -81,7 +81,7 @@
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>$(ProjectDir)/../lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>gtestd.lib;gmockd.lib;avformat.lib;avcodec.lib;avutil.lib;swscale.lib;swresample.lib;yuv.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gtestd.lib;gmockd.lib;avformat.lib;avcodec.lib;avutil.lib;swscale.lib;swresample.lib;yuv.lib;spdlogd.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="Configuration">
@@ -114,6 +114,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="module\AudioPlay\AudioPlay.cpp" />
+    <ClCompile Include="module\LogModule\Log.cpp" />
     <ClCompile Include="module\VideoDecoder\VideoDecoder.cpp" />
     <ClCompile Include="module\VideoInfo\VideoInfoAcqure.cpp" />
     <ClCompile Include="ui\MySlider\MySlider.cpp" />
@@ -136,6 +137,7 @@
     <ClInclude Include="CommonDef.h" />
     <QtMoc Include="ui\MySlider\MySlider.h" />
     <QtMoc Include="module\AudioPlay\AudioPlay.h" />
+    <ClInclude Include="module\LogModule\Log.h" />
     <ClInclude Include="module\VideoDecoder\VideoDecoder.h" />
     <ClInclude Include="module\VideoInfo\VideoInfoAcqure.h" />
     <QtMoc Include="ui\OpenGLPreviewWidget\OpenGLPreviewWidget.h" />

@@ -9,6 +9,9 @@ struct LogConfig {
     std::string path;
     int64_t     size;
     int         count;
+
+	LogConfig(std::string strLevel, std::string strPath, int64_t iSize, int iCount)
+		: level(strLevel), path(strPath), size(iSize), count(iCount) {}
 };
 
 // 日志的单例模式
