@@ -178,8 +178,10 @@ void VideoDecoder::readFrameFromFile()
 
 				m_iTotalVideoSeekTime += m_iSeekTime * kmicroSecondsPerSecond - m_uiVideoCurrentTime;
 				qDebug() << "video seek count" << m_iTotalVideoSeekTime;
+				m_uiVideoCurrentTime = m_iSeekTime * kmicroSecondsPerSecond;
 				m_iTotalAudioSeekTime+=m_iSeekTime*kmicroSecondsPerSecond-m_uiAudioCurrentTime;
 				qDebug() << "audio seek count" << m_iTotalVideoSeekTime;
+				m_uiAudioCurrentTime=m_iSeekTime*kmicroSecondsPerSecond;
 
 				avcodec_flush_buffers(videoCodecContext);
 				// avcodec_flush_buffers(audioCodecContext);

@@ -83,7 +83,7 @@ QString VideoPlayback::onSignalChooseFileClicked()
 
 void VideoPlayback::onSignalSliderValueChanged(double vlaue)
 {
-	qDebug()<<"vlaue"<<vlaue;
+	qDebug() << "vlaue" << vlaue;
 	// 触发时间小于200ms的不处理
 	disconnect(ui.videoTImeSlider, &MySlider::signalSliderValueChanged, this, &VideoPlayback::onSignalSliderValueChanged);
 	m_bSliderEnableConnect = false;
@@ -163,6 +163,10 @@ void VideoPlayback::updateTimeLabel(const int currentTime, const int totalTime)
 
 void VideoPlayback::updateTimeSliderPosition(int64_t currentTime)
 {
+	if (ui.videoTImeSlider->getPressed())
+	{
+		return;
+	}
 	// QSlider修改值
 	ui.videoTImeSlider->setValue(currentTime);
 }
