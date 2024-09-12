@@ -16,17 +16,14 @@ std::function<void(AVFrame *)> avframedel = [](AVFrame *_frame)
 	av_frame_free(&_frame); /*fprintf(stdout, "AVFrame clear\n");*/
 };
 
-std::ofstream file;
 VideoDecoder::VideoDecoder()
 	: formatContext(nullptr), videoCodecContext(nullptr), audioCodecContext(nullptr),
 	  videoStreamIndex(-1), audioStreamIndex(-1), swsContext(nullptr), swrContext(nullptr)
 {
-	file.open("audio.pcm", std::ios::binary);
 }
 
 VideoDecoder::~VideoDecoder()
 {
-	file.close();
 	unInitModule();
 }
 
