@@ -39,6 +39,8 @@ message(STATUS "src_file: ${src_file}")
 
 if(UNIX)
     list(APPEND src_file ${CMAKE_CURRENT_SOURCE_DIR}/include/blackmagic_linux/DeckLinkAPIDispatch.cpp)
+elseif(WIN32)
+    list(APPEND src_file ${CMAKE_CURRENT_SOURCE_DIR}/include/blackmagic_win/DeckLinkAPI_i.c)
 endif()
 
 add_executable(VideoPlayback ${src_file})
