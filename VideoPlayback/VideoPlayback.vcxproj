@@ -66,7 +66,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir)/ui;$(ProjectDir)/../include;$(ProjectDir)/../include/ffmpeg;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)/ui;$(ProjectDir)/../include;$(ProjectDir)/../include/ffmpeg;$(ProjectDir)/../include/blackmagic_win;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>false</TreatWarningAsError>
     </ClCompile>
     <Link>
@@ -76,7 +76,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir)/ui;$(ProjectDir)/../include;$(ProjectDir)/../include/ffmpeg;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)/ui;$(ProjectDir)/../include;$(ProjectDir)/../include/ffmpeg;$(ProjectDir)/../include/blackmagic_win;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>false</TreatWarningAsError>
     </ClCompile>
     <Link>
@@ -113,10 +113,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\include\blackmagic_win\DeckLinkAPI_i.c" />
     <ClCompile Include="module\AudioPlay\AudioPlay.cpp" />
+    <ClCompile Include="module\BlackMagic\DeckLinkDeviceDiscovery\DeckLinkDeviceDiscovery.cpp" />
     <ClCompile Include="module\LogModule\Log.cpp" />
     <ClCompile Include="module\VideoDecoder\VideoDecoder.cpp" />
     <ClCompile Include="module\VideoInfo\VideoInfoAcqure.cpp" />
+    <ClCompile Include="stdafx.cpp" />
     <ClCompile Include="ui\MySlider\MySlider.cpp" />
     <ClCompile Include="ui\OpenGLPreviewWidget\OpenGLPreviewWidget.cpp" />
     <ClCompile Include="ui\VideoPlayback.cpp" />
@@ -135,8 +138,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CommonDef.h" />
+    <ClInclude Include="stdafx.h" />
     <QtMoc Include="ui\MySlider\MySlider.h" />
     <QtMoc Include="module\AudioPlay\AudioPlay.h" />
+    <ClInclude Include="module\BlackMagic\DeckLinkDeviceDiscovery\DeckLinkDeviceDiscovery.h" />
     <ClInclude Include="module\LogModule\Log.h" />
     <ClInclude Include="module\VideoDecoder\VideoDecoder.h" />
     <ClInclude Include="module\VideoInfo\VideoInfoAcqure.h" />

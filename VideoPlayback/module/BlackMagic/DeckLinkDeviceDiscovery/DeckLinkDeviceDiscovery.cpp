@@ -97,10 +97,10 @@ void DeckLinkDeviceDiscovery::Disable()
 	if (m_deckLinkDiscovery != nullptr)
 #elif defined(__linux__)
 	if (m_deckLinkDiscovery)
+#endif
 	{
 		m_deckLinkDiscovery->UninstallDeviceNotifications();
 	}
-	#endif
 }
 
 HRESULT DeckLinkDeviceDiscovery::DeckLinkDeviceArrived(IDeckLink* deckLink)

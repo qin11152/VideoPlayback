@@ -33,6 +33,15 @@
     <Filter Include="ui\MySlider">
       <UniqueIdentifier>{a29cd20c-80b4-42d0-8ee5-d12622651d88}</UniqueIdentifier>
     </Filter>
+    <Filter Include="module\LogModule">
+      <UniqueIdentifier>{ee5c8059-577a-4d72-a49e-9ec17ab91f24}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="module\BlackMagic">
+      <UniqueIdentifier>{474a7a85-020b-4d85-a4c6-25eb88b0ab55}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="module\BlackMagic\DeckLinkDeviceDiscovery">
+      <UniqueIdentifier>{bced9f6c-bafa-42bc-8058-4827c5309a8b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <QtRcc Include="VideoPlayback.qrc">
@@ -73,6 +82,18 @@
     <ClCompile Include="ui\MySlider\MySlider.cpp">
       <Filter>ui\MySlider</Filter>
     </ClCompile>
+    <ClCompile Include="module\LogModule\Log.cpp">
+      <Filter>module\LogModule</Filter>
+    </ClCompile>
+    <ClCompile Include="module\BlackMagic\DeckLinkDeviceDiscovery\DeckLinkDeviceDiscovery.cpp">
+      <Filter>module\BlackMagic\DeckLinkDeviceDiscovery</Filter>
+    </ClCompile>
+    <ClCompile Include="..\include\blackmagic_win\DeckLinkAPI_i.c">
+      <Filter>module\BlackMagic</Filter>
+    </ClCompile>
+    <ClCompile Include="stdafx.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="ui\VideoPlayback.h">
@@ -102,6 +123,15 @@
     </ClInclude>
     <ClInclude Include="module\VideoDecoder\VideoDecoder.h">
       <Filter>module\VideoDecoder</Filter>
+    </ClInclude>
+    <ClInclude Include="module\LogModule\Log.h">
+      <Filter>module\LogModule</Filter>
+    </ClInclude>
+    <ClInclude Include="module\BlackMagic\DeckLinkDeviceDiscovery\DeckLinkDeviceDiscovery.h">
+      <Filter>module\BlackMagic\DeckLinkDeviceDiscovery</Filter>
+    </ClInclude>
+    <ClInclude Include="stdafx.h">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
