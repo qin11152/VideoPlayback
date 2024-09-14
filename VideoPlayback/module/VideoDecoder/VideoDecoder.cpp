@@ -175,10 +175,8 @@ void VideoDecoder::readFrameFromFile()
 
 				m_iTotalVideoSeekTime += m_dSeekTime * kmicroSecondsPerSecond - m_uiVideoCurrentTime;
 				LOG_INFO("at seek time,play time:{},seek time{},video changed time:{}", (double)m_uiVideoCurrentTime / kmicroSecondsPerSecond, m_dSeekTime.load(), m_iTotalVideoSeekTime);
-				//qDebug() << "video seek count" << m_iTotalVideoSeekTime;
 				m_uiVideoCurrentTime = m_dSeekTime * kmicroSecondsPerSecond;
 				m_iTotalAudioSeekTime+=m_dSeekTime*kmicroSecondsPerSecond-m_uiAudioCurrentTime;
-				//qDebug() << "audio seek count" << m_iTotalVideoSeekTime;
 				LOG_INFO("at seek time,play time:{},seek time{:.4f},audio changed time:{}", (double)m_uiAudioCurrentTime / kmicroSecondsPerSecond, m_dSeekTime.load(), m_iTotalAudioSeekTime);
 				m_uiAudioCurrentTime=m_dSeekTime*kmicroSecondsPerSecond;
 
@@ -221,8 +219,6 @@ void VideoDecoder::readFrameFromFile()
 				if(av_q2d(formatContext->streams[audioStreamIndex]->time_base) * packet->pts<m_dSeekTime)
 				{
 					LOG_INFO("audio frame late,pts:{}",av_q2d(formatContext->streams[audioStreamIndex]->time_base) * packet->pts);
-					// av_packet_unref(packet);
-					// continue;
 				}
 				m_queueAudioFrame.push(*packet); // 把音频包加入队列
 				lck.unlock();
