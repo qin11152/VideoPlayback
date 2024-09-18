@@ -51,6 +51,8 @@ bool VideoPlayback::initModule()
 {
 	m_ptrVideoDecoder = new VideoDecoder();
 	m_ptrAudioPlay = new AudioPlay(nullptr);
+	m_ptrDeckLinkDeviceDiscovery = new DeckLinkDeviceDiscovery(this);
+	m_ptrDeckLinkDeviceDiscovery->Enable();
 	return initConnect() && initAudioOutput();
 }
 
@@ -93,6 +95,46 @@ void VideoPlayback::onSignalSliderValueChanged(double vlaue)
 					   {
 		m_bSliderEnableConnect = true;
 		connect(ui.videoTImeSlider, &MySlider::signalSliderValueChanged, this, &VideoPlayback::onSignalSliderValueChanged); });
+}
+
+void VideoPlayback::customEvent(QEvent *event)
+{
+	switch (event->type())
+	{
+	case kAddDeviceEvent:
+	{
+		DeckLinkDeviceDiscoveryEvent *addEvent = dynamic_cast<DeckLinkDeviceDiscoveryEvent *>(event);
+		if (addEvent)
+		{
+			auto decklink = addEvent->deckLink();
+			com_ptr<IDeckLinkProfileAttributes> decklinkAttributes(IID_IDeckLinkProfileAttributes, decklink);
+
+			int64_t videoIOSupport;
+			if (!decklinkAttributes)
+			{
+				qDebug() << "decklinkAttributes is null";
+				return;
+			}
+			if (decklinkAttributes->GetInt(BMDDeckLinkVideoIOSupport, &videoIOSupport) != S_OK || (videoIOSupport & bmdDeviceSupportsPlayback) == 0)
+			{
+				qDebug() << "decklinkAttributes->GetInt(BMDDeckLinkVideoIOSupport, &videoIOSupport) != S_OK";
+				return;
+			}
+
+			bool bActive=isDeviceActive(decklink);
+			MyDeckLinkDevice device;
+			device.deckLink = decklink;
+			char* pName = nullptr;
+			decklink->GetDisplayName((const char**)(&pName));
+			device.m_strDisplayName = QString::fromLocal8Bit(pName);
+			device.m_bActive = bActive;
+			m_mapDeviceNameIndex[device.m_strDisplayName] = device;
+
+			ui.deckLinkComboBox->addItem(device.m_strDisplayName);
+		}
+	}
+	break;
+	}
 }
 
 bool VideoPlayback::initConnect()

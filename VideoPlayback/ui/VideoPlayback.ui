@@ -78,6 +78,9 @@
          </property>
         </widget>
        </item>
+       <item>
+        <widget class="QComboBox" name="deckLinkComboBox"/>
+       </item>
       </layout>
      </item>
     </layout>

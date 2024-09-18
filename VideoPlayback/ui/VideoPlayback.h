@@ -4,6 +4,9 @@
 #include "ui_VideoPlayback.h"
 #include "module/AudioPlay/AudioPlay.h"
 #include "module/VideoDecoder/VideoDecoder.h"
+#include "module/BlackMagic/DeckLinkDeviceDiscovery/DeckLinkDeviceDiscovery.h"
+
+#include <map>
 
 class VideoPlayback : public QWidget
 {
@@ -27,6 +30,9 @@ public slots:
 
     void onSignalSliderValueChanged(double vlaue);
 
+protected:
+    void customEvent(QEvent* event) override;
+
 private:
     bool initConnect();
     bool initAudioOutput();
@@ -43,6 +49,8 @@ private:
     AudioPlay* m_ptrAudioPlay{ nullptr };
     QString m_strChooseFileName{ "" };
     MediaInfo m_stuMediaInfo;
+    DeckLinkDeviceDiscovery* m_ptrDeckLinkDeviceDiscovery{nullptr};
 
 	bool m_bSliderEnableConnect{ true };       //是否允许连接信号槽
+    std::map<QString, MyDeckLinkDevice> m_mapDeviceNameIndex;
 };

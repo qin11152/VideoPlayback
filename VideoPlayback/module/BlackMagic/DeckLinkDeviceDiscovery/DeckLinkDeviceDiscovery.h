@@ -40,83 +40,109 @@
 
 #pragma once
 
+#include <QString>
 #include <atomic>
 #include <functional>
 
 #if defined(WIN32)
-    #include <stdint.h>
-    #include "DeckLinkAPI_h.h"
+#include <stdint.h>
+#include "DeckLinkAPI_h.h"
 #elif defined(__linux__)
-    #include <QEvent>
-    #include "com_ptr.h"
-    #include "DeckLinkAPI.h"
+#include <QEvent>
+#include "com_ptr.h"
+#include "DeckLinkAPI.h"
 
-	#define __stdcall
+#define __stdcall
 
-	static const QEvent::Type kAddDeviceEvent			= static_cast<QEvent::Type>(QEvent::User + 1);
-	static const QEvent::Type kRemoveDeviceEvent		= static_cast<QEvent::Type>(QEvent::User + 2);
-	static const QEvent::Type kVideoFormatChangedEvent	= static_cast<QEvent::Type>(QEvent::User + 3);
-	static const QEvent::Type kVideoFrameArrivedEvent	= static_cast<QEvent::Type>(QEvent::User + 4);
-	static const QEvent::Type kProfileActivatedEvent	= static_cast<QEvent::Type>(QEvent::User + 5);
+static const QEvent::Type kAddDeviceEvent = static_cast<QEvent::Type>(QEvent::User + 1);
+static const QEvent::Type kRemoveDeviceEvent = static_cast<QEvent::Type>(QEvent::User + 2);
+static const QEvent::Type kVideoFormatChangedEvent = static_cast<QEvent::Type>(QEvent::User + 3);
+static const QEvent::Type kVideoFrameArrivedEvent = static_cast<QEvent::Type>(QEvent::User + 4);
+static const QEvent::Type kProfileActivatedEvent = static_cast<QEvent::Type>(QEvent::User + 5);
 
 #endif
+
+struct MyDeckLinkDevice
+{
+	com_ptr<IDeckLink> deckLink{nullptr};
+	QString m_strDisplayName{""};
+	bool m_bActive{false};
+};
+
+inline bool isDeviceActive(com_ptr<IDeckLink> &deckLink)
+{
+	com_ptr<IDeckLinkProfileAttributes> deckLinkAttributes(IID_IDeckLinkProfileAttributes, deckLink);
+	int64_t i64Attribute;
+
+	if (!deckLinkAttributes)
+	{
+		return false;
+	}
+
+	if (deckLinkAttributes->GetInt(BMDDeckLinkDuplex, &i64Attribute) != S_OK)
+	{
+		return false;
+	}
+
+	return ((BMDDuplexMode)i64Attribute) != bmdDuplexInactive;
+}
 
 class DeckLinkDeviceDiscovery : public IDeckLinkDeviceNotificationCallback
 {
 #if defined(WIN32)
-	using Callback = std::function<void(CComPtr<IDeckLink>&)>;
+	using Callback = std::function<void(CComPtr<IDeckLink> &)>;
 #elif defined(__linux__)
-	using Callback = std::function<void(com_ptr<IDeckLink>&)>;
+	using Callback = std::function<void(com_ptr<IDeckLink> &)>;
 #endif
 
 public:
 #if defined(WIN32)
 	DeckLinkDeviceDiscovery();
-	void						OnDeviceArrival(const Callback& callback) { m_deckLinkArrivedCallback = callback; }
-	void						OnDeviceRemoval(const Callback& callback) { m_deckLinkRemovedCallback = callback; };
+	void OnDeviceArrival(const Callback &callback) { m_deckLinkArrivedCallback = callback; }
+	void OnDeviceRemoval(const Callback &callback) { m_deckLinkRemovedCallback = callback; };
 #elif defined(__linux__)
-	DeckLinkDeviceDiscovery(QObject* owner);
+	DeckLinkDeviceDiscovery(QObject *owner);
 #endif
 
 	virtual ~DeckLinkDeviceDiscovery();
 
-	bool				        Enable();
-	void				        Disable();
+	bool Enable();
+	void Disable();
 
 	// IDeckLinkDeviceArrivalNotificationCallback interface
-	virtual HRESULT	__stdcall	DeckLinkDeviceArrived(IDeckLink* deckLinkDevice) override;
-	virtual HRESULT	__stdcall	DeckLinkDeviceRemoved(IDeckLink* deckLinkDevice) override;
+	virtual HRESULT __stdcall DeckLinkDeviceArrived(IDeckLink *deckLinkDevice) override;
+	virtual HRESULT __stdcall DeckLinkDeviceRemoved(IDeckLink *deckLinkDevice) override;
 
 	// IUnknown interface
-	virtual HRESULT	__stdcall	QueryInterface(REFIID iid, LPVOID* ppv) override;
-	virtual ULONG	__stdcall	AddRef() override;
-	virtual ULONG	__stdcall	Release() override;
+	virtual HRESULT __stdcall QueryInterface(REFIID iid, LPVOID *ppv) override;
+	virtual ULONG __stdcall AddRef() override;
+	virtual ULONG __stdcall Release() override;
 
 private:
 #if defined(WIN32)
-	CComPtr<IDeckLinkDiscovery>		m_deckLinkDiscovery;
-	Callback						m_deckLinkArrivedCallback;
-	Callback						m_deckLinkRemovedCallback;
+	CComPtr<IDeckLinkDiscovery> m_deckLinkDiscovery;
+	Callback m_deckLinkArrivedCallback;
+	Callback m_deckLinkRemovedCallback;
 
-	std::atomic<ULONG>				m_refCount;
+	std::atomic<ULONG> m_refCount;
 #elif defined(__linux__)
-	com_ptr<IDeckLinkDiscovery>		m_deckLinkDiscovery;
-	QObject*						m_owner;
-	std::atomic<ULONG>				m_refCount;
+	com_ptr<IDeckLinkDiscovery> m_deckLinkDiscovery;
+	QObject *m_owner;
+	std::atomic<ULONG> m_refCount;
 #endif
 };
 
 #if defined(__linux__)
-	class DeckLinkDeviceDiscoveryEvent : public QEvent
-	{
-	public:
-		DeckLinkDeviceDiscoveryEvent(QEvent::Type type, IDeckLink* deckLinkDevice)
-			: QEvent(type), m_deckLink(deckLinkDevice) { }
-		virtual ~DeckLinkDeviceDiscoveryEvent() = default;
+class DeckLinkDeviceDiscoveryEvent : public QEvent
+{
+public:
+	DeckLinkDeviceDiscoveryEvent(QEvent::Type type, IDeckLink *deckLinkDevice)
+		: QEvent(type), m_deckLink(deckLinkDevice) {}
+	virtual ~DeckLinkDeviceDiscoveryEvent() = default;
 
-		com_ptr<IDeckLink> deckLink() const { return m_deckLink; }
+	com_ptr<IDeckLink> deckLink() const { return m_deckLink; }
 
-	private:
-		com_ptr<IDeckLink> m_deckLink;
-	};
+private:
+	com_ptr<IDeckLink> m_deckLink;
+};
 #endif
