@@ -28,7 +28,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/bin)
 if(WIN32)
     set(CMAKE_PREFIX_PATH "D:/developtool/qt/5.15.2/msvc2019_64")
 elseif(UNIX)
-    set(CMAKE_PREFIX_PATH "/home/qin/Qt5.14.0/5.14.0/gcc_64")
+    set(CMAKE_PREFIX_PATH "/home/qin/developTool/Qt5.14.0/5.14.0/gcc_64")
 endif()
 
 find_package(Qt5 COMPONENTS Core Gui OpenGL Widgets Multimedia REQUIRED)
