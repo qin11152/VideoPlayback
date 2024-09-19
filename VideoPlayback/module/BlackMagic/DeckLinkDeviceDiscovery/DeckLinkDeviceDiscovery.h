@@ -66,7 +66,11 @@ static const QEvent::Type kProfileActivatedEvent = static_cast<QEvent::Type>(QEv
 
 struct MyDeckLinkDevice
 {
+#if defined(WIN32)
+	CComPtr<IDeckLink> deckLink{ nullptr };
+#elif defined(__linux__)
 	com_ptr<IDeckLink> deckLink{nullptr};
+#endif
 	QString m_strDisplayName{""};
 	bool m_bActive{false};
 };

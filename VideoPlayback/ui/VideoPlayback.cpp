@@ -299,7 +299,7 @@ void VideoPlayback::initSDIOutput()
 		return;
 	}
 	// ³õÊ¼»¯SDIÊä³ö
-	m_ptrSelectedDeckLinkOutput->EnableVideoOutput(kSDIOutputFormat, bmdVideoOutputFlagDefault);
+	m_ptrSelectedDeckLinkOutput->EnableVideoOutput((BMDDisplayMode)kSDIOutputFormat, bmdVideoOutputFlagDefault);
 	m_ptrSelectedDeckLinkOutput->EnableAudioOutput(bmdAudioSampleRate48kHz, bmdAudioSampleType16bitInteger, kOutputAudioChannels, bmdAudioOutputStreamContinuous);
 	if (nullptr == kDecklinkOutputFrame)
 	{

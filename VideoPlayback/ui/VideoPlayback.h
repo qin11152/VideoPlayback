@@ -57,7 +57,11 @@ private:
     MediaInfo m_stuMediaInfo;
 
     DeckLinkDeviceDiscovery* m_ptrDeckLinkDeviceDiscovery{nullptr};
+#if defined(WIN32)
+	CComQIPtr<IDeckLinkOutput> m_ptrSelectedDeckLinkOutput{ nullptr };
+#elif defined(__linux__)
     IDeckLinkOutput* m_ptrSelectedDeckLinkOutput{ nullptr };
+#endif
 
 	bool m_bSliderEnableConnect{ true };       //是否允许连接信号槽
     std::map<QString, MyDeckLinkDevice> m_mapDeviceNameIndex;
