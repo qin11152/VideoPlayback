@@ -107,7 +107,10 @@ HRESULT DeckLinkDeviceDiscovery::DeckLinkDeviceArrived(IDeckLink* deckLink)
 {
 #if defined(WIN32)
 	CComPtr<IDeckLink> deckLinkDevice = deckLink;
-	m_deckLinkArrivedCallback(deckLinkDevice);
+	if (m_deckLinkArrivedCallback)
+	{
+		m_deckLinkArrivedCallback(deckLinkDevice);
+	}
 #elif defined(__linux__)
 	QCoreApplication::postEvent(m_owner, new DeckLinkDeviceDiscoveryEvent(kAddDeviceEvent, deckLink ) );
 #endif

@@ -1,5 +1,11 @@
 #pragma once
 
+#if defined(WIN32)
+#include "stdafx.h"
+#include "com_ptr.h"
+#include "DeckLinkAPI_h.h"
+#endif
+
 extern "C"
 {
 #include <ffmpeg/libavutil/pixfmt.h>

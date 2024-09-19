@@ -44,6 +44,8 @@
 #include <atomic>
 #include <functional>
 
+#include "CommonDef.h"
+
 #if defined(WIN32)
 #include <stdint.h>
 #include "DeckLinkAPI_h.h"

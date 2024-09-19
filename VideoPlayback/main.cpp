@@ -2,6 +2,7 @@
 #include <QtWidgets/QApplication>
 
 #include <gmock/gmock.h>
+#include "CommonDef.h"
 
 #define UNITTEST 0
 

@@ -309,15 +309,19 @@ void VideoDecoder::decodeVideo()
 				//计算avframe中的数据量
 				switch (m_stuVideoInfo.videoFormat)
 				{
-					case AV_PIX_FMT_YUV420P:
-					videoInfo.yuvData=new uint8_t[m_stuVideoInfo.width*m_stuVideoInfo.height*3/2];
-					videoInfo.dataSize=m_stuVideoInfo.width*m_stuVideoInfo.height*3/2;
-					memcpy(videoInfo.yuvData,yuvFrame->data[0],videoInfo.dataSize);
+				case AV_PIX_FMT_YUV420P:
+				{
+					videoInfo.yuvData = new uint8_t[m_stuVideoInfo.width * m_stuVideoInfo.height * 3 / 2];
+					videoInfo.dataSize = m_stuVideoInfo.width * m_stuVideoInfo.height * 3 / 2;
+					memcpy(videoInfo.yuvData, yuvFrame->data[0], videoInfo.dataSize);
+				}
 					break;
-					case AV_PIX_FMT_YUV422P:
-					videoInfo.yuvData=new uint8_t[m_stuVideoInfo.width*m_stuVideoInfo.height*2];
-					videoInfo.dataSize=m_stuVideoInfo.width*m_stuVideoInfo.height*2;
-					memcpy(videoInfo.yuvData,yuvFrame->data[0],videoInfo.dataSize);
+				case AV_PIX_FMT_YUV422P:
+				{
+					videoInfo.yuvData = new uint8_t[m_stuVideoInfo.width * m_stuVideoInfo.height * 2];
+					videoInfo.dataSize = m_stuVideoInfo.width * m_stuVideoInfo.height * 2;
+					memcpy(videoInfo.yuvData, yuvFrame->data[0], videoInfo.dataSize);
+				}
 					break;
 					default:
 					break;
@@ -352,7 +356,7 @@ void VideoDecoder::decodeVideo()
 
 				if (previewCallback && !m_bSeekState)
 				{
-					previewCallback(videoInfo, pts);
+					//previewCallback(videoInfo, pts);
 				}
 				if(videoOutputCallback && !m_bSeekState)
 				{

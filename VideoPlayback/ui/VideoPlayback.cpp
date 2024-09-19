@@ -51,7 +51,11 @@ bool VideoPlayback::initModule()
 {
 	m_ptrVideoDecoder = new VideoDecoder();
 	m_ptrAudioPlay = new AudioPlay(nullptr);
+#if defined(WIN32)
+	m_ptrDeckLinkDeviceDiscovery = new DeckLinkDeviceDiscovery();
+#elif defined(__linux__)
 	m_ptrDeckLinkDeviceDiscovery = new DeckLinkDeviceDiscovery(this);
+#endif
 	m_ptrDeckLinkDeviceDiscovery->Enable();
 	return initConnect() && initAudioOutput();
 }
@@ -65,7 +69,6 @@ void VideoPlayback::previewCallback(const VideoCallbackInfo& videoInfo, int64_t 
 	}
 	QByteArray data((char *)videoInfo.yuvData, videoInfo.dataSize);
 	emit signalYUVData(data, videoInfo);
-	// emit signalYUVData(yuvData, videoInfo);
 	updateTimeLabel(currentTime, m_stuMediaInfo.duration);
 	updateTimeSliderPosition(currentTime);
 }
@@ -106,6 +109,7 @@ void VideoPlayback::customEvent(QEvent *event)
 {
 	switch (event->type())
 	{
+#if defined(__linux__)
 	case kAddDeviceEvent:
 	{
 		DeckLinkDeviceDiscoveryEvent *addEvent = dynamic_cast<DeckLinkDeviceDiscoveryEvent *>(event);
@@ -139,6 +143,7 @@ void VideoPlayback::customEvent(QEvent *event)
 		}
 	}
 	break;
+#endif
 	}
 }
 
