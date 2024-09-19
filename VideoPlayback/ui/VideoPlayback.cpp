@@ -88,27 +88,34 @@ void VideoPlayback::SDIOutputCallback(const VideoCallbackInfo &videoInfo)
 	uint8_t *destData = nullptr;
 	kDecklinkOutputFrame->GetBytes((void **)&destData);
 	std::copy(videoInfo.yuvData, videoInfo.yuvData + videoInfo.dataSize, destData);
+	std::unique_lock<std::mutex> lck(m_mutex);
 	int ret = m_ptrSelectedDeckLinkOutput->DisplayVideoFrameSync(kDecklinkOutputFrame);
+	lck.unlock();
 	if (ret != S_OK)
 	{
 		LOG_ERROR("DisplayVideoFrameSync error");
 	}
 }
 
-void VideoPlayback::AudioPlayCallBack(uint8_t **audioData, uint32_t channelSampleNumber)
+void VideoPlayback::AudioPlayCallBack(uint8_t *audioData, uint32_t channelSampleNumber)
 {
-	QByteArray data((char *)audioData[0], kOutputAudioChannels * channelSampleNumber * av_get_bytes_per_sample((AVSampleFormat)kOutputAudioFormat));
+	QByteArray data((char *)audioData, kOutputAudioChannels * channelSampleNumber * av_get_bytes_per_sample((AVSampleFormat)kOutputAudioFormat));
 	m_ptrAudioPlay->inputPcmData(data);
 	if (nullptr != m_ptrSelectedDeckLinkOutput)
 	{
 		uint8_t *destData = nullptr;
-		destData = new uint8_t[kOutputAudioChannels * channelSampleNumber * av_get_bytes_per_sample((AVSampleFormat)kOutputAudioFormat)];
-		memcpy(destData, audioData[0], kOutputAudioChannels * channelSampleNumber * av_get_bytes_per_sample((AVSampleFormat)kOutputAudioFormat));
-		int ret = m_ptrSelectedDeckLinkOutput->WriteAudioSamplesSync(destData, 20, nullptr);
-		delete[] destData;
+		uint32_t iWritten=0;
+		std::unique_lock<std::mutex> lck(m_mutex);
+		int ret = m_ptrSelectedDeckLinkOutput->WriteAudioSamplesSync(audioData, kOutputAudioChannels * channelSampleNumber * 
+		av_get_bytes_per_sample((AVSampleFormat)kOutputAudioFormat), &iWritten);
+		lck.unlock();
 		if (ret != S_OK)
 		{
-			LOG_ERROR("WriteAudioSamplesSync error");
+			LOG_ERROR("WriteAudioSamplesSync error,ret={}",ret);
+		}
+		if(iWritten!=kOutputAudioChannels * channelSampleNumber * av_get_bytes_per_sample((AVSampleFormat)kOutputAudioFormat))
+		{
+			LOG_ERROR("WriteAudioSamplesSync error,iWritten={},dest={}",iWritten,kOutputAudioChannels * channelSampleNumber * av_get_bytes_per_sample((AVSampleFormat)kOutputAudioFormat));
 		}
 	}
 }
@@ -247,6 +254,7 @@ bool VideoPlayback::initDecoder()
 	audioInfo.audioChannels = kOutputAudioChannels;
 	audioInfo.audioSampleRate = kOutputAudioSampleRate;
 	audioInfo.audioFormat = (AVSampleFormat)kOutputAudioFormat;
+	audioInfo.samplePerChannel = kOutputAudioSamplePerChannel;
 	m_ptrVideoDecoder->initModule(m_strChooseFileName.toStdString().c_str(), videoInfo, audioInfo);
 	m_ptrVideoDecoder->initVideoCallBack(std::bind(&VideoPlayback::previewCallback, this, std::placeholders::_1, std::placeholders::_2), std::bind(&VideoPlayback::SDIOutputCallback, this, std::placeholders::_1));
 	m_ptrVideoDecoder->initAudioCallback(std::bind(&VideoPlayback::AudioPlayCallBack, this, std::placeholders::_1, std::placeholders::_2));
@@ -298,6 +306,7 @@ void VideoPlayback::initSDIOutput()
 	{
 		return;
 	}
+	std::unique_lock<std::mutex> lck(m_mutex);
 	// ³õÊ¼»¯SDIÊä³ö
 	m_ptrSelectedDeckLinkOutput->EnableVideoOutput((BMDDisplayMode)kSDIOutputFormat, bmdVideoOutputFlagDefault);
 	m_ptrSelectedDeckLinkOutput->EnableAudioOutput(bmdAudioSampleRate48kHz, bmdAudioSampleType16bitInteger, kOutputAudioChannels, bmdAudioOutputStreamContinuous);
@@ -305,4 +314,5 @@ void VideoPlayback::initSDIOutput()
 	{
 		m_ptrSelectedDeckLinkOutput->CreateVideoFrame(kOutputVideoWidth, kOutputVideoHeight, kOutputVideoWidth * 2, bmdFormat8BitYUV, bmdFrameFlagDefault, &kDecklinkOutputFrame);
 	}
+	lck.unlock();
 }

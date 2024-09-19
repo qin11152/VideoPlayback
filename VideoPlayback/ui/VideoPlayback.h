@@ -7,6 +7,7 @@
 #include "module/BlackMagic/DeckLinkDeviceDiscovery/DeckLinkDeviceDiscovery.h"
 
 #include <map>
+#include <mutex>
 
 class VideoPlayback : public QWidget
 {
@@ -22,7 +23,7 @@ public:
 
     void SDIOutputCallback(const VideoCallbackInfo& videoInfo);
 
-    void AudioPlayCallBack(uint8_t** audioData, uint32_t channelSampleNumber);
+    void AudioPlayCallBack(uint8_t* audioData, uint32_t channelSampleNumber);
 
 signals:
     void signalYUVData(QByteArray data, const VideoInfo& videoInfo);
@@ -62,6 +63,7 @@ private:
 #elif defined(__linux__)
     IDeckLinkOutput* m_ptrSelectedDeckLinkOutput{ nullptr };
 #endif
+    std::mutex m_mutex;
 
 	bool m_bSliderEnableConnect{ true };       //是否允许连接信号槽
     std::map<QString, MyDeckLinkDevice> m_mapDeviceNameIndex;

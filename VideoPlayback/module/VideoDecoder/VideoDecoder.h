@@ -24,7 +24,7 @@ extern std::function<void(AVFrame *)> avframedel;
 using avframe_ptr = std::unique_ptr<AVFrame, decltype(avframedel)>;
 
 using PreviewCallback = std::function<void(const VideoCallbackInfo& videoInfo, int64_t currentTime)>;
-using AudioPlayCallback = std::function<void(uint8_t **, uint32_t channelSampleNumber)>;
+using AudioPlayCallback = std::function<void(uint8_t *, uint32_t channelSampleNumber)>;
 using VideoOutputCallback = std::function<void(const VideoCallbackInfo& videoInfo)>;
 
 class VideoDecoder

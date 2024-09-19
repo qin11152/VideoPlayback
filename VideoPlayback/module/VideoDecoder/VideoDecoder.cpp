@@ -88,6 +88,7 @@ int32_t VideoDecoder::initModule(const char *fileName, const VideoInfo &outVideo
 			AVChannelLayout out_channel_layout;
 			av_channel_layout_default(&out_channel_layout, m_stuAudioInfo.audioChannels); // Stereo output
 
+			// int out_sample_rate = m_stuAudioInfo.audioSampleRate;
 			int out_sample_rate = audioCodecContext->sample_rate;
 			AVSampleFormat out_sample_fmt = m_stuAudioInfo.audioFormat;
 
@@ -176,9 +177,9 @@ void VideoDecoder::readFrameFromFile()
 				m_iTotalVideoSeekTime += m_dSeekTime * kmicroSecondsPerSecond - m_uiVideoCurrentTime;
 				LOG_INFO("at seek time,play time:{},seek time{},video changed time:{}", (double)m_uiVideoCurrentTime / kmicroSecondsPerSecond, m_dSeekTime.load(), m_iTotalVideoSeekTime);
 				m_uiVideoCurrentTime = m_dSeekTime * kmicroSecondsPerSecond;
-				m_iTotalAudioSeekTime+=m_dSeekTime*kmicroSecondsPerSecond-m_uiAudioCurrentTime;
+				m_iTotalAudioSeekTime += m_dSeekTime * kmicroSecondsPerSecond - m_uiAudioCurrentTime;
 				LOG_INFO("at seek time,play time:{},seek time{:.4f},audio changed time:{}", (double)m_uiAudioCurrentTime / kmicroSecondsPerSecond, m_dSeekTime.load(), m_iTotalAudioSeekTime);
-				m_uiAudioCurrentTime=m_dSeekTime*kmicroSecondsPerSecond;
+				m_uiAudioCurrentTime = m_dSeekTime * kmicroSecondsPerSecond;
 
 				avcodec_flush_buffers(videoCodecContext);
 				// avcodec_flush_buffers(audioCodecContext);
@@ -216,23 +217,23 @@ void VideoDecoder::readFrameFromFile()
 				// 音频包需要解码
 				std::unique_lock<std::mutex> lck(m_PacketMutex); // 对音频队列锁加锁
 				// qDebug() << "ai pts" << av_q2d(formatContext->streams[audioStreamIndex]->time_base) * packet->pts;
-				if(av_q2d(formatContext->streams[audioStreamIndex]->time_base) * packet->pts<m_dSeekTime)
+				if (av_q2d(formatContext->streams[audioStreamIndex]->time_base) * packet->pts < m_dSeekTime)
 				{
-					LOG_INFO("audio frame late,pts:{}",av_q2d(formatContext->streams[audioStreamIndex]->time_base) * packet->pts);
+					LOG_INFO("audio frame late,pts:{}", av_q2d(formatContext->streams[audioStreamIndex]->time_base) * packet->pts);
 				}
 				m_queueAudioFrame.push(*packet); // 把音频包加入队列
 				lck.unlock();
 				m_AudioCV.notify_one();
 			}
 			else if (packet->stream_index == videoStreamIndex)
-			{ // 视频包需要解码
+			{													 // 视频包需要解码
 				std::unique_lock<std::mutex> lck(m_PacketMutex); // 对视频队列锁加锁
-				//qDebug() << "vi pts" << av_q2d(formatContext->streams[videoStreamIndex]->time_base) * packet->pts;
-				if(av_q2d(formatContext->streams[videoStreamIndex]->time_base) * packet->pts<m_dSeekTime)
+				// qDebug() << "vi pts" << av_q2d(formatContext->streams[videoStreamIndex]->time_base) * packet->pts;
+				if (av_q2d(formatContext->streams[videoStreamIndex]->time_base) * packet->pts < m_dSeekTime)
 				{
-					LOG_INFO("video frame late,pts:{}",av_q2d(formatContext->streams[videoStreamIndex]->time_base) * packet->pts);
+					LOG_INFO("video frame late,pts:{}", av_q2d(formatContext->streams[videoStreamIndex]->time_base) * packet->pts);
 				}
-				m_queueVideoFrame.push(*packet);				 // 把视频包加入队列
+				m_queueVideoFrame.push(*packet); // 把视频包加入队列
 
 				lck.unlock();
 				m_VideoCV.notify_one(); // 对视频队列锁解锁
@@ -303,10 +304,10 @@ void VideoDecoder::decodeVideo()
 				av_image_alloc(yuvFrame->data, yuvFrame->linesize, m_stuVideoInfo.width, m_stuVideoInfo.height, m_stuVideoInfo.videoFormat, 1);
 				sws_scale(swsContext, frame->data, frame->linesize, 0, videoCodecContext->height, yuvFrame->data, yuvFrame->linesize);
 				VideoCallbackInfo videoInfo;
-				videoInfo.width=m_stuVideoInfo.width;
-				videoInfo.height=m_stuVideoInfo.height;
-				videoInfo.videoFormat=m_stuVideoInfo.videoFormat;
-				//计算avframe中的数据量
+				videoInfo.width = m_stuVideoInfo.width;
+				videoInfo.height = m_stuVideoInfo.height;
+				videoInfo.videoFormat = m_stuVideoInfo.videoFormat;
+				// 计算avframe中的数据量
 				switch (m_stuVideoInfo.videoFormat)
 				{
 				case AV_PIX_FMT_YUV420P:
@@ -359,7 +360,7 @@ void VideoDecoder::decodeVideo()
 				{
 					m_previewCallback(videoInfo, pts);
 				}
-				if(m_videoOutputCallback && !m_bSeekState)
+				if (m_videoOutputCallback && !m_bSeekState)
 				{
 					m_videoOutputCallback(videoInfo);
 				}
@@ -426,9 +427,9 @@ void VideoDecoder::decodeAudio()
 														   audioCodecContext->ch_layout.nb_channels,
 														   frame->nb_samples,
 														   audioCodecContext->sample_fmt, 1);
-				int32_t out_buffer_size = av_samples_get_buffer_size(nullptr, m_stuAudioInfo.audioChannels, frame->nb_samples, m_stuAudioInfo.audioFormat, 1);
+				int32_t out_buffer_size = av_samples_get_buffer_size(nullptr, m_stuAudioInfo.audioChannels, m_stuAudioInfo.samplePerChannel, m_stuAudioInfo.audioFormat, 1);
 				//// 分配输出缓冲区的空间
-				uint8_t *out_buff = (unsigned char *)av_malloc(out_buffer_size);
+				uint8_t *out_buff = new uint8_t[out_buffer_size];
 				swr_size = swr_convert(swrContext,										  // 音频采样器的实例
 									   &out_buff, out_buffer_size,						  // 输出的数据内容和数据大小
 									   (const uint8_t **)frame->data, frame->nb_samples); // 输入的数据内容和数据大小
@@ -438,7 +439,7 @@ void VideoDecoder::decodeAudio()
 
 				if (pts > 0)
 				{
-					//qDebug() << "audio pts" << pts;
+					// qDebug() << "audio pts" << pts;
 					if (m_bFirstAudioPacketAfterSeek)
 					{
 						m_bFirstAudioPacketAfterSeek = false;
@@ -458,10 +459,10 @@ void VideoDecoder::decodeAudio()
 
 				if (m_audioPlayCallback && !m_bSeekState)
 				{
-					m_audioPlayCallback(&out_buff, frame->nb_samples);
+					m_audioPlayCallback(out_buff, m_stuAudioInfo.samplePerChannel);
 				}
 				// file.write((const char*)out_buff, out_buffer_size);
-				av_freep(&out_buff);
+				delete[] out_buff;
 			}
 		}
 
