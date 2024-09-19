@@ -302,10 +302,33 @@ void VideoDecoder::decodeVideo()
 				AVFrame *yuvFrame = av_frame_alloc();
 				av_image_alloc(yuvFrame->data, yuvFrame->linesize, m_stuVideoInfo.width, m_stuVideoInfo.height, m_stuVideoInfo.videoFormat, 1);
 				sws_scale(swsContext, frame->data, frame->linesize, 0, videoCodecContext->height, yuvFrame->data, yuvFrame->linesize);
-				yuvFrame->width = m_stuVideoInfo.width;
-				yuvFrame->height = m_stuVideoInfo.height;
-				yuvFrame->format = m_stuVideoInfo.videoFormat;
-
+				VideoCallbackInfo videoInfo;
+				videoInfo.width=m_stuVideoInfo.width;
+				videoInfo.height=m_stuVideoInfo.height;
+				videoInfo.videoFormat=m_stuVideoInfo.videoFormat;
+				//计算avframe中的数据量
+				switch (m_stuVideoInfo.videoFormat)
+				{
+					case AV_PIX_FMT_YUV420P:
+					videoInfo.yuvData=new uint8_t[m_stuVideoInfo.width*m_stuVideoInfo.height*3/2];
+					videoInfo.dataSize=m_stuVideoInfo.width*m_stuVideoInfo.height*3/2;
+					memcpy(videoInfo.yuvData,yuvFrame->data[0],videoInfo.dataSize);
+					break;
+					case AV_PIX_FMT_YUV422P:
+					videoInfo.yuvData=new uint8_t[m_stuVideoInfo.width*m_stuVideoInfo.height*2];
+					videoInfo.dataSize=m_stuVideoInfo.width*m_stuVideoInfo.height*2;
+					memcpy(videoInfo.yuvData,yuvFrame->data[0],videoInfo.dataSize);
+					break;
+					default:
+					break;
+				}
+				av_frame_free(&yuvFrame);
+				if(nullptr==videoInfo.yuvData)
+				{
+					LOG_ERROR("videoInfo.yuvData is nullptr");
+					ret = avcodec_receive_frame(videoCodecContext, frame);
+					continue;
+				}
 				double pts = frame->pts * av_q2d(formatContext->streams[videoStreamIndex]->time_base);
 				if (pts > 0)
 				{
@@ -327,10 +350,13 @@ void VideoDecoder::decodeVideo()
 					std::this_thread::sleep_for(std::chrono::microseconds(delay));
 				}
 
-				avframe_ptr framePtr(yuvFrame, avframedel);
-				if (previewCallback && framePtr && !m_bSeekState)
+				if (previewCallback && !m_bSeekState)
 				{
-					previewCallback(std::move(framePtr), pts);
+					previewCallback(videoInfo, pts);
+				}
+				if(videoOutputCallback && !m_bSeekState)
+				{
+					videoOutputCallback(videoInfo);
 				}
 				ret = avcodec_receive_frame(videoCodecContext, frame);
 			}

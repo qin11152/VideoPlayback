@@ -12,6 +12,7 @@ int main(int argc, char *argv[])
     testing::InitGoogleMock(&argc, argv);
     return RUN_ALL_TESTS();
 #endif
+    qRegisterMetaType<VideoCallbackInfo>("VideoCallbackInfo");
     LogConfig conf("info", "log/VideoPlayback.log", 5 * 1024 * 1024,10);
     INITLOG(conf);
     LOG_INFO("VideoPlayback start");

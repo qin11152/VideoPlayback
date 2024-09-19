@@ -56,11 +56,16 @@ bool VideoPlayback::initModule()
 	return initConnect() && initAudioOutput();
 }
 
-void VideoPlayback::previewCallback(avframe_ptr framePtr, int64_t currentTime)
+void VideoPlayback::previewCallback(const VideoCallbackInfo& videoInfo, int64_t currentTime)
 {
 	// 将YUV数据发送出去
-	QByteArray data((char *)framePtr->data[0], framePtr->width * framePtr->height * 2);
-	emit signalYUVData(data, framePtr->width, framePtr->height);
+	if(nullptr == videoInfo.yuvData)
+	{
+		return;
+	}
+	QByteArray data((char *)videoInfo.yuvData, videoInfo.dataSize);
+	emit signalYUVData(data, videoInfo);
+	// emit signalYUVData(yuvData, videoInfo);
 	updateTimeLabel(currentTime, m_stuMediaInfo.duration);
 	updateTimeSliderPosition(currentTime);
 }

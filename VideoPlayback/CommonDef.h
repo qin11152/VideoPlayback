@@ -65,6 +65,25 @@ struct AudioInfo
 	AVSampleFormat audioFormat{ AV_SAMPLE_FMT_NONE };
 };
 
+struct VideoCallbackInfo
+{
+	uint32_t width;
+	uint32_t height;
+	uint32_t dataSize;
+	AVPixelFormat videoFormat;
+	uint8_t *yuvData;
+	~VideoCallbackInfo()
+	{
+		if (yuvData)
+		{
+			delete[] yuvData;
+			yuvData = nullptr;
+		}
+	}
+};
+
+Q_DECLARE_METATYPE(VideoCallbackInfo);
+
 enum class ErrorCode
 {
 	NoError=0,

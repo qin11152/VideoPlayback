@@ -1,5 +1,7 @@
 #pragma once
 
+#include "CommonDef.h"
+
 #include <QOpenGLWidget>
 #include <QOpenGLFunctions>
 #include <QGLShaderProgram>
@@ -18,7 +20,8 @@ public:
 	~OpenGLPreviewWidget();
 
 public slots:
-	void onSignalYUVData(QByteArray data, int width, int height);
+	// void onSignalYUVData(QByteArray data, int width, int height);
+	void onSignalYUVData(QByteArray data, const VideoCallbackInfo& videoInfo);
 
 protected:
 	void initializeGL() override;

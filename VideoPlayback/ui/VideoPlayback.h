@@ -18,12 +18,13 @@ public:
 
     bool initModule();
 
-    void previewCallback(avframe_ptr framePtr, int64_t currentTime);
+    void previewCallback(const VideoCallbackInfo& videoInfo, int64_t currentTime);
 
     void AudioPlayCallBack(uint8_t** audioData, uint32_t channelSampleNumber);
 
 signals:
-    void signalYUVData(QByteArray data, int width, int height);
+    // void signalYUVData(QByteArray data, int width, int height);
+    void signalYUVData(QByteArray data, const VideoCallbackInfo& videoInfo);
 
 public slots:
     QString onSignalChooseFileClicked();
