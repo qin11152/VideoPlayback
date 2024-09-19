@@ -4,6 +4,8 @@
 #include "stdafx.h"
 #include "com_ptr.h"
 #include "DeckLinkAPI_h.h"
+#elif defined(__linux__)
+#include "DeckLinkAPI.h"
 #endif
 
 extern "C"
@@ -25,6 +27,8 @@ constexpr int kOutputAudioChannels = 2;
 constexpr int kOutputAudioSampleRate = 48000;
 constexpr int kOutputAudioBitDepth = 16;
 constexpr int kOutputAudioFormat = AV_SAMPLE_FMT_S16;
+
+constexpr int kSDIOutputFormat = bmdModeHD1080i50;
 
 constexpr int kBufferWaterLevel = 20;
 

@@ -7,6 +7,8 @@
 #include <QDateTime>
 #include <QFileDialog>
 
+IDeckLinkMutableVideoFrame *kDecklinkOutputFrame = nullptr;
+
 VideoPlayback::VideoPlayback(QWidget *parent)
 	: QWidget(parent)
 {
@@ -60,10 +62,10 @@ bool VideoPlayback::initModule()
 	return initConnect() && initAudioOutput();
 }
 
-void VideoPlayback::previewCallback(const VideoCallbackInfo& videoInfo, int64_t currentTime)
+void VideoPlayback::previewCallback(const VideoCallbackInfo &videoInfo, int64_t currentTime)
 {
 	// 将YUV数据发送出去
-	if(nullptr == videoInfo.yuvData)
+	if (nullptr == videoInfo.yuvData)
 	{
 		return;
 	}
@@ -77,10 +79,38 @@ void VideoPlayback::previewCallback(const VideoCallbackInfo& videoInfo, int64_t 
 	updateTimeSliderPosition(currentTime);
 }
 
+void VideoPlayback::SDIOutputCallback(const VideoCallbackInfo &videoInfo)
+{
+	if (nullptr == videoInfo.yuvData || nullptr == m_ptrSelectedDeckLinkOutput)
+	{
+		return;
+	}
+	uint8_t *destData = nullptr;
+	kDecklinkOutputFrame->GetBytes((void **)&destData);
+	std::copy(videoInfo.yuvData, videoInfo.yuvData + videoInfo.dataSize, destData);
+	int ret = m_ptrSelectedDeckLinkOutput->DisplayVideoFrameSync(kDecklinkOutputFrame);
+	if (ret != S_OK)
+	{
+		LOG_ERROR("DisplayVideoFrameSync error");
+	}
+}
+
 void VideoPlayback::AudioPlayCallBack(uint8_t **audioData, uint32_t channelSampleNumber)
 {
 	QByteArray data((char *)audioData[0], kOutputAudioChannels * channelSampleNumber * av_get_bytes_per_sample((AVSampleFormat)kOutputAudioFormat));
 	m_ptrAudioPlay->inputPcmData(data);
+	if (nullptr != m_ptrSelectedDeckLinkOutput)
+	{
+		uint8_t *destData = nullptr;
+		destData = new uint8_t[kOutputAudioChannels * channelSampleNumber * av_get_bytes_per_sample((AVSampleFormat)kOutputAudioFormat)];
+		memcpy(destData, audioData[0], kOutputAudioChannels * channelSampleNumber * av_get_bytes_per_sample((AVSampleFormat)kOutputAudioFormat));
+		int ret = m_ptrSelectedDeckLinkOutput->WriteAudioSamplesSync(destData, 20, nullptr);
+		delete[] destData;
+		if (ret != S_OK)
+		{
+			LOG_ERROR("WriteAudioSamplesSync error");
+		}
+	}
 }
 
 QString VideoPlayback::onSignalChooseFileClicked()
@@ -109,6 +139,34 @@ void VideoPlayback::onSignalSliderValueChanged(double vlaue)
 		connect(ui.videoTImeSlider, &MySlider::signalSliderValueChanged, this, &VideoPlayback::onSignalSliderValueChanged); });
 }
 
+void VideoPlayback::onSignalSelectedDeviceChanged(int index)
+{
+	if (index < 0)
+	{
+		return;
+	}
+	QString strDeviceName = ui.deckLinkComboBox->itemText(index);
+	auto iter = m_mapDeviceNameIndex.find(strDeviceName);
+	if (iter == m_mapDeviceNameIndex.end())
+	{
+		return;
+	}
+	if (iter->second.m_bActive)
+	{
+#if defined(WIN32)
+		m_ptrSelectedDeckLinkOutput = iter->second.deckLink;
+#elif defined(__linux__)
+		iter->second.deckLink->QueryInterface(IID_IDeckLinkOutput, (void **)&m_ptrSelectedDeckLinkOutput);
+#endif
+		initSDIOutput();
+		LOG_INFO("Selected device is {}", strDeviceName.toStdString().c_str());
+	}
+	else
+	{
+		m_ptrSelectedDeckLinkOutput = nullptr;
+	}
+}
+
 void VideoPlayback::customEvent(QEvent *event)
 {
 	switch (event->type())
@@ -134,11 +192,11 @@ void VideoPlayback::customEvent(QEvent *event)
 				return;
 			}
 
-			bool bActive=isDeviceActive(decklink);
+			bool bActive = isDeviceActive(decklink);
 			MyDeckLinkDevice device;
 			device.deckLink = decklink;
-			char* pName = nullptr;
-			decklink->GetDisplayName((const char**)(&pName));
+			char *pName = nullptr;
+			decklink->GetDisplayName((const char **)(&pName));
 			device.m_strDisplayName = QString::fromLocal8Bit(pName);
 			device.m_bActive = bActive;
 			m_mapDeviceNameIndex[device.m_strDisplayName] = device;
@@ -157,6 +215,7 @@ bool VideoPlayback::initConnect()
 	flag = flag && connect(ui.choosePushButton, &QPushButton::clicked, this, &VideoPlayback::onSignalChooseFileClicked);
 	flag = flag && connect(this, &VideoPlayback::signalYUVData, ui.openGLWidget, &OpenGLPreviewWidget::onSignalYUVData);
 	flag = flag && connect(ui.videoTImeSlider, &MySlider::signalSliderValueChanged, this, &VideoPlayback::onSignalSliderValueChanged);
+	flag = flag && connect(ui.deckLinkComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &VideoPlayback::onSignalSelectedDeviceChanged);
 	return flag;
 }
 
@@ -189,7 +248,8 @@ bool VideoPlayback::initDecoder()
 	audioInfo.audioSampleRate = kOutputAudioSampleRate;
 	audioInfo.audioFormat = (AVSampleFormat)kOutputAudioFormat;
 	m_ptrVideoDecoder->initModule(m_strChooseFileName.toStdString().c_str(), videoInfo, audioInfo);
-	m_ptrVideoDecoder->initCallBack(std::bind(&VideoPlayback::previewCallback, this, std::placeholders::_1, std::placeholders::_2), std::bind(&VideoPlayback::AudioPlayCallBack, this, std::placeholders::_1, std::placeholders::_2));
+	m_ptrVideoDecoder->initVideoCallBack(std::bind(&VideoPlayback::previewCallback, this, std::placeholders::_1, std::placeholders::_2), std::bind(&VideoPlayback::SDIOutputCallback, this, std::placeholders::_1));
+	m_ptrVideoDecoder->initAudioCallback(std::bind(&VideoPlayback::AudioPlayCallBack, this, std::placeholders::_1, std::placeholders::_2));
 	return true;
 }
 
@@ -230,4 +290,19 @@ void VideoPlayback::updateTimeSliderPosition(int64_t currentTime)
 void VideoPlayback::setTimeSliderRange(int64_t totalTime)
 {
 	ui.videoTImeSlider->setRange(0, totalTime);
+}
+
+void VideoPlayback::initSDIOutput()
+{
+	if (nullptr == m_ptrSelectedDeckLinkOutput)
+	{
+		return;
+	}
+	// 初始化SDI输出
+	m_ptrSelectedDeckLinkOutput->EnableVideoOutput(kSDIOutputFormat, bmdVideoOutputFlagDefault);
+	m_ptrSelectedDeckLinkOutput->EnableAudioOutput(bmdAudioSampleRate48kHz, bmdAudioSampleType16bitInteger, kOutputAudioChannels, bmdAudioOutputStreamContinuous);
+	if (nullptr == kDecklinkOutputFrame)
+	{
+		m_ptrSelectedDeckLinkOutput->CreateVideoFrame(kOutputVideoWidth, kOutputVideoHeight, kOutputVideoWidth * 2, bmdFormat8BitYUV, bmdFrameFlagDefault, &kDecklinkOutputFrame);
+	}
 }

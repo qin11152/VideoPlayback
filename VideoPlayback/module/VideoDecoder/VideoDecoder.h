@@ -26,7 +26,6 @@ using avframe_ptr = std::unique_ptr<AVFrame, decltype(avframedel)>;
 using PreviewCallback = std::function<void(const VideoCallbackInfo& videoInfo, int64_t currentTime)>;
 using AudioPlayCallback = std::function<void(uint8_t **, uint32_t channelSampleNumber)>;
 using VideoOutputCallback = std::function<void(const VideoCallbackInfo& videoInfo)>;
-using AudioOutputCallback = std::function<void(uint8_t **, uint32_t channelSampleNumber)>;
 
 class VideoDecoder
 {
@@ -46,7 +45,9 @@ public:
 	AVCodecContext *getVideoCodecContext() const { return videoCodecContext; }
 	AVCodecContext *getAudioCodecContext() const { return audioCodecContext; }
 
-	void initCallBack(PreviewCallback preCallback, AudioPlayCallback audioCallback);
+	void initAudioCallback(AudioPlayCallback audioCallback);
+
+	void initVideoCallBack(PreviewCallback preCallback, VideoOutputCallback videoOutputCallback);
 
 	void startDecoder();
 
@@ -76,10 +77,9 @@ private:
 	SwsContext *swsContext{nullptr};
 	SwrContext *swrContext{nullptr};
 
-	PreviewCallback previewCallback;
-	AudioPlayCallback audioPlayCallback;
-	VideoOutputCallback videoOutputCallback;
-	AudioOutputCallback audioOutputCallback;
+	PreviewCallback m_previewCallback;
+	AudioPlayCallback m_audioPlayCallback;
+	VideoOutputCallback m_videoOutputCallback;
 
 	std::thread m_ReadThread;
 	std::thread m_VideoDecoderThread;

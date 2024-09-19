@@ -20,6 +20,8 @@ public:
 
     void previewCallback(const VideoCallbackInfo& videoInfo, int64_t currentTime);
 
+    void SDIOutputCallback(const VideoCallbackInfo& videoInfo);
+
     void AudioPlayCallBack(uint8_t** audioData, uint32_t channelSampleNumber);
 
 signals:
@@ -29,6 +31,8 @@ public slots:
     QString onSignalChooseFileClicked();
 
     void onSignalSliderValueChanged(double vlaue);
+
+    void onSignalSelectedDeviceChanged(int index);
 
 protected:
     void customEvent(QEvent* event) override;
@@ -42,6 +46,8 @@ private:
 	void updateTimeSliderPosition(int64_t currentTime);
     void setTimeSliderRange(int64_t totalTime);
 
+    void initSDIOutput();
+
 private:
     Ui::VideoPlaybackClass ui;
 
@@ -49,7 +55,9 @@ private:
     AudioPlay* m_ptrAudioPlay{ nullptr };
     QString m_strChooseFileName{ "" };
     MediaInfo m_stuMediaInfo;
+
     DeckLinkDeviceDiscovery* m_ptrDeckLinkDeviceDiscovery{nullptr};
+    IDeckLinkOutput* m_ptrSelectedDeckLinkOutput{ nullptr };
 
 	bool m_bSliderEnableConnect{ true };       //是否允许连接信号槽
     std::map<QString, MyDeckLinkDevice> m_mapDeviceNameIndex;

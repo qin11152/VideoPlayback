@@ -355,13 +355,13 @@ void VideoDecoder::decodeVideo()
 					std::this_thread::sleep_for(std::chrono::microseconds(delay));
 				}
 
-				if (previewCallback && !m_bSeekState)
+				if (m_previewCallback && !m_bSeekState)
 				{
-					previewCallback(videoInfo, pts);
+					m_previewCallback(videoInfo, pts);
 				}
-				if(videoOutputCallback && !m_bSeekState)
+				if(m_videoOutputCallback && !m_bSeekState)
 				{
-					videoOutputCallback(videoInfo);
+					m_videoOutputCallback(videoInfo);
 				}
 				ret = avcodec_receive_frame(videoCodecContext, frame);
 			}
@@ -456,9 +456,9 @@ void VideoDecoder::decodeAudio()
 					std::this_thread::sleep_for(std::chrono::microseconds(delay));
 				}
 
-				if (audioPlayCallback)
+				if (m_audioPlayCallback && !m_bSeekState)
 				{
-					audioPlayCallback(&out_buff, frame->nb_samples);
+					m_audioPlayCallback(&out_buff, frame->nb_samples);
 				}
 				// file.write((const char*)out_buff, out_buffer_size);
 				av_freep(&out_buff);
@@ -470,10 +470,10 @@ void VideoDecoder::decodeAudio()
 	av_frame_free(&frame);
 }
 
-void VideoDecoder::initCallBack(PreviewCallback preCallback, AudioPlayCallback audioCallback)
+void VideoDecoder::initVideoCallBack(PreviewCallback preCallback, VideoOutputCallback videoOutputCallback)
 {
-	previewCallback = preCallback;
-	audioPlayCallback = audioCallback;
+	m_previewCallback = preCallback;
+	m_videoOutputCallback = videoOutputCallback;
 }
 
 void VideoDecoder::pauseDecoder()
@@ -515,6 +515,11 @@ void VideoDecoder::seekTo(double_t time)
 
 void VideoDecoder::clearBuffer()
 {
+}
+
+void VideoDecoder::initAudioCallback(AudioPlayCallback audioCallback)
+{
+	m_audioPlayCallback = audioCallback;
 }
 
 void VideoDecoder::startDecoder()
