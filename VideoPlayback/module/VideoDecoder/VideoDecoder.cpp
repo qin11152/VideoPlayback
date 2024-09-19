@@ -88,7 +88,7 @@ int32_t VideoDecoder::initModule(const char *fileName, const VideoInfo &outVideo
 			AVChannelLayout out_channel_layout;
 			av_channel_layout_default(&out_channel_layout, m_stuAudioInfo.audioChannels); // Stereo output
 
-			// int out_sample_rate = m_stuAudioInfo.audioSampleRate;
+			 //int out_sample_rate = m_stuAudioInfo.audioSampleRate;
 			int out_sample_rate = audioCodecContext->sample_rate;
 			AVSampleFormat out_sample_fmt = m_stuAudioInfo.audioFormat;
 
@@ -427,9 +427,9 @@ void VideoDecoder::decodeAudio()
 														   audioCodecContext->ch_layout.nb_channels,
 														   frame->nb_samples,
 														   audioCodecContext->sample_fmt, 1);
-				int32_t out_buffer_size = av_samples_get_buffer_size(nullptr, m_stuAudioInfo.audioChannels, m_stuAudioInfo.samplePerChannel, m_stuAudioInfo.audioFormat, 1);
+				int32_t out_buffer_size = av_samples_get_buffer_size(nullptr, m_stuAudioInfo.audioChannels, frame->nb_samples, m_stuAudioInfo.audioFormat, 1);
 				//// 分配输出缓冲区的空间
-				uint8_t *out_buff = new uint8_t[out_buffer_size];
+				uint8_t* out_buff = (unsigned char*)av_malloc(out_buffer_size);
 				swr_size = swr_convert(swrContext,										  // 音频采样器的实例
 									   &out_buff, out_buffer_size,						  // 输出的数据内容和数据大小
 									   (const uint8_t **)frame->data, frame->nb_samples); // 输入的数据内容和数据大小
@@ -459,10 +459,13 @@ void VideoDecoder::decodeAudio()
 
 				if (m_audioPlayCallback && !m_bSeekState)
 				{
-					m_audioPlayCallback(out_buff, m_stuAudioInfo.samplePerChannel);
+					m_audioPlayCallback(out_buff, frame->nb_samples);
 				}
 				// file.write((const char*)out_buff, out_buffer_size);
-				delete[] out_buff;
+				if (out_buff)
+				{
+					av_freep(&out_buff);
+				}
 			}
 		}
 

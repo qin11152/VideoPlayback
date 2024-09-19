@@ -25,7 +25,7 @@ constexpr int kOutputVideoHeight = 1080;
 constexpr int kOutputVideoFormat = AV_PIX_FMT_YUV422P;
 constexpr int kOutputAudioChannels = 2;
 constexpr int kOutputAudioSampleRate = 48000;
-constexpr int kOutputAudioSamplePerChannel = 960;
+constexpr int kOutputAudioSamplePerChannel = 1024;
 constexpr int kOutputAudioBitDepth = 16;
 constexpr int kOutputAudioFormat = AV_SAMPLE_FMT_S16;
 

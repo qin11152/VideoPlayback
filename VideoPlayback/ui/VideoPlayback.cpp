@@ -99,6 +99,7 @@ void VideoPlayback::SDIOutputCallback(const VideoCallbackInfo &videoInfo)
 
 void VideoPlayback::AudioPlayCallBack(uint8_t *audioData, uint32_t channelSampleNumber)
 {
+	int cvafd = kOutputAudioChannels * channelSampleNumber * av_get_bytes_per_sample((AVSampleFormat)kOutputAudioFormat);
 	QByteArray data((char *)audioData, kOutputAudioChannels * channelSampleNumber * av_get_bytes_per_sample((AVSampleFormat)kOutputAudioFormat));
 	m_ptrAudioPlay->inputPcmData(data);
 	if (nullptr != m_ptrSelectedDeckLinkOutput)
