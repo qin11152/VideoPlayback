@@ -20,8 +20,7 @@ public:
 	~OpenGLPreviewWidget();
 
 public slots:
-	// void onSignalYUVData(QByteArray data, int width, int height);
-	void onSignalYUVData(QByteArray data, const VideoCallbackInfo& videoInfo);
+	void onSignalYUVData(QByteArray data, const VideoInfo& videoInfo);
 
 protected:
 	void initializeGL() override;

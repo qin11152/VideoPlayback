@@ -67,8 +67,12 @@ void VideoPlayback::previewCallback(const VideoCallbackInfo& videoInfo, int64_t 
 	{
 		return;
 	}
+	VideoInfo video;
+	video.width = videoInfo.width;
+	video.height = videoInfo.height;
+	video.videoFormat = videoInfo.videoFormat;
 	QByteArray data((char *)videoInfo.yuvData, videoInfo.dataSize);
-	emit signalYUVData(data, videoInfo);
+	emit signalYUVData(data, video);
 	updateTimeLabel(currentTime, m_stuMediaInfo.duration);
 	updateTimeSliderPosition(currentTime);
 }

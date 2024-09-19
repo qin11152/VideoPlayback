@@ -46,8 +46,7 @@ OpenGLPreviewWidget::~OpenGLPreviewWidget()
 {
 }
 
-// void OpenGLPreviewWidget::onSignalYUVData(QByteArray data, int width, int height)
-void OpenGLPreviewWidget::onSignalYUVData(QByteArray data, const VideoCallbackInfo &videoInfo)
+void OpenGLPreviewWidget::onSignalYUVData(QByteArray data, const VideoInfo &videoInfo)
 {
 	if (m_uiWidth != videoInfo.width || m_uiHeight != videoInfo.height)
 	{
@@ -70,7 +69,7 @@ void OpenGLPreviewWidget::onSignalYUVData(QByteArray data, const VideoCallbackIn
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, m_uiWidth / 2, m_uiHeight / 2, 0, GL_RED, GL_UNSIGNED_BYTE, 0); // 创建材质显卡空间
 	}
-	uint8_t* yuyv422 = new uint8_t[videoInfo.dataSize]{ 0 };
+	uint8_t* yuyv422 = new uint8_t[videoInfo.width*videoInfo.height*2]{ 0 };
 	memcpy(yuyv422, data.data(), data.size());
 	uint8_t* yuv420 = new uint8_t[m_uiWidth * m_uiHeight * 3 / 2]{ 0 };
 	//ConvertYUYV422ToYUV420(yuyv422, width, height, yuv420, yuv420 + width * height, yuv420 + width * height * 5 / 4);

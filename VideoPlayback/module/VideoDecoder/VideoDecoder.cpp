@@ -315,19 +315,20 @@ void VideoDecoder::decodeVideo()
 					videoInfo.dataSize = m_stuVideoInfo.width * m_stuVideoInfo.height * 3 / 2;
 					memcpy(videoInfo.yuvData, yuvFrame->data[0], videoInfo.dataSize);
 				}
-					break;
+				break;
 				case AV_PIX_FMT_YUV422P:
 				{
 					videoInfo.yuvData = new uint8_t[m_stuVideoInfo.width * m_stuVideoInfo.height * 2];
 					videoInfo.dataSize = m_stuVideoInfo.width * m_stuVideoInfo.height * 2;
 					memcpy(videoInfo.yuvData, yuvFrame->data[0], videoInfo.dataSize);
 				}
-					break;
-					default:
+				break;
+				default:
 					break;
 				}
+				av_freep(yuvFrame->data);
 				av_frame_free(&yuvFrame);
-				if(nullptr==videoInfo.yuvData)
+				if (nullptr == videoInfo.yuvData)
 				{
 					LOG_ERROR("videoInfo.yuvData is nullptr");
 					ret = avcodec_receive_frame(videoCodecContext, frame);
@@ -356,7 +357,7 @@ void VideoDecoder::decodeVideo()
 
 				if (previewCallback && !m_bSeekState)
 				{
-					//previewCallback(videoInfo, pts);
+					previewCallback(videoInfo, pts);
 				}
 				if(videoOutputCallback && !m_bSeekState)
 				{

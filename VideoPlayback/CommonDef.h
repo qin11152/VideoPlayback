@@ -16,6 +16,7 @@ extern "C"
 #include "module/LogModule/Log.h"
 
 #include <cstdint>
+#include <fstream>
 
 constexpr int kOutputVideoWidth = 1920;
 constexpr int kOutputVideoHeight = 1080;
@@ -60,6 +61,8 @@ struct VideoInfo
 	AVPixelFormat videoFormat{ AV_PIX_FMT_NONE };
 };
 
+Q_DECLARE_METATYPE(VideoInfo);
+
 struct AudioInfo
 {
 	int audioChannels{ 0 };
@@ -77,7 +80,7 @@ struct VideoCallbackInfo
 	uint32_t height;
 	uint32_t dataSize;
 	AVPixelFormat videoFormat;
-	uint8_t *yuvData;
+	uint8_t* yuvData{ nullptr };
 	~VideoCallbackInfo()
 	{
 		if (yuvData)

@@ -23,8 +23,7 @@ public:
     void AudioPlayCallBack(uint8_t** audioData, uint32_t channelSampleNumber);
 
 signals:
-    // void signalYUVData(QByteArray data, int width, int height);
-    void signalYUVData(QByteArray data, const VideoCallbackInfo& videoInfo);
+    void signalYUVData(QByteArray data, const VideoInfo& videoInfo);
 
 public slots:
     QString onSignalChooseFileClicked();
