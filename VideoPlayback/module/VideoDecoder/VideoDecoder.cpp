@@ -428,11 +428,15 @@ void VideoDecoder::decodeAudio()
 														   frame->nb_samples,
 														   audioCodecContext->sample_fmt, 1);
 				int32_t out_buffer_size = av_samples_get_buffer_size(nullptr, m_stuAudioInfo.audioChannels, frame->nb_samples, m_stuAudioInfo.audioFormat, 1);
+				int64_t delay1 = swr_get_delay(swrContext, 44100);
+				int out_samples = av_rescale_rnd(delay1 + frame->nb_samples, 48000, 44100, AV_ROUND_UP);
 				//// 分配输出缓冲区的空间
 				uint8_t* out_buff = (unsigned char*)av_malloc(out_buffer_size);
 				swr_size = swr_convert(swrContext,										  // 音频采样器的实例
-									   &out_buff, out_buffer_size,						  // 输出的数据内容和数据大小
+									   &out_buff, frame->nb_samples,						  // 输出的数据内容和数据大小
 									   (const uint8_t **)frame->data, frame->nb_samples); // 输入的数据内容和数据大小
+
+				qDebug() << "re sample size" << out_samples << ",success resample:" << swr_size;
 
 				double pts = frame->pts * av_q2d(formatContext->streams[audioStreamIndex]->time_base);
 				// 记录下当前播放的帧的时间，用于计算快进时的增量
