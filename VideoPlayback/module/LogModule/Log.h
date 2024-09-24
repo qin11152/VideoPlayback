@@ -3,7 +3,7 @@
 #include <spdlog/sinks/rotating_file_sink.h>
 #include<spdlog/async.h>
 
-// æ—¥å¿—çš„é…ç½®é¡¹
+// ÈÕÖ¾µÄÅäÖÃÏî
 struct LogConfig {
     std::string level;
     std::string path;
@@ -14,7 +14,7 @@ struct LogConfig {
 		: level(strLevel), path(strPath), size(iSize), count(iCount) {}
 };
 
-// æ—¥å¿—çš„å•ä¾‹æ¨¡å¼
+// ÈÕÖ¾µÄµ¥ÀıÄ£Ê½
 class Logger {
 public:
     static Logger* getInstance() {
@@ -22,7 +22,7 @@ public:
         return &instance;
     }
 
-	//c++14è¿”å›å€¼å¯è®¾ç½®ä¸ºauto
+	//c++14·µ»ØÖµ¿ÉÉèÖÃÎªauto
     std::shared_ptr<spdlog::logger> getLogger() {
         return loggerPtr;
     }
@@ -39,7 +39,7 @@ private:
     std::shared_ptr<spdlog::logger> loggerPtr;
 };
 
-// æ—¥å¿—ç›¸å…³æ“ä½œçš„å®å°è£…
+// ÈÕÖ¾Ïà¹Ø²Ù×÷µÄºê·â×°
 #define INITLOG(conf)      Logger::getInstance()->Init(conf)
 #define GETLOGLEVEL()      Logger::getInstance()->GetLogLevel()
 #define SETLOGLEVEL(level) Logger::getInstance()->SetLogLevel(level)

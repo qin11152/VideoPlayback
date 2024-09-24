@@ -460,7 +460,7 @@ void VideoDecoder::decodeAudio()
 
 				if (m_audioPlayCallback && !m_bSeekState)
 				{
-					m_audioPlayCallback(out_buff, frame->nb_samples);
+					m_audioPlayCallback(out_buff, swr_size);
 				}
 				// file.write((const char*)out_buff, out_buffer_size);
 				if (out_buff)

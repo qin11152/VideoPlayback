@@ -20,16 +20,16 @@ void MySlider::mousePressEvent(QMouseEvent *event)
     m_bPressed = true;
     int currentX = event->pos().x();
 
-    //è·å–å½“å‰ç‚¹å‡»çš„ä½ç½®å æ•´ä¸ªSliderçš„ç™¾åˆ†æ¯”
+    //»ñÈ¡µ±Ç°µã»÷µÄÎ»ÖÃÕ¼Õû¸öSliderµÄ°Ù·Ö±È
     double per = currentX *1.0 /this->width();
 
-    //åˆ©ç”¨ç®—å¾—çš„ç™¾åˆ†æ¯”å¾—åˆ°å…·ä½“æ•°å­—
+    //ÀûÓÃËãµÃµÄ°Ù·Ö±ÈµÃµ½¾ßÌåÊı×Ö
     double value = per*(this->maximum() - this->minimum()) + this->minimum();
     
-    //valueè½¬ä¸ºintï¼Œå››èˆäº”å…¥
+    //value×ªÎªint£¬ËÄÉáÎåÈë
     value = qRound(value);
 
-    //è®¾å®šæ»‘åŠ¨æ¡ä½ç½®
+    //Éè¶¨»¬¶¯ÌõÎ»ÖÃ
     qDebug()<<"set value"<<value;
     this->setValue(value);
 
@@ -43,7 +43,7 @@ void MySlider::mouseReleaseEvent(QMouseEvent *event)
 
 void MySlider::mouseMoveEvent(QMouseEvent *event)
 {
-    //ç§»åŠ¨çš„æ—¶å€™è®¡ç®—ä¸‹å½“å‰çš„å€¼ï¼Œè®¾ç½®åˆ°æ»‘åŠ¨æ¡ä¸Š,ä¸è¦å¤ªé¢‘ç¹çš„è§¦å‘
+    //ÒÆ¶¯µÄÊ±ºò¼ÆËãÏÂµ±Ç°µÄÖµ£¬ÉèÖÃµ½»¬¶¯ÌõÉÏ,²»ÒªÌ«Æµ·±µÄ´¥·¢
     if(m_bPressed)
     {
         int currentX = event->pos().x();

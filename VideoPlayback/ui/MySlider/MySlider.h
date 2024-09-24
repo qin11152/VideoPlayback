@@ -35,5 +35,5 @@ private:
     bool m_bPressed = false;
     bool m_bMoved = false;
     int m_iValue = 0;
-    int m_iLastMoveValue = 0;   //ä¸Šæ¬¡ç§»åŠ¨æ—¶çš„å€¼
+    int m_iLastMoveValue = 0;   //ÉÏ´ÎÒÆ¶¯Ê±µÄÖµ
 };
