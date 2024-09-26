@@ -26,6 +26,7 @@ jobs:
         os: [ubuntu-latest, windows-latest]
         build_type: [Release]
         c_compiler: [gcc, clang, cl]
+        qt_version: [5.15.2]
         include:
           - os: windows-latest
             c_compiler: cl
@@ -47,9 +48,15 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - uses: qt/actions/setup-qt@v2
+    - name: Install Qt
+      uses: jurplel/install-qt-action@v3
       with:
-        qt-version: '5.15.2'
+        version: ${{ matrix.qt_version }}
+        host: 'linux'
+        target: 'desktop'
+        arch: 'gcc_64'
+        dir: '${{ github.workspace }}/Qt'
+        install-deps: 'true'
 
     - name: Set reusable strings
       # Turn repeated input strings (such as the build output directory) into step outputs. These step outputs can be used throughout the workflow file.
@@ -66,6 +73,7 @@ jobs:
         -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
         -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+        -DCMAKE_PREFIX_PATH=${{ github.workspace }}/Qt/${{ matrix.qt_version }}/gcc_64
         -S ${{ github.workspace }}
 
     - name: Build
@@ -77,3 +85,8 @@ jobs:
       # Execute tests defined by the CMake configuration. Note that --build-config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
       # See https://cmake.org/cmake/help/latest/manual/ctest.1.html for more detail
       run: ctest --build-config ${{ matrix.build_type }}
+
+    - name: Add Qt bin to PATH for Windows
+      if: matrix.os == 'windows-latest'
+      run: echo "${{ github.workspace }}/Qt/${{ matrix.qt_version }}/msvc2019_64/bin" >> $GITHUB_PATH
+      shell: bash
