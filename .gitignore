@@ -369,3 +369,5 @@ FodyWeavers.xsd
 /build
 /unittest
 bin/VideoPlayback
+VideoPlayback/test.bat
+VideoPlayback/teststart.bat

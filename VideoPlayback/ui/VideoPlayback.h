@@ -49,6 +49,10 @@ private:
 
     void initSDIOutput();
 
+#if defined(WIN32)
+    void deviceDiscovered(CComPtr<IDeckLink>& deckLink);
+#endif
+
 private:
     Ui::VideoPlaybackClass ui;
 

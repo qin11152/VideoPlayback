@@ -175,14 +175,16 @@ void VideoDecoder::readFrameFromFile()
 				// ret = av_seek_frame(formatContext, audioStreamIndex, audioPos, AVSEEK_FLAG_BACKWARD);
 
 				m_iTotalVideoSeekTime += m_dSeekTime * kmicroSecondsPerSecond - m_uiVideoCurrentTime;
+				m_iTotalAudioSeekTime += m_dSeekTime * kmicroSecondsPerSecond - m_uiVideoCurrentTime;
+				qDebug() << "first seek,video time:" << m_uiVideoCurrentTime;
 				LOG_INFO("at seek time,play time:{},seek time{},video changed time:{}", (double)m_uiVideoCurrentTime / kmicroSecondsPerSecond, m_dSeekTime.load(), m_iTotalVideoSeekTime);
 				m_uiVideoCurrentTime = m_dSeekTime * kmicroSecondsPerSecond;
-				m_iTotalAudioSeekTime += m_dSeekTime * kmicroSecondsPerSecond - m_uiAudioCurrentTime;
+				qDebug() << "first seek,audio time:" << m_uiAudioCurrentTime;
 				LOG_INFO("at seek time,play time:{},seek time{:.4f},audio changed time:{}", (double)m_uiAudioCurrentTime / kmicroSecondsPerSecond, m_dSeekTime.load(), m_iTotalAudioSeekTime);
 				m_uiAudioCurrentTime = m_dSeekTime * kmicroSecondsPerSecond;
 
 				avcodec_flush_buffers(videoCodecContext);
-				// avcodec_flush_buffers(audioCodecContext);
+				 //avcodec_flush_buffers(audioCodecContext);
 
 				while (m_queueVideoFrame.size() > 0)
 				{
@@ -229,6 +231,24 @@ void VideoDecoder::readFrameFromFile()
 			{													 // 视频包需要解码
 				std::unique_lock<std::mutex> lck(m_PacketMutex); // 对视频队列锁加锁
 				// qDebug() << "vi pts" << av_q2d(formatContext->streams[videoStreamIndex]->time_base) * packet->pts;
+				if (m_bFirstVideoPacketAfterSeek)
+				{
+					m_bFirstVideoPacketAfterSeek = false;
+					//获取这一帧的时间戳，
+					double pts = packet->pts * av_q2d(formatContext->streams[videoStreamIndex]->time_base);
+					m_dSeekTime = pts;
+					m_iTotalVideoSeekTime += pts * kmicroSecondsPerSecond - m_uiVideoCurrentTime;
+					m_iTotalAudioSeekTime += pts * kmicroSecondsPerSecond - m_uiVideoCurrentTime;
+					//根据此时间戳，seek到这个时间戳
+					m_uiVideoCurrentTime = pts * kmicroSecondsPerSecond;
+					auto midva = (double)r2d(formatContext->streams[videoStreamIndex]->time_base);
+					auto videoPos = pts / midva;
+					av_seek_frame(formatContext, videoStreamIndex, videoPos, AVSEEK_FLAG_BACKWARD);
+					LOG_INFO("at seek time,play time:{},seek time{},video changed time:{}", (double)m_uiVideoCurrentTime / kmicroSecondsPerSecond, m_dSeekTime.load(), m_iTotalVideoSeekTime);
+					m_uiAudioCurrentTime = pts * kmicroSecondsPerSecond;
+					avcodec_flush_buffers(videoCodecContext);
+					//avcodec_flush_buffers(audioCodecContext);
+				}
 				if (av_q2d(formatContext->streams[videoStreamIndex]->time_base) * packet->pts < m_dSeekTime)
 				{
 					LOG_INFO("video frame late,pts:{}", av_q2d(formatContext->streams[videoStreamIndex]->time_base) * packet->pts);
@@ -338,7 +358,7 @@ void VideoDecoder::decodeVideo()
 				double pts = frame->pts * av_q2d(formatContext->streams[videoStreamIndex]->time_base);
 				if (pts > 0)
 				{
-					// qDebug() << "video pts" << pts;
+					//qDebug() << "video pts" << pts;
 					if (m_bFirstVideoPacketAfterSeek)
 					{
 						m_bFirstVideoPacketAfterSeek = false;
@@ -350,6 +370,8 @@ void VideoDecoder::decodeVideo()
 				uint64_t current_time = av_gettime() - m_iStartTime + m_iTotalVideoSeekTime;
 				// 表示当前帧需要延迟显示的时间。通过计算 pts 应该显示的时间与 current_time 的差值，我们得到需要等待的时间，以确保帧在正确的时间显示
 				int64_t delay = static_cast<int64_t>(pts * kmicroSecondsPerSecond) - current_time;
+
+				//qDebug() << "video start time" << m_iStartTime << ",play time" << current_time << "seek time" << m_iTotalVideoSeekTime << ",delay:" << delay << ",pts:" << pts;
 
 				if (delay > 0)
 				{
@@ -440,7 +462,7 @@ void VideoDecoder::decodeAudio()
 
 				if (pts > 0)
 				{
-					// qDebug() << "audio pts" << pts;
+					//qDebug() << "audio pts" << pts;
 					if (m_bFirstAudioPacketAfterSeek)
 					{
 						m_bFirstAudioPacketAfterSeek = false;
@@ -451,7 +473,7 @@ void VideoDecoder::decodeAudio()
 				int64_t current_time = av_gettime() - m_iStartTime + m_iTotalAudioSeekTime;
 				int64_t delay = static_cast<int64_t>(pts * kmicroSecondsPerSecond) - current_time;
 
-				// qDebug() << "start time" << m_iStartTime << ",play time" << current_time << "seek time" << m_iTotalAudioSeekTime << ",delay:" << delay << ",pts:" << pts;
+				//qDebug() << "audio start time" << m_iStartTime << ",play time" << current_time << "seek time" << m_iTotalAudioSeekTime << ",delay:" << delay << ",pts:" << pts;
 
 				if (delay > 0)
 				{
@@ -460,7 +482,7 @@ void VideoDecoder::decodeAudio()
 
 				if (m_audioPlayCallback && !m_bSeekState)
 				{
-					m_audioPlayCallback(out_buff, swr_size);
+					m_audioPlayCallback(out_buff, frame->nb_samples);
 				}
 				// file.write((const char*)out_buff, out_buffer_size);
 				if (out_buff)

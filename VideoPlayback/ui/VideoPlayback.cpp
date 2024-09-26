@@ -55,6 +55,7 @@ bool VideoPlayback::initModule()
 	m_ptrAudioPlay = new AudioPlay(nullptr);
 #if defined(WIN32)
 	m_ptrDeckLinkDeviceDiscovery = new DeckLinkDeviceDiscovery();
+	m_ptrDeckLinkDeviceDiscovery->OnDeviceArrival(std::bind(&VideoPlayback::deviceDiscovered, this, std::placeholders::_1));
 #elif defined(__linux__)
 	m_ptrDeckLinkDeviceDiscovery = new DeckLinkDeviceDiscovery(this);
 #endif
@@ -177,9 +178,9 @@ void VideoPlayback::onSignalSelectedDeviceChanged(int index)
 
 void VideoPlayback::customEvent(QEvent *event)
 {
+#if defined(__linux__)
 	switch (event->type())
 	{
-#if defined(__linux__)
 	case kAddDeviceEvent:
 	{
 		DeckLinkDeviceDiscoveryEvent *addEvent = dynamic_cast<DeckLinkDeviceDiscoveryEvent *>(event);
@@ -213,8 +214,8 @@ void VideoPlayback::customEvent(QEvent *event)
 		}
 	}
 	break;
+}
 #endif
-	}
 }
 
 bool VideoPlayback::initConnect()
@@ -317,3 +318,31 @@ void VideoPlayback::initSDIOutput()
 	}
 	lck.unlock();
 }
+
+#if defined(WIN32)
+void VideoPlayback::deviceDiscovered(CComPtr<IDeckLink>& deckLink)
+{
+	CComBSTR	deviceNameBSTR = nullptr;
+	HRESULT		hr;
+
+	hr = deckLink->GetDisplayName(&deviceNameBSTR);
+	if (FAILED(hr))
+	{
+		// ´¦Àí´íÎó
+		return;
+	}
+
+	std::wstring deviceNameWStr = BSTRToWString(deviceNameBSTR.m_str);
+	std::string deviceNameStr = WStringToString(deviceNameWStr);
+	QString deviceName = QString::fromStdString(deviceNameStr);
+
+	//bool bActive = isDeviceActive(deckLink);
+	MyDeckLinkDevice device;
+	device.deckLink = deckLink;
+	device.m_strDisplayName = deviceName;
+	device.m_bActive = true;
+	m_mapDeviceNameIndex[device.m_strDisplayName] = device;
+
+	ui.deckLinkComboBox->addItem(device.m_strDisplayName);
+}
+#endif
