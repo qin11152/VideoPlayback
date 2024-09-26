@@ -169,9 +169,13 @@ void VideoDecoder::readFrameFromFile()
 				long long videoPos = m_dSeekTime / midva;
 
 				midva = (double)r2d(formatContext->streams[audioStreamIndex]->time_base);
-				long long audioPos = m_dSeekTime / midva;
+				//long long audioPos = m_dSeekTime / midva;
 
 				int ret = av_seek_frame(formatContext, videoStreamIndex, videoPos, AVSEEK_FLAG_BACKWARD);
+				if (0 != ret)
+				{
+					LOG_ERROR("seek video error:{}", ret);
+				}
 				// ret = av_seek_frame(formatContext, audioStreamIndex, audioPos, AVSEEK_FLAG_BACKWARD);
 
 				m_iTotalVideoSeekTime += m_dSeekTime * kmicroSecondsPerSecond - m_uiVideoCurrentTime;

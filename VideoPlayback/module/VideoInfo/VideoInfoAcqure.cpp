@@ -40,7 +40,6 @@ int32_t VideoInfoAcqure::getVideoInfo(const char* fileName, MediaInfo& mediaInfo
 	}
 
 	// Find the first video stream
-	int videoStreamIndex = -1;
 	for (unsigned int i = 0; i < formatContext->nb_streams; ++i) 
 	{
 		AVCodecParameters* codecParameters = formatContext->streams[i]->codecpar;

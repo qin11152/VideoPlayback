@@ -37,7 +37,7 @@ void ConvertYUV422pToYUV420p(const uint8_t *src_yuv422p, int width, int height, 
 	uint8_t *dst_v = dst_u + (width * height / 4);
 
 	// 使用libyuv进行转换
-	int result = libyuv::I422ToI420(
+	libyuv::I422ToI420(
 		src_y, width,
 		src_u, width / 2,
 		src_v, width / 2,

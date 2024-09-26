@@ -3,6 +3,7 @@
 #include <QMouseEvent>
 
 MySlider::MySlider(QWidget *parent)
+	: QSlider(parent)
 {
 }
 
