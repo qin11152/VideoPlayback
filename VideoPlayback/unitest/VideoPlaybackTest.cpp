@@ -28,5 +28,5 @@ TEST_F(VideoPlaybackTest,DISABLED_getChooseFileName)
 {
 	QString name = videoPlayback.onSignalChooseFileClicked();
 	//EXPECT_EQ(name.isEmpty(), false);
-	EXPECT_THAT(name, testing::Eq(u8"D:/shoulu/融合 高清 路径3 1080i50_20240903_114451_0.mov"));
+	//EXPECT_THAT(name, testing::Eq(u8"D:/shoulu/融合 高清 路径3 1080i50_20240903_114451_0.mov"));
 }

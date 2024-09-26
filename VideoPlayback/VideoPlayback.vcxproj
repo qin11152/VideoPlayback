@@ -80,6 +80,7 @@
       <AdditionalIncludeDirectories>$(ProjectDir)/ui;$(ProjectDir)/../include;$(ProjectDir)/../include/ffmpeg;$(ProjectDir)/../include/blackmagic_win;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>false</TreatWarningAsError>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>$(ProjectDir)/../lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
