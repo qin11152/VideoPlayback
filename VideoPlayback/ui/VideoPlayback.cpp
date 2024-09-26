@@ -108,16 +108,15 @@ void VideoPlayback::AudioPlayCallBack(uint8_t *audioData, uint32_t channelSample
 		uint8_t *destData = nullptr;
 		uint32_t iWritten=0;
 		std::unique_lock<std::mutex> lck(m_mutex);
-		int ret = m_ptrSelectedDeckLinkOutput->WriteAudioSamplesSync(audioData, kOutputAudioChannels * channelSampleNumber * 
-		av_get_bytes_per_sample((AVSampleFormat)kOutputAudioFormat), &iWritten);
+		uint64_t ret = m_ptrSelectedDeckLinkOutput->WriteAudioSamplesSync(audioData, channelSampleNumber, &iWritten);
 		lck.unlock();
 		if (ret != S_OK)
 		{
 			LOG_ERROR("WriteAudioSamplesSync error,ret={}",ret);
 		}
-		if(iWritten!=kOutputAudioChannels * channelSampleNumber * av_get_bytes_per_sample((AVSampleFormat)kOutputAudioFormat))
+		if(iWritten!=channelSampleNumber)
 		{
-			LOG_ERROR("WriteAudioSamplesSync error,iWritten={},dest={}",iWritten,kOutputAudioChannels * channelSampleNumber * av_get_bytes_per_sample((AVSampleFormat)kOutputAudioFormat));
+			LOG_ERROR("WriteAudioSamplesSync error,iWritten={},dest cnt={}",iWritten,kOutputAudioChannels * channelSampleNumber * av_get_bytes_per_sample((AVSampleFormat)kOutputAudioFormat));
 		}
 	}
 }
@@ -136,7 +135,6 @@ QString VideoPlayback::onSignalChooseFileClicked()
 
 void VideoPlayback::onSignalSliderValueChanged(double vlaue)
 {
-	qDebug() << "vlaue" << vlaue;
 	// 触发时间小于200ms的不处理
 	disconnect(ui.videoTImeSlider, &MySlider::signalSliderValueChanged, this, &VideoPlayback::onSignalSliderValueChanged);
 	m_bSliderEnableConnect = false;
@@ -192,12 +190,12 @@ void VideoPlayback::customEvent(QEvent *event)
 			int64_t videoIOSupport;
 			if (!decklinkAttributes)
 			{
-				qDebug() << "decklinkAttributes is null";
+				LOG_ERROR("decklinkAttributes is null");
 				return;
 			}
 			if (decklinkAttributes->GetInt(BMDDeckLinkVideoIOSupport, &videoIOSupport) != S_OK || (videoIOSupport & bmdDeviceSupportsPlayback) == 0)
 			{
-				qDebug() << "decklinkAttributes->GetInt(BMDDeckLinkVideoIOSupport, &videoIOSupport) != S_OK";
+				LOG_ERROR("decklinkAttributes->GetInt(BMDDeckLinkVideoIOSupport, &videoIOSupport) != S_OK");
 				return;
 			}
 
@@ -310,8 +308,16 @@ void VideoPlayback::initSDIOutput()
 	}
 	std::unique_lock<std::mutex> lck(m_mutex);
 	// 初始化SDI输出
-	m_ptrSelectedDeckLinkOutput->EnableVideoOutput((BMDDisplayMode)kSDIOutputFormat, bmdVideoOutputFlagDefault);
-	m_ptrSelectedDeckLinkOutput->EnableAudioOutput(bmdAudioSampleRate48kHz, bmdAudioSampleType16bitInteger, kOutputAudioChannels, bmdAudioOutputStreamContinuous);
+	int64_t ret = m_ptrSelectedDeckLinkOutput->EnableVideoOutput((BMDDisplayMode)kSDIOutputFormat, bmdVideoOutputFlagDefault);
+	if(S_OK!=ret)
+	{
+		LOG_ERROR("enable video output failed,ret={}",ret);
+	}
+	ret = m_ptrSelectedDeckLinkOutput->EnableAudioOutput(bmdAudioSampleRate48kHz, bmdAudioSampleType16bitInteger, kOutputAudioChannels, bmdAudioOutputStreamContinuous);
+	if(S_OK!=ret)
+	{
+		LOG_ERROR("enable audio output failed,ret={}",ret);
+	}
 	if (nullptr == kDecklinkOutputFrame)
 	{
 		m_ptrSelectedDeckLinkOutput->CreateVideoFrame(kOutputVideoWidth, kOutputVideoHeight, kOutputVideoWidth * 2, bmdFormat8BitYUV, bmdFrameFlagDefault, &kDecklinkOutputFrame);

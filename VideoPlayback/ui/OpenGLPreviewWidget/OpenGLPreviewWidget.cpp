@@ -9,8 +9,18 @@ void ConvertYUYV422ToYUV420(const uint8_t *yuyv, int width, int height,
 	int y_stride = width;
 	int uv_stride = width / 2;
 
-	// 使用libyuv进行转换,yuv422到yuv420
+	// 使用libyuv进行转换,yuyv422到yuv420
 	libyuv::YUY2ToI420(yuyv, yuyv_stride, y_plane, y_stride, u_plane, uv_stride, v_plane, uv_stride, width, height);
+}
+
+void convertUYVY422ToYUV420(const uint8_t *uyvy, int width, int height, uint8_t *y_plane, uint8_t *u_plane, uint8_t *v_plane)
+{
+	int uyvy_stride = width * 2;
+	int y_stride = width;
+	int uv_stride = width / 2;
+
+	// 使用libyuv进行转换,uyvy422到yuv420
+	libyuv::UYVYToI420(uyvy, uyvy_stride, y_plane, y_stride, u_plane, uv_stride, v_plane, uv_stride, width, height);
 }
 
 void ConvertYUV422pToYUV420p(const uint8_t *src_yuv422p, int width, int height, uint8_t *dst_yuv420p)
@@ -69,15 +79,27 @@ void OpenGLPreviewWidget::onSignalYUVData(QByteArray data, const VideoInfo &vide
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, m_uiWidth / 2, m_uiHeight / 2, 0, GL_RED, GL_UNSIGNED_BYTE, 0); // 创建材质显卡空间
 	}
-	uint8_t* yuyv422 = new uint8_t[videoInfo.width*videoInfo.height*2]{ 0 };
-	memcpy(yuyv422, data.data(), data.size());
-	uint8_t* yuv420 = new uint8_t[m_uiWidth * m_uiHeight * 3 / 2]{ 0 };
-	//ConvertYUYV422ToYUV420(yuyv422, width, height, yuv420, yuv420 + width * height, yuv420 + width * height * 5 / 4);
-	ConvertYUV422pToYUV420p(yuyv422, m_uiWidth, m_uiHeight, yuv420);
+	uint8_t* yuv420 = new uint8_t[m_uiWidth * m_uiHeight * 3 / 2];
+	switch(videoInfo.videoFormat)
+	{
+		case::AV_PIX_FMT_UYVY422:
+		{
+			convertUYVY422ToYUV420((const uint8_t*)data.data(), m_uiWidth, m_uiHeight, yuv420, yuv420 + m_uiWidth * m_uiHeight, yuv420 + m_uiWidth * m_uiHeight * 5 / 4);
+		}
+			break;
+		case::AV_PIX_FMT_YUYV422:
+		{
+			ConvertYUYV422ToYUV420((const uint8_t*)data.data(), m_uiWidth, m_uiHeight, yuv420, yuv420 + m_uiWidth * m_uiHeight, yuv420 + m_uiWidth * m_uiHeight * 5 / 4);
+		}
+			break;
+		case::AV_PIX_FMT_YUV422P:
+		{
+			ConvertYUV422pToYUV420p((const uint8_t*)data.data(), m_uiWidth, m_uiHeight, yuv420);
+			break;
+		}
+	}
 	m_YUV420Data = QByteArray((char*)yuv420, m_uiWidth * m_uiHeight * 3 / 2);
-	//printf("convert time :%llu\n", std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count());
 	delete[]yuv420;
-	delete[]yuyv422;
 	update();
 }
 
