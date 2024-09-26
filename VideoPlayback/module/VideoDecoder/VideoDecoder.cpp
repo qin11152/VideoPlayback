@@ -88,8 +88,8 @@ int32_t VideoDecoder::initModule(const char *fileName, const VideoInfo &outVideo
 			AVChannelLayout out_channel_layout;
 			av_channel_layout_default(&out_channel_layout, m_stuAudioInfo.audioChannels); // Stereo output
 
-			 int out_sample_rate = m_stuAudioInfo.audioSampleRate;
-			//int out_sample_rate = audioCodecContext->sample_rate;
+			int out_sample_rate = m_stuAudioInfo.audioSampleRate;
+			// int out_sample_rate = audioCodecContext->sample_rate;
 			AVSampleFormat out_sample_fmt = m_stuAudioInfo.audioFormat;
 
 			if (swr_alloc_set_opts2(&swrContext, &out_channel_layout, out_sample_fmt, out_sample_rate,
@@ -317,7 +317,9 @@ void VideoDecoder::decodeVideo()
 					memcpy(videoInfo.yuvData, yuvFrame->data[0], videoInfo.dataSize);
 				}
 				break;
-				case AV_PIX_FMT_YUV422P:
+				case AV_PIX_FMT_YUV422P: 
+				case AV_PIX_FMT_YUYV422: 
+				case AV_PIX_FMT_UYVY422:
 				{
 					videoInfo.yuvData = new uint8_t[m_stuVideoInfo.width * m_stuVideoInfo.height * 2];
 					videoInfo.dataSize = m_stuVideoInfo.width * m_stuVideoInfo.height * 2;
@@ -430,9 +432,9 @@ void VideoDecoder::decodeAudio()
 				int32_t out_buffer_size = av_samples_get_buffer_size(nullptr, m_stuAudioInfo.audioChannels, frame->nb_samples, m_stuAudioInfo.audioFormat, 1);
 
 				//// 分配输出缓冲区的空间
-				uint8_t* out_buff = (unsigned char*)av_malloc(out_buffer_size);
+				uint8_t *out_buff = (unsigned char *)av_malloc(out_buffer_size);
 				swr_size = swr_convert(swrContext,										  // 音频采样器的实例
-									   &out_buff, frame->nb_samples,						  // 输出的数据内容和数据大小
+									   &out_buff, frame->nb_samples,					  // 输出的数据内容和数据大小
 									   (const uint8_t **)frame->data, frame->nb_samples); // 输入的数据内容和数据大小
 
 				double pts = frame->pts * av_q2d(formatContext->streams[audioStreamIndex]->time_base);
@@ -513,7 +515,6 @@ void VideoDecoder::seekTo(double_t time)
 	}
 	m_dSeekTime = time;
 	m_bSeekState = true;
-	qDebug() << "seek value" << time;
 	std::unique_lock<std::mutex> lck(m_PacketMutex);
 	m_ReadCV.notify_one();
 }
