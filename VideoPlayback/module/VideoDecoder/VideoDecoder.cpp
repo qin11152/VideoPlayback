@@ -176,10 +176,8 @@ void VideoDecoder::readFrameFromFile()
 
 				m_iTotalVideoSeekTime += m_dSeekTime * kmicroSecondsPerSecond - m_uiVideoCurrentTime;
 				m_iTotalAudioSeekTime += m_dSeekTime * kmicroSecondsPerSecond - m_uiVideoCurrentTime;
-				qDebug() << "first seek,video time:" << m_uiVideoCurrentTime;
 				LOG_INFO("at seek time,play time:{},seek time{},video changed time:{}", (double)m_uiVideoCurrentTime / kmicroSecondsPerSecond, m_dSeekTime.load(), m_iTotalVideoSeekTime);
 				m_uiVideoCurrentTime = m_dSeekTime * kmicroSecondsPerSecond;
-				qDebug() << "first seek,audio time:" << m_uiAudioCurrentTime;
 				LOG_INFO("at seek time,play time:{},seek time{:.4f},audio changed time:{}", (double)m_uiAudioCurrentTime / kmicroSecondsPerSecond, m_dSeekTime.load(), m_iTotalAudioSeekTime);
 				m_uiAudioCurrentTime = m_dSeekTime * kmicroSecondsPerSecond;
 
@@ -447,6 +445,11 @@ void VideoDecoder::decodeAudio()
 		{
 			while (avcodec_receive_frame(audioCodecContext, frame) == 0)
 			{
+				std::fstream fs("audio.pcm", std::ios::app | std::ios::binary);
+				//把重采样之前的数据保存本地
+				fs.write((const char *)frame->data[0], frame->linesize[0]);
+				fs.close();
+
 				int data_size = av_samples_get_buffer_size(nullptr,
 														   audioCodecContext->ch_layout.nb_channels,
 														   frame->nb_samples,
