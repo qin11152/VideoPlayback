@@ -7,9 +7,9 @@
 #include <QDateTime>
 #include <QFileDialog>
 
-IDeckLinkMutableVideoFrame *kDecklinkOutputFrame = nullptr;
+IDeckLinkMutableVideoFrame* kDecklinkOutputFrame = nullptr;
 
-VideoPlayback::VideoPlayback(QWidget *parent)
+VideoPlayback::VideoPlayback(QWidget* parent)
 	: QWidget(parent)
 {
 	ui.setupUi(this);
@@ -17,21 +17,50 @@ VideoPlayback::VideoPlayback(QWidget *parent)
 	initModule();
 
 	connect(ui.startPushButton, &QPushButton::clicked, this, [=]()
+		{
+			if (ui.atomRadioButton->isChecked())
 			{
-		if (m_ptrVideoDecoder)
-		{
-			delete m_ptrVideoDecoder;
-			m_ptrVideoDecoder = nullptr;
-		}
-		m_ptrVideoDecoder = new VideoDecoder();
-		if (initDecoder())
-		{
-			m_ptrVideoDecoder->startDecoder();
-		} });
-	connect(ui.pausePushButton, &QPushButton::clicked, this, [=]()
-			{ m_ptrVideoDecoder->pauseDecoder(); });
-	connect(ui.continuePushButton, &QPushButton::clicked, this, [=]()
-			{ m_ptrVideoDecoder->resumeDecoder(); });
+				if (m_ptrAtomDecoder)
+				{
+					delete m_ptrAtomDecoder;
+					m_ptrAtomDecoder = nullptr;
+				}
+				m_ptrAtomDecoder = new AtomDecoder();
+				if (initDecoder())
+				{
+					m_ptrAtomDecoder->startDecoder();
+				}
+			}
+			else
+			{
+				if (m_ptrVideoDecoder)
+				{
+					delete m_ptrVideoDecoder;
+					m_ptrVideoDecoder = nullptr;
+				}
+				m_ptrVideoDecoder = new VideoDecoder();
+				if (initDecoder())
+				{
+					m_ptrVideoDecoder->startDecoder();
+				}
+			} });
+
+			connect(ui.pausePushButton, &QPushButton::clicked, this, [=]()
+				{
+					if (ui.atomRadioButton->isChecked())
+						if (m_ptrVideoDecoder)
+						{
+							m_ptrVideoDecoder->pauseDecoder();
+						}
+				});
+
+			connect(ui.continuePushButton, &QPushButton::clicked, this, [=]()
+				{
+					if (m_ptrVideoDecoder)
+					{
+						m_ptrVideoDecoder->resumeDecoder();
+					}
+				});
 }
 
 VideoPlayback::~VideoPlayback()
@@ -40,6 +69,12 @@ VideoPlayback::~VideoPlayback()
 	{
 		delete m_ptrVideoDecoder;
 		m_ptrVideoDecoder = nullptr;
+	}
+
+	if (m_ptrAtomDecoder)
+	{
+		delete m_ptrAtomDecoder;
+		m_ptrAtomDecoder = nullptr;
 	}
 
 	if (m_ptrAudioPlay)
@@ -52,6 +87,7 @@ VideoPlayback::~VideoPlayback()
 bool VideoPlayback::initModule()
 {
 	m_ptrVideoDecoder = new VideoDecoder();
+	m_ptrAtomDecoder = new AtomDecoder();
 	m_ptrAudioPlay = new AudioPlay(nullptr);
 #if defined(WIN32)
 	m_ptrDeckLinkDeviceDiscovery = new DeckLinkDeviceDiscovery();
@@ -63,7 +99,7 @@ bool VideoPlayback::initModule()
 	return initConnect() && initAudioOutput();
 }
 
-void VideoPlayback::previewCallback(const VideoCallbackInfo &videoInfo, int64_t currentTime)
+void VideoPlayback::previewCallback(const VideoCallbackInfo& videoInfo, int64_t currentTime)
 {
 	// 将YUV数据发送出去
 	if (nullptr == videoInfo.yuvData)
@@ -74,20 +110,43 @@ void VideoPlayback::previewCallback(const VideoCallbackInfo &videoInfo, int64_t 
 	video.width = videoInfo.width;
 	video.height = videoInfo.height;
 	video.videoFormat = videoInfo.videoFormat;
-	QByteArray data((char *)videoInfo.yuvData, videoInfo.dataSize);
+	QByteArray data((char*)videoInfo.yuvData, videoInfo.dataSize);
 	emit signalYUVData(data, video);
 	updateTimeLabel(currentTime, m_stuMediaInfo.duration);
 	updateTimeSliderPosition(currentTime);
 }
 
-void VideoPlayback::SDIOutputCallback(const VideoCallbackInfo &videoInfo)
+void VideoPlayback::AudioCallback(std::vector<Buffer*> audioBuffer)
+{
+	//从buffer中按顺序取出pcm数据，然后按照交错的方式将数据组合起来
+	int channelNum = (int)audioBuffer.size();
+	uint8_t* pcmData = new uint8_t[channelNum * m_uiAtomAudioSampleCntPerFrame]{ 0 };
+	for (int i = 0; i < channelNum; ++i)
+	{
+		uint8_t* pSrc = new uint8_t[m_uiAtomAudioSampleCntPerFrame]{ 0 };
+		audioBuffer[i]->getBuffer(pSrc, m_uiAtomAudioSampleCntPerFrame);
+		for (uint32_t j = 0; j < m_uiAtomAudioSampleCntPerFrame; ++j)
+		{
+			pcmData[j * channelNum + i] = pSrc[j];
+		}
+		delete pSrc;
+	}
+	//保存到本地
+	//QByteArray data((char*)pcmData, channelNum * m_uiAtomAudioSampleCntPerFrame);
+	//std::fstream fs("audio.pcm", std::ios::out | std::ios::app);
+	//fs.write(data.data(), data.size());
+	//fs.close();
+	delete pcmData;
+}
+
+void VideoPlayback::SDIOutputCallback(const VideoCallbackInfo& videoInfo)
 {
 	if (nullptr == videoInfo.yuvData || nullptr == m_ptrSelectedDeckLinkOutput)
 	{
 		return;
 	}
-	uint8_t *destData = nullptr;
-	kDecklinkOutputFrame->GetBytes((void **)&destData);
+	uint8_t* destData = nullptr;
+	kDecklinkOutputFrame->GetBytes((void**)&destData);
 	std::copy(videoInfo.yuvData, videoInfo.yuvData + videoInfo.dataSize, destData);
 	std::unique_lock<std::mutex> lck(m_mutex);
 	int ret = m_ptrSelectedDeckLinkOutput->DisplayVideoFrameSync(kDecklinkOutputFrame);
@@ -98,39 +157,82 @@ void VideoPlayback::SDIOutputCallback(const VideoCallbackInfo &videoInfo)
 	}
 }
 
-void VideoPlayback::AudioPlayCallBack(uint8_t *audioData, uint32_t channelSampleNumber)
+void VideoPlayback::AudioPlayCallBack(uint8_t* audioData, uint32_t channelSampleNumber)
 {
 	int cvafd = kOutputAudioChannels * channelSampleNumber * av_get_bytes_per_sample((AVSampleFormat)kOutputAudioFormat);
-	QByteArray data((char *)audioData, kOutputAudioChannels * channelSampleNumber * av_get_bytes_per_sample((AVSampleFormat)kOutputAudioFormat));
+	QByteArray data((char*)audioData, kOutputAudioChannels * channelSampleNumber * av_get_bytes_per_sample((AVSampleFormat)kOutputAudioFormat));
 	m_ptrAudioPlay->inputPcmData(data);
 	if (nullptr != m_ptrSelectedDeckLinkOutput)
 	{
-		uint8_t *destData = nullptr;
-		uint32_t iWritten=0;
+		uint8_t* destData = nullptr;
+		uint32_t iWritten = 0;
 		std::unique_lock<std::mutex> lck(m_mutex);
 		uint64_t ret = m_ptrSelectedDeckLinkOutput->WriteAudioSamplesSync(audioData, channelSampleNumber, &iWritten);
 		lck.unlock();
 		if (ret != S_OK)
 		{
-			LOG_ERROR("WriteAudioSamplesSync error,ret={}",ret);
+			LOG_ERROR("WriteAudioSamplesSync error,ret={}", ret);
 		}
-		if(iWritten!=channelSampleNumber)
+		if (iWritten != channelSampleNumber)
 		{
-			LOG_ERROR("WriteAudioSamplesSync error,iWritten={},dest cnt={}",iWritten,kOutputAudioChannels * channelSampleNumber * av_get_bytes_per_sample((AVSampleFormat)kOutputAudioFormat));
+			LOG_ERROR("WriteAudioSamplesSync error,iWritten={},dest cnt={}", iWritten, kOutputAudioChannels * channelSampleNumber * av_get_bytes_per_sample((AVSampleFormat)kOutputAudioFormat));
 		}
 	}
 }
 
 QString VideoPlayback::onSignalChooseFileClicked()
 {
-	// 打开一个文件选择框，返回选择的文件，只选择mxf，mp4，mov格式的文件
-	QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"), "", tr("Video Files (*.mxf *.mp4 *.mov)"));
-	if (!fileName.isEmpty())
+	if (ui.atomRadioButton->isChecked())
 	{
-		ui.fileNameLabel->setText(fileName);
+		m_bAtomFileValid = true;
+		//打开一个文件选择框，选择多个文件，只选择mxf文件
+		QStringList fileNames = QFileDialog::getOpenFileNames(this, tr("Open File"), "", tr("Video Files (*.mxf)"));
+		if (!fileNames.isEmpty())
+		{
+			ui.fileNameLabel->setText(fileNames.first());
+		}
+		int vNum = 0;
+		for (auto& item : fileNames)
+		{
+			MediaInfo mediaInfo;
+			VideoInfoAcqure::getInstance()->getVideoInfo(item.toStdString().c_str(), mediaInfo);
+			if (MediaType::VideoAndAudio == mediaInfo.mediaType)
+			{
+				m_bAtomFileValid = false;
+				LOG_ERROR("The file not atom format{}", item.toStdString().c_str());
+				return "";
+			}
+			else if (MediaType::Video == mediaInfo.mediaType)
+			{
+				if (++vNum > 1)
+				{
+					m_bAtomFileValid = false;
+					LOG_ERROR("file contains more than two video file");
+					return "";
+				}
+				m_uiAtomFrameCnt = mediaInfo.fps;
+				m_strChooseFileName = item;
+			}
+			else if (MediaType::Audio == mediaInfo.mediaType)
+			{
+				m_vecChooseNameAtom.push_back(item);
+				m_uiAtomAudioSampleRate = mediaInfo.audioSampleRate;
+			}
+		}
+		m_uiAtomAudioSampleCntPerFrame = m_uiAtomAudioSampleRate / m_uiAtomFrameCnt;
+		return fileNames.first();
 	}
-	m_strChooseFileName = fileName;
-	return fileName;
+	else
+	{
+		// 打开一个文件选择框，返回选择的文件，只选择mxf，mp4，mov格式的文件
+		QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"), "", tr("Video Files (*.mxf *.mp4 *.mov)"));
+		if (!fileName.isEmpty())
+		{
+			ui.fileNameLabel->setText(fileName);
+		}
+		m_strChooseFileName = fileName;
+		return fileName;
+	}
 }
 
 void VideoPlayback::onSignalSliderValueChanged(double vlaue)
@@ -141,9 +243,9 @@ void VideoPlayback::onSignalSliderValueChanged(double vlaue)
 	double time = vlaue * ((ui.videoTImeSlider->maximum() - ui.videoTImeSlider->minimum()) + ui.videoTImeSlider->minimum()) / 100.0;
 	m_ptrVideoDecoder->seekTo(time);
 	QTimer::singleShot(100, this, [=]()
-					   {
-		m_bSliderEnableConnect = true;
-		connect(ui.videoTImeSlider, &MySlider::signalSliderValueChanged, this, &VideoPlayback::onSignalSliderValueChanged); });
+		{
+			m_bSliderEnableConnect = true;
+			connect(ui.videoTImeSlider, &MySlider::signalSliderValueChanged, this, &VideoPlayback::onSignalSliderValueChanged); });
 }
 
 void VideoPlayback::onSignalSelectedDeviceChanged(int index)
@@ -163,25 +265,25 @@ void VideoPlayback::onSignalSelectedDeviceChanged(int index)
 #if defined(WIN32)
 		m_ptrSelectedDeckLinkOutput = iter->second.deckLink;
 #elif defined(__linux__)
-		iter->second.deckLink->QueryInterface(IID_IDeckLinkOutput, (void **)&m_ptrSelectedDeckLinkOutput);
+		iter->second.deckLink->QueryInterface(IID_IDeckLinkOutput, (void**)&m_ptrSelectedDeckLinkOutput);
 #endif
 		initSDIOutput();
 		LOG_INFO("Selected device is {}", strDeviceName.toStdString().c_str());
-	}
+}
 	else
 	{
 		m_ptrSelectedDeckLinkOutput = nullptr;
 	}
 }
 
-void VideoPlayback::customEvent(QEvent *event)
+void VideoPlayback::customEvent(QEvent* event)
 {
 #if defined(__linux__)
 	switch (event->type())
 	{
 	case kAddDeviceEvent:
 	{
-		DeckLinkDeviceDiscoveryEvent *addEvent = dynamic_cast<DeckLinkDeviceDiscoveryEvent *>(event);
+		DeckLinkDeviceDiscoveryEvent* addEvent = dynamic_cast<DeckLinkDeviceDiscoveryEvent*>(event);
 		if (addEvent)
 		{
 			auto decklink = addEvent->deckLink();
@@ -202,8 +304,8 @@ void VideoPlayback::customEvent(QEvent *event)
 			bool bActive = isDeviceActive(decklink);
 			MyDeckLinkDevice device;
 			device.deckLink = decklink;
-			char *pName = nullptr;
-			decklink->GetDisplayName((const char **)(&pName));
+			char* pName = nullptr;
+			decklink->GetDisplayName((const char**)(&pName));
 			device.m_strDisplayName = QString::fromLocal8Bit(pName);
 			device.m_bActive = bActive;
 			m_mapDeviceNameIndex[device.m_strDisplayName] = device;
@@ -212,7 +314,7 @@ void VideoPlayback::customEvent(QEvent *event)
 		}
 	}
 	break;
-}
+	}
 #endif
 }
 
@@ -245,19 +347,43 @@ bool VideoPlayback::initDecoder()
 	setTimeSliderRange(m_stuMediaInfo.duration);
 	updateTimeLabel(0, m_stuMediaInfo.duration);
 
-	m_ptrVideoDecoder->unInitModule();
-	VideoInfo videoInfo;
-	videoInfo.width = kOutputVideoWidth;
-	videoInfo.height = kOutputVideoHeight;
-	videoInfo.videoFormat = (AVPixelFormat)kOutputVideoFormat;
-	AudioInfo audioInfo;
-	audioInfo.audioChannels = kOutputAudioChannels;
-	audioInfo.audioSampleRate = kOutputAudioSampleRate;
-	audioInfo.audioFormat = (AVSampleFormat)kOutputAudioFormat;
-	audioInfo.samplePerChannel = kOutputAudioSamplePerChannel;
-	m_ptrVideoDecoder->initModule(m_strChooseFileName.toStdString().c_str(), videoInfo, audioInfo);
-	m_ptrVideoDecoder->initVideoCallBack(std::bind(&VideoPlayback::previewCallback, this, std::placeholders::_1, std::placeholders::_2), std::bind(&VideoPlayback::SDIOutputCallback, this, std::placeholders::_1));
-	m_ptrVideoDecoder->initAudioCallback(std::bind(&VideoPlayback::AudioPlayCallBack, this, std::placeholders::_1, std::placeholders::_2));
+	if (ui.atomRadioButton->isChecked())
+	{
+		m_ptrAtomDecoder->unInitModule();
+		VideoInfo videoInfo;
+		videoInfo.width = kOutputVideoWidth;
+		videoInfo.height = kOutputVideoHeight;
+		videoInfo.videoFormat = (AVPixelFormat)kOutputVideoFormat;
+		std::vector<std::pair<std::string, AudioInfo>> vecTmp;
+		for (auto& item : m_vecChooseNameAtom)
+		{
+			AudioInfo audioInfo;
+			audioInfo.audioChannels = kOutputAudioChannels;
+			audioInfo.audioSampleRate = kOutputAudioSampleRate;
+			audioInfo.audioFormat = (AVSampleFormat)kOutputAudioFormat;
+			audioInfo.samplePerChannel = kOutputAudioSamplePerChannel;
+			vecTmp.push_back(std::pair<std::string, AudioInfo>(item.toStdString(), audioInfo));
+		}
+		m_ptrAtomDecoder->initModule(m_strChooseFileName.toStdString().c_str(), vecTmp, videoInfo);
+		m_ptrAtomDecoder->initVideoCallBack(std::bind(&VideoPlayback::previewCallback, this, std::placeholders::_1, std::placeholders::_2), std::bind(&VideoPlayback::SDIOutputCallback, this, std::placeholders::_1));
+		m_ptrAtomDecoder->initAudioCallback(std::bind(&VideoPlayback::AudioCallback, this, std::placeholders::_1));
+	}
+	else
+	{
+		m_ptrVideoDecoder->unInitModule();
+		VideoInfo videoInfo;
+		videoInfo.width = kOutputVideoWidth;
+		videoInfo.height = kOutputVideoHeight;
+		videoInfo.videoFormat = (AVPixelFormat)kOutputVideoFormat;
+		AudioInfo audioInfo;
+		audioInfo.audioChannels = kOutputAudioChannels;
+		audioInfo.audioSampleRate = kOutputAudioSampleRate;
+		audioInfo.audioFormat = (AVSampleFormat)kOutputAudioFormat;
+		audioInfo.samplePerChannel = kOutputAudioSamplePerChannel;
+		m_ptrVideoDecoder->initModule(m_strChooseFileName.toStdString().c_str(), videoInfo, audioInfo);
+		m_ptrVideoDecoder->initVideoCallBack(std::bind(&VideoPlayback::previewCallback, this, std::placeholders::_1, std::placeholders::_2), std::bind(&VideoPlayback::SDIOutputCallback, this, std::placeholders::_1));
+		m_ptrVideoDecoder->initAudioCallback(std::bind(&VideoPlayback::AudioPlayCallBack, this, std::placeholders::_1, std::placeholders::_2));
+	}
 	return true;
 }
 
@@ -273,14 +399,14 @@ void VideoPlayback::updateTimeLabel(const int currentTime, const int totalTime)
 	int totalSecond = totalTime % 60;
 
 	QString strCurrentTime = QString("%1:%2:%3")
-								 .arg(currentHour, 2, 10, QChar('0'))
-								 .arg(currentMinute, 2, 10, QChar('0'))
-								 .arg(currentSecond, 2, 10, QChar('0'));
+		.arg(currentHour, 2, 10, QChar('0'))
+		.arg(currentMinute, 2, 10, QChar('0'))
+		.arg(currentSecond, 2, 10, QChar('0'));
 
 	QString strTotalTime = QString("%1:%2:%3")
-							   .arg(totalHour, 2, 10, QChar('0'))
-							   .arg(totalMinute, 2, 10, QChar('0'))
-							   .arg(totalSecond, 2, 10, QChar('0'));
+		.arg(totalHour, 2, 10, QChar('0'))
+		.arg(totalMinute, 2, 10, QChar('0'))
+		.arg(totalSecond, 2, 10, QChar('0'));
 
 	ui.timeCodeLabel->setText(strCurrentTime + "/" + strTotalTime);
 }
@@ -309,14 +435,14 @@ void VideoPlayback::initSDIOutput()
 	std::unique_lock<std::mutex> lck(m_mutex);
 	// 初始化SDI输出
 	int64_t ret = m_ptrSelectedDeckLinkOutput->EnableVideoOutput((BMDDisplayMode)kSDIOutputFormat, bmdVideoOutputFlagDefault);
-	if(S_OK!=ret)
+	if (S_OK != ret)
 	{
-		LOG_ERROR("enable video output failed,ret={}",ret);
+		LOG_ERROR("enable video output failed,ret={}", ret);
 	}
 	ret = m_ptrSelectedDeckLinkOutput->EnableAudioOutput(bmdAudioSampleRate48kHz, bmdAudioSampleType16bitInteger, kOutputAudioChannels, bmdAudioOutputStreamContinuous);
-	if(S_OK!=ret)
+	if (S_OK != ret)
 	{
-		LOG_ERROR("enable audio output failed,ret={}",ret);
+		LOG_ERROR("enable audio output failed,ret={}", ret);
 	}
 	if (nullptr == kDecklinkOutputFrame)
 	{
@@ -328,8 +454,8 @@ void VideoPlayback::initSDIOutput()
 #if defined(WIN32)
 void VideoPlayback::deviceDiscovered(CComPtr<IDeckLink>& deckLink)
 {
-	CComBSTR	deviceNameBSTR = nullptr;
-	HRESULT		hr;
+	CComBSTR deviceNameBSTR = nullptr;
+	HRESULT hr;
 
 	hr = deckLink->GetDisplayName(&deviceNameBSTR);
 	if (FAILED(hr))
@@ -342,7 +468,7 @@ void VideoPlayback::deviceDiscovered(CComPtr<IDeckLink>& deckLink)
 	std::string deviceNameStr = WStringToString(deviceNameWStr);
 	QString deviceName = QString::fromStdString(deviceNameStr);
 
-	//bool bActive = isDeviceActive(deckLink);
+	// bool bActive = isDeviceActive(deckLink);
 	MyDeckLinkDevice device;
 	device.deckLink = deckLink;
 	device.m_strDisplayName = deviceName;

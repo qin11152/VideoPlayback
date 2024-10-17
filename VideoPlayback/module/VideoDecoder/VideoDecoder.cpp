@@ -449,10 +449,10 @@ void VideoDecoder::decodeAudio()
 		{
 			while (avcodec_receive_frame(audioCodecContext, frame) == 0)
 			{
-				std::fstream fs("audio.pcm", std::ios::app | std::ios::binary);
-				//把重采样之前的数据保存本地
-				fs.write((const char *)frame->data[0], frame->linesize[0]);
-				fs.close();
+				//std::fstream fs("audio.pcm", std::ios::app | std::ios::binary);
+				////把重采样之前的数据保存本地
+				//fs.write((const char *)frame->data[0], frame->linesize[0]);
+				//fs.close();
 
 				int data_size = av_samples_get_buffer_size(nullptr,
 														   audioCodecContext->ch_layout.nb_channels,

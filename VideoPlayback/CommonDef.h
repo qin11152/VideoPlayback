@@ -36,6 +36,13 @@ constexpr int kBufferWaterLevel = 20;
 constexpr int kmicroSecondsPerSecond = 1000000;
 constexpr int kmilliSecondsPerSecond = 1000;
 
+enum class MediaType
+{
+	Invalid,
+	Video,
+	Audio,
+	VideoAndAudio,
+};
 
 struct MediaInfo
 {
@@ -53,6 +60,7 @@ struct MediaInfo
 	int audioFrameCount{ 0 };
 	AVPixelFormat videoFormat{ AV_PIX_FMT_NONE };
 	AVSampleFormat audioFormat{ AV_SAMPLE_FMT_NONE };
+	MediaType mediaType{ MediaType::Invalid };
 };
 
 struct VideoInfo

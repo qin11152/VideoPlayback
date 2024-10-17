@@ -63,6 +63,7 @@
     <IntDir>$(SolutionDir)/internal/$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <IntDir>$(SolutionDir)/internal/$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -117,6 +118,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\include\blackmagic_win\DeckLinkAPI_i.c" />
+    <ClCompile Include="module\AtomDecoder\AtomDecoder.cpp" />
+    <ClCompile Include="module\AtomDecoder\Buffer.cpp" />
     <ClCompile Include="module\AudioPlay\AudioPlay.cpp" />
     <ClCompile Include="module\BlackMagic\DeckLinkDeviceDiscovery\DeckLinkDeviceDiscovery.cpp" />
     <ClCompile Include="module\LogModule\Log.cpp" />
@@ -141,6 +144,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CommonDef.h" />
+    <ClInclude Include="module\AtomDecoder\AtomDecoder.h" />
+    <ClInclude Include="module\AtomDecoder\Buffer.h" />
     <ClInclude Include="stdafx.h" />
     <QtMoc Include="ui\MySlider\MySlider.h" />
     <QtMoc Include="module\AudioPlay\AudioPlay.h" />

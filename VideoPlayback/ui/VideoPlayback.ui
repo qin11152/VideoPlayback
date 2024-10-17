@@ -36,7 +36,10 @@
     </layout>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout_4">
+    <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="3,3,2">
+     <property name="spacing">
+      <number>15</number>
+     </property>
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout">
        <item>
@@ -74,12 +77,33 @@
        <item>
         <widget class="QLabel" name="fileNameLabel">
          <property name="text">
-          <string>TextLabel</string>
+          <string>SDIOutputChannel</string>
          </property>
         </widget>
        </item>
        <item>
         <widget class="QComboBox" name="deckLinkComboBox"/>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_5" stretch="2,1">
+       <property name="spacing">
+        <number>0</number>
+       </property>
+       <item>
+        <widget class="QLabel" name="label">
+         <property name="text">
+          <string>Atom mode</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QRadioButton" name="atomRadioButton">
+         <property name="text">
+          <string/>
+         </property>
+        </widget>
        </item>
       </layout>
      </item>

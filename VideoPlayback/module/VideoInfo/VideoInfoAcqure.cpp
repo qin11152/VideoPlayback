@@ -38,13 +38,15 @@ int32_t VideoInfoAcqure::getVideoInfo(const char* fileName, MediaInfo& mediaInfo
 		avformat_close_input(&formatContext);
 		return (int32_t)ErrorCode::FindStreamInfoError;
 	}
-
+	bool vFlag = false;
+	bool aFlag = false;
 	// Find the first video stream
 	for (unsigned int i = 0; i < formatContext->nb_streams; ++i) 
 	{
 		AVCodecParameters* codecParameters = formatContext->streams[i]->codecpar;
 		if (formatContext->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO)
 		{
+			vFlag = true;
 			// Get video information
 			if (codecParameters)
 			{
@@ -57,6 +59,7 @@ int32_t VideoInfoAcqure::getVideoInfo(const char* fileName, MediaInfo& mediaInfo
 		}
 		else if (formatContext->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_AUDIO)
 		{
+			aFlag = true;
 			if (codecParameters)
 			{
 				mediaInfo.audioBitrate = codecParameters->bit_rate;
@@ -66,6 +69,19 @@ int32_t VideoInfoAcqure::getVideoInfo(const char* fileName, MediaInfo& mediaInfo
 			}
 		}
 	}
+	if (vFlag && aFlag)
+	{
+		mediaInfo.mediaType = MediaType::VideoAndAudio;
+	}
+	else if (vFlag)
+	{
+		mediaInfo.mediaType = MediaType::Video;
+	}
+	else if (aFlag)
+	{
+		mediaInfo.mediaType = MediaType::Audio;
+	}
+
 	// Clean up
 	avformat_close_input(&formatContext);
 	return (int32_t)ErrorCode::NoError;
