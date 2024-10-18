@@ -48,6 +48,12 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    - name: Install OpenGL and other dependencies
+      run: |
+        git clone https://github.com/Microsoft/vcpkg.git
+        .\vcpkg\bootstrap-vcpkg.bat
+        .\vcpkg\vcpkg install opengl
+
     - name: Install Qt
       uses: jurplel/install-qt-action@v3
       with:
