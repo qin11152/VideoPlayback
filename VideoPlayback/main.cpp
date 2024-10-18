@@ -19,10 +19,7 @@ int main(int argc, char *argv[])
     LogConfig conf("info", "log/VideoPlayback.log", 5 * 1024 * 1024, 10);
     INITLOG(conf);
     LOG_INFO("VideoPlayback start");
-
-    MediaInfo videoInfo;
-	VideoInfoAcqure::getInstance()->getVideoInfo(u8"Z:/∫”±±≤‚ ‘/≤‚ ‘ ”∆µ/davinci_atom_xdcam.mxf", videoInfo);
-
+    
     VideoPlayback w;
     w.show();
     return a.exec();
