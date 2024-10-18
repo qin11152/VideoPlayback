@@ -19,6 +19,8 @@ public:
 
 	void inputPcmData(const QByteArray& pcmData);
 
+	void clearAudioDevice();
+
 private:
 	void initModule();
 

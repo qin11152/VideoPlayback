@@ -8,7 +8,8 @@
 #include <QFileDialog>
 
 IDeckLinkMutableVideoFrame* kDecklinkOutputFrame = nullptr;
-
+std::fstream fs("audio.pcm1", std::ios::out | std::ios::binary);
+std::fstream fs1("audio.pcm2", std::ios::out | std::ios::binary);
 VideoPlayback::VideoPlayback(QWidget* parent)
 	: QWidget(parent)
 {
@@ -25,6 +26,7 @@ VideoPlayback::VideoPlayback(QWidget* parent)
 					delete m_ptrAtomDecoder;
 					m_ptrAtomDecoder = nullptr;
 				}
+				initAudioOutput();
 				m_ptrAtomDecoder = new AtomDecoder();
 				if (initDecoder())
 				{
@@ -38,12 +40,14 @@ VideoPlayback::VideoPlayback(QWidget* parent)
 					delete m_ptrVideoDecoder;
 					m_ptrVideoDecoder = nullptr;
 				}
+				initAudioOutput();
 				m_ptrVideoDecoder = new VideoDecoder();
 				if (initDecoder())
 				{
 					m_ptrVideoDecoder->startDecoder();
 				}
-			} });
+			} 
+		});
 
 			connect(ui.pausePushButton, &QPushButton::clicked, this, [=]()
 				{
@@ -65,6 +69,8 @@ VideoPlayback::VideoPlayback(QWidget* parent)
 
 VideoPlayback::~VideoPlayback()
 {
+	fs.close();
+	fs1.close();
 	if (m_ptrVideoDecoder)
 	{
 		delete m_ptrVideoDecoder;
@@ -96,7 +102,7 @@ bool VideoPlayback::initModule()
 	m_ptrDeckLinkDeviceDiscovery = new DeckLinkDeviceDiscovery(this);
 #endif
 	m_ptrDeckLinkDeviceDiscovery->Enable();
-	return initConnect() && initAudioOutput();
+	return initConnect();
 }
 
 void VideoPlayback::previewCallback(const VideoCallbackInfo& videoInfo, int64_t currentTime)
@@ -120,22 +126,38 @@ void VideoPlayback::AudioCallback(std::vector<Buffer*> audioBuffer)
 {
 	//从buffer中按顺序取出pcm数据，然后按照交错的方式将数据组合起来
 	int channelNum = (int)audioBuffer.size();
-	uint8_t* pcmData = new uint8_t[channelNum * m_uiAtomAudioSampleCntPerFrame]{ 0 };
+	uint8_t* pcmData = new uint8_t[channelNum * 1920 * 2]{ 0 };
+
+	std::vector<uint8_t*> vecAudioBuffer;
 	for (int i = 0; i < channelNum; ++i)
 	{
-		uint8_t* pSrc = new uint8_t[m_uiAtomAudioSampleCntPerFrame]{ 0 };
-		audioBuffer[i]->getBuffer(pSrc, m_uiAtomAudioSampleCntPerFrame);
-		for (uint32_t j = 0; j < m_uiAtomAudioSampleCntPerFrame; ++j)
+		uint8_t* pSrc = new uint8_t[1920 * 2]{ 0 };
+		audioBuffer[i]->getBuffer(pSrc, 1920 * 2);
+		if (0 == i)
 		{
-			pcmData[j * channelNum + i] = pSrc[j];
+			QByteArray data((char*)pSrc, 1920 * 2);
+			m_ptrAudioPlay->inputPcmData(data);
 		}
-		delete pSrc;
+		vecAudioBuffer.push_back(pSrc);
+	}
+
+	//for (int i = 0; i < 1920; ++i)
+	//{
+	//	//16位采样率的音频数据，组合成交错的方式
+	//	for (size_t j = 0; j < channelNum; ++j)
+	//	{
+	//		pcmData[(i * channelNum + j) * 2] = vecAudioBuffer[j][i * 2];
+	//	}
+	//}
+	memcpy(pcmData, vecAudioBuffer[0], 1920 * 2);
+	memcpy(pcmData + 1920 * 2, vecAudioBuffer[1], 1920 * 2);
+	//fs.write((char*)vecAudioBuffer[0], 1920 * 2);
+	//fs1.write((char*)pcmData, 1920 * 4);
+	for (auto& item : vecAudioBuffer)
+	{
+		delete[]item;
 	}
 	//保存到本地
-	//QByteArray data((char*)pcmData, channelNum * m_uiAtomAudioSampleCntPerFrame);
-	//std::fstream fs("audio.pcm", std::ios::out | std::ios::app);
-	//fs.write(data.data(), data.size());
-	//fs.close();
 	delete pcmData;
 }
 
@@ -330,8 +352,9 @@ bool VideoPlayback::initConnect()
 
 bool VideoPlayback::initAudioOutput()
 {
+	m_ptrAudioPlay->clearAudioDevice();
 	AudioInfo audioInfo;
-	audioInfo.audioChannels = kOutputAudioChannels;
+	audioInfo.audioChannels = 1;
 	audioInfo.audioSampleRate = kOutputAudioSampleRate;
 	audioInfo.audioFormat = (AVSampleFormat)kOutputAudioFormat;
 	return m_ptrAudioPlay->initOutputParameter(audioInfo) && m_ptrAudioPlay->startPlay();
@@ -358,7 +381,7 @@ bool VideoPlayback::initDecoder()
 		for (auto& item : m_vecChooseNameAtom)
 		{
 			AudioInfo audioInfo;
-			audioInfo.audioChannels = kOutputAudioChannels;
+			audioInfo.audioChannels = kAtomOutputAudioChannels;
 			audioInfo.audioSampleRate = kOutputAudioSampleRate;
 			audioInfo.audioFormat = (AVSampleFormat)kOutputAudioFormat;
 			audioInfo.samplePerChannel = kOutputAudioSamplePerChannel;

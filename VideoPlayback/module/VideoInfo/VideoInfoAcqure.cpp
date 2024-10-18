@@ -59,10 +59,12 @@ int32_t VideoInfoAcqure::getVideoInfo(const char* fileName, MediaInfo& mediaInfo
 		}
 		else if (formatContext->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_AUDIO)
 		{
+			//获取此音频流中数据长度
 			aFlag = true;
 			if (codecParameters)
 			{
 				mediaInfo.audioBitrate = codecParameters->bit_rate;
+				auto duration = formatContext->streams[i]->duration * av_q2d(formatContext->streams[i]->time_base);
 				mediaInfo.audioSampleRate = codecParameters->sample_rate;
 				mediaInfo.audioChannels = codecParameters->ch_layout.nb_channels;
 				mediaInfo.bitDepth = codecParameters->bits_per_coded_sample;

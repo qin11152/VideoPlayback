@@ -2,7 +2,6 @@
 
 Buffer::Buffer()
 {
-
 }
 
 Buffer::Buffer(const Buffer& l)
@@ -21,7 +20,6 @@ Buffer::Buffer(const Buffer& l)
 
 Buffer::~Buffer()
 {
-
 }
 
 void Buffer::initBuffer(uint32_t bufferSize)
@@ -42,6 +40,8 @@ void Buffer::unInitBuffer()
 void Buffer::appendData(uint8_t* data, uint32_t size)
 {
 	std::lock_guard<std::mutex> lck(m_mutex);
+	QByteArray datas((char*)data, 1920 * 2);
+	//如果datas的收个成员是0x0D，则打印hh
 	if (m_uiEndPos + size > m_uiBufferSize)
 	{
 		memcpy(m_pBuffer, m_pBuffer + m_uiStartPos, m_uiEndPos - m_uiStartPos);
@@ -52,7 +52,7 @@ void Buffer::appendData(uint8_t* data, uint32_t size)
 	{
 		//二倍扩容
 		uint8_t* pTemp = new uint8_t[m_uiBufferSize * 2]{ 0 };
-		memcpy(pTemp, m_pBuffer, m_uiBufferSize);
+		memcpy(pTemp, m_pBuffer + m_uiStartPos, m_uiBufferSize);
 		delete[] m_pBuffer;
 		m_pBuffer = pTemp;
 		m_uiBufferSize *= 2;
@@ -64,6 +64,10 @@ void Buffer::appendData(uint8_t* data, uint32_t size)
 void Buffer::getBuffer(uint8_t* buffer, uint32_t size)
 {
 	std::lock_guard<std::mutex> lck(m_mutex);
+	if (m_uiStartPos + size > m_uiEndPos)
+	{
+		return;
+	}
 	memcpy(buffer, m_pBuffer + m_uiStartPos, size);
 	m_uiStartPos += size;
 }

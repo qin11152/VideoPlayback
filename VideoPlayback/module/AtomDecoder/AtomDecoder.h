@@ -40,6 +40,8 @@ public:
 
 	void readFrameFromFile();
 
+    void readAudioPacketFromFile();
+
 	void decodeVideo();
 
     void decodeAudio();
@@ -68,14 +70,16 @@ private:
     AudioCallback m_AudioCallback;
     VideoOutputCallback m_videoOutputCallback;
 
-    std::thread m_ReadThread;
+    std::thread m_ReadVideoThread;
+    std::thread m_ReadAudioThread;
     std::thread m_VideoDecoderThread;
     std::thread m_AudioDecoderThread;
     std::mutex m_PacketMutex;
 	std::mutex m_AudioPacketMutex;
     std::condition_variable m_VideoCV;
     std::condition_variable m_AudioCV;
-    std::condition_variable m_ReadCV;
+    std::condition_variable m_ReadVideoCV;
+    std::condition_variable m_ReadAudioCV;
 
     std::condition_variable m_PauseCV;
 

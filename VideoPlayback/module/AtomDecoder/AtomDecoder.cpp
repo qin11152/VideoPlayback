@@ -133,7 +133,8 @@ int32_t AtomDecoder::initModule(const char* videoFileName, std::vector<std::pair
 void AtomDecoder::unInitModule()
 {
 	m_bRunningState = false;
-	m_ReadCV.notify_one();
+	m_ReadVideoCV.notify_one();
+	m_ReadAudioCV.notify_one();
 	m_VideoCV.notify_one();
 	m_AudioCV.notify_one();
 	if (m_AudioDecoderThread.joinable())
@@ -148,9 +149,13 @@ void AtomDecoder::unInitModule()
 	{
 		m_AudioDecoderThread.join();
 	}
-	if (m_ReadThread.joinable())
+	if (m_ReadVideoThread.joinable())
 	{
-		m_ReadThread.join();
+		m_ReadVideoThread.join();
+	}
+	if (m_ReadAudioThread.joinable())
+	{
+		m_ReadAudioThread.join();
 	}
 	videoStreamIndex = -1;
 	sws_freeContext(swsContext);
@@ -191,7 +196,7 @@ void AtomDecoder::readFrameFromFile()
 			if (m_queueVideoFrame.size() > kBufferWaterLevel)
 			{
 				m_VideoCV.notify_one();
-				m_ReadCV.wait(lck, [this]
+				m_ReadVideoCV.wait(lck, [this]
 					{ return !m_bRunningState || m_queueVideoFrame.size() < kBufferWaterLevel; });
 			}
 		}
@@ -224,7 +229,19 @@ void AtomDecoder::readFrameFromFile()
 			av_packet_unref(packet);
 			// todo，如果需要循环播放，可以在这里seek到文件开头
 		}
+		
+	}
+}
 
+void AtomDecoder::readAudioPacketFromFile()
+{
+	if (!m_bInitState)
+	{
+		return;
+	}
+
+	while (m_bRunningState)
+	{
 		for (int i = 0; i < m_vecAudioFormatContext.size(); ++i)
 		{
 			AVPacket* audipPacket = av_packet_alloc();
@@ -234,22 +251,24 @@ void AtomDecoder::readFrameFromFile()
 				if (m_queueAudioFrame.size() > kBufferWaterLevel)
 				{
 					m_AudioCV.notify_one();
-					m_ReadCV.wait(lck, [this]
-						{ return !m_bRunningState || m_queueAudioFrame.size() < kBufferWaterLevel || m_queueVideoFrame.size() < kBufferWaterLevel; });
+					m_ReadAudioCV.wait(lck, [this]
+						{ return !m_bRunningState || m_queueAudioFrame.size() < kBufferWaterLevel; });
 				}
 			}
 			if (!m_bRunningState)
 			{
 				break;
 			}
-			if (av_read_frame(m_vecAudioFormatContext[i], packet) >= 0)
+			if (av_read_frame(m_vecAudioFormatContext[i], audipPacket) >= 0)
 			{
-				if (packet->stream_index == m_vecAudioCodecContext[i].second)
+				if (audipPacket->stream_index == m_vecAudioCodecContext[i].second)
 				{
+					//double relative_pts = audipPacket->pts * av_q2d(m_vecAudioFormatContext[i]->streams[audipPacket->stream_index]->time_base);
+					//qDebug() << "Relative PTS (seconds):" << relative_pts;
 					// 音频包需要解码
 					std::unique_lock<std::mutex> lck(m_AudioPacketMutex); // 对音频队列锁加锁
 					// qDebug() << "ai pts" << av_q2d(formatContext->streams[audioStreamIndex]->time_base) * packet->pts;
-					m_queueAudioFrame.push(std::pair<AVPacket, uint32_t>(*packet, i)); // 把音频包加入队列
+					m_queueAudioFrame.push(std::pair<AVPacket, uint32_t>(*audipPacket, i)); // 把音频包加入队列
 					lck.unlock();
 					m_AudioCV.notify_one();
 				}
@@ -259,7 +278,7 @@ void AtomDecoder::readFrameFromFile()
 				// 现在读取到文件末尾就退出
 				//  break;
 				std::this_thread::sleep_for(std::chrono::milliseconds(50));
-				av_packet_unref(packet);
+				av_packet_unref(audipPacket);
 				// todo，如果需要循环播放，可以在这里seek到文件开头
 			}
 		}
@@ -286,6 +305,7 @@ void AtomDecoder::decodeVideo()
 		if (m_queueVideoFrame.size() <= 0)
 		{
 			lck.unlock();
+			m_ReadVideoCV.notify_one();
 			continue;
 		}
 		auto packet = m_queueVideoFrame.front();
@@ -294,7 +314,7 @@ void AtomDecoder::decodeVideo()
 		lck.unlock();
 		if (size < kBufferWaterLevel)
 		{
-			m_ReadCV.notify_one();
+			m_ReadVideoCV.notify_one();
 		}
 		if (avcodec_send_packet(videoCodecContext, &packet) == 0)
 		{
@@ -381,6 +401,7 @@ void AtomDecoder::decodeAudio()
 {
 	AVFrame* frame = av_frame_alloc();
 	int swr_size = 0;
+	std::fstream fs("audio.pcm", std::ios::out | std::ios::binary);
 	while (m_bRunningState)
 	{
 		if (!m_bRunningState)
@@ -397,6 +418,7 @@ void AtomDecoder::decodeAudio()
 		if (m_queueAudioFrame.size() <= 0)
 		{
 			lck.unlock();
+			m_ReadAudioCV.notify_one();
 			continue;
 		}
 		auto audioInfo = m_queueAudioFrame.front();
@@ -407,17 +429,12 @@ void AtomDecoder::decodeAudio()
 		lck.unlock();
 		if (size < kBufferWaterLevel)
 		{
-			m_ReadCV.notify_one();
+			m_ReadAudioCV.notify_one();
 		}
 		if (avcodec_send_packet(m_vecAudioCodecContext[index].first, &packet) == 0)
 		{
 			while (avcodec_receive_frame(m_vecAudioCodecContext[index].first, frame) == 0)
 			{
-				//std::fstream fs("audio.pcm", std::ios::app | std::ios::binary);
-				////把重采样之前的数据保存本地
-				//fs.write((const char *)frame->data[0], frame->linesize[0]);
-				//fs.close();
-
 				int data_size = av_samples_get_buffer_size(nullptr,
 					m_vecAudioCodecContext[index].first->ch_layout.nb_channels,
 					frame->nb_samples,
@@ -430,9 +447,8 @@ void AtomDecoder::decodeAudio()
 					&out_buff, frame->nb_samples,					  // 输出的数据内容和数据大小
 					(const uint8_t**)frame->data, frame->nb_samples); // 输入的数据内容和数据大小
 
-				double pts = frame->pts * av_q2d(formatContext->streams[m_vecAudioCodecContext[index].second]->time_base);
+				double pts = frame->pts * av_q2d(m_vecAudioFormatContext[index]->streams[m_vecAudioCodecContext[index].second]->time_base);
 				// 记录下当前播放的帧的时间，用于计算快进时的增量
-
 				if (pts > 0)
 				{
 					m_uiAudioCurrentTime = pts * kmicroSecondsPerSecond;
@@ -450,15 +466,12 @@ void AtomDecoder::decodeAudio()
 
 				if (0 == index)
 				{
-					QByteArray data((char*)out_buff, frame->nb_samples);
-					std::fstream fs("audio.pcm", std::ios::out | std::ios::app);
+					QByteArray data((char*)out_buff, frame->nb_samples * av_get_bytes_per_sample(m_vecAudioInfo[index].second.audioFormat));
 					fs.write(data.data(), data.size());
-					fs.close();
 				}
 
-				m_vecBuffer[index]->appendData(out_buff, frame->nb_samples);
+				m_vecBuffer[index]->appendData(out_buff, frame->nb_samples * av_get_bytes_per_sample(m_vecAudioInfo[index].second.audioFormat));
 
-				// file.write((const char*)out_buff, out_buffer_size);
 				if (out_buff)
 				{
 					av_freep(&out_buff);
@@ -468,6 +481,7 @@ void AtomDecoder::decodeAudio()
 
 		av_packet_unref(&packet);
 	}
+	fs.close();
 	av_frame_free(&frame);
 }
 
@@ -491,7 +505,9 @@ void AtomDecoder::startDecoder()
 
 	m_iStartTime = av_gettime();
 
-	m_ReadThread = std::thread(&AtomDecoder::readFrameFromFile, this);
+	m_ReadVideoThread = std::thread(&AtomDecoder::readFrameFromFile, this);
+
+	m_ReadAudioThread = std::thread(&AtomDecoder::readAudioPacketFromFile, this);
 
 	m_VideoDecoderThread = std::thread(&AtomDecoder::decodeVideo, this);
 

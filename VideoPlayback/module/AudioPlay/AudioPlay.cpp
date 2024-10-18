@@ -52,6 +52,21 @@ void AudioPlay::inputPcmData(const QByteArray& pcmData)
 	}
 }
 
+void AudioPlay::clearAudioDevice()
+{
+	if (m_ptrAudioOutput)
+	{
+		m_ptrAudioOutput->stop();
+		delete m_ptrAudioOutput;
+		m_ptrAudioOutput = nullptr;
+	}
+	//if (m_ptr_AudioDevice)
+	//{
+	//	delete m_ptr_AudioDevice;
+	//	m_ptr_AudioDevice = nullptr;
+	//}
+}
+
 void AudioPlay::initModule()
 {
 	//m_ptrAudioOutput = new QAudioOutput();

@@ -371,3 +371,8 @@ FodyWeavers.xsd
 bin/VideoPlayback
 VideoPlayback/test.bat
 VideoPlayback/teststart.bat
+/VideoPlayback/2audio.pcm
+/VideoPlayback/2audio.pk
+/VideoPlayback/audio.pcm
+/VideoPlayback/audio.pcm1
+/VideoPlayback/audio.pcm2
