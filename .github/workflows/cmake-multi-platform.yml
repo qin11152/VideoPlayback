@@ -28,6 +28,9 @@ jobs:
         c_compiler: [gcc, clang, cl]
         qt_version: [5.15.2]
         include:
+          - os: windows-latest
+            c_compiler: cl
+            cpp_compiler: cl
           - os: ubuntu-latest
             c_compiler: gcc
             cpp_compiler: g++
@@ -41,9 +44,6 @@ jobs:
             c_compiler: clang
           - os: ubuntu-latest
             c_compiler: cl
-          - os: windows-latest
-            c_compiler: cl
-            cpp_compiler: cl
 
     steps:
     - uses: actions/checkout@v4
@@ -57,11 +57,6 @@ jobs:
         arch: 'gcc_64'
         dir: '${{ github.workspace }}/Qt'
         install-deps: 'true'
-
-    - name: Set up Qt build dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y libgl1-mesa-dev
 
     - name: Set reusable strings
       # Turn repeated input strings (such as the build output directory) into step outputs. These step outputs can be used throughout the workflow file.
