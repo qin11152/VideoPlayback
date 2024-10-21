@@ -244,7 +244,7 @@ void AtomDecoder::readAudioPacketFromFile()
 	{
 		for (int i = 0; i < m_vecAudioFormatContext.size(); ++i)
 		{
-			AVPacket* audipPacket = av_packet_alloc();
+			AVPacket* audioPacket = av_packet_alloc();
 			{
 				std::unique_lock<std::mutex> lck(m_AudioPacketMutex);
 
@@ -259,16 +259,16 @@ void AtomDecoder::readAudioPacketFromFile()
 			{
 				break;
 			}
-			if (av_read_frame(m_vecAudioFormatContext[i], audipPacket) >= 0)
+			if (av_read_frame(m_vecAudioFormatContext[i], audioPacket) >= 0)
 			{
-				if (audipPacket->stream_index == m_vecAudioCodecContext[i].second)
+				if (audioPacket->stream_index == m_vecAudioCodecContext[i].second)
 				{
-					//double relative_pts = audipPacket->pts * av_q2d(m_vecAudioFormatContext[i]->streams[audipPacket->stream_index]->time_base);
+					//double relative_pts = audioPacket->pts * av_q2d(m_vecAudioFormatContext[i]->streams[audioPacket->stream_index]->time_base);
 					//qDebug() << "Relative PTS (seconds):" << relative_pts;
 					// 音频包需要解码
 					std::unique_lock<std::mutex> lck(m_AudioPacketMutex); // 对音频队列锁加锁
 					// qDebug() << "ai pts" << av_q2d(formatContext->streams[audioStreamIndex]->time_base) * packet->pts;
-					m_queueAudioFrame.push(std::pair<AVPacket, uint32_t>(*audipPacket, i)); // 把音频包加入队列
+					m_queueAudioFrame.push(std::pair<AVPacket, uint32_t>(*audioPacket, i)); // 把音频包加入队列
 					lck.unlock();
 					m_AudioCV.notify_one();
 				}
@@ -278,7 +278,7 @@ void AtomDecoder::readAudioPacketFromFile()
 				// 现在读取到文件末尾就退出
 				//  break;
 				std::this_thread::sleep_for(std::chrono::milliseconds(50));
-				av_packet_unref(audipPacket);
+				av_packet_unref(audioPacket);
 				// todo，如果需要循环播放，可以在这里seek到文件开头
 			}
 		}
