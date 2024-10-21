@@ -46,25 +46,39 @@ VideoPlayback::VideoPlayback(QWidget* parent)
 				{
 					m_ptrVideoDecoder->startDecoder();
 				}
-			} 
+			}
 		});
 
-			connect(ui.pausePushButton, &QPushButton::clicked, this, [=]()
+	connect(ui.pausePushButton, &QPushButton::clicked, this, [=]()
+		{
+			if (ui.atomRadioButton->isChecked())
+				if (m_ptrVideoDecoder)
 				{
-					if (ui.atomRadioButton->isChecked())
-						if (m_ptrVideoDecoder)
-						{
-							m_ptrVideoDecoder->pauseDecoder();
-						}
-				});
+					m_ptrVideoDecoder->pauseDecoder();
+				}
+		});
 
-			connect(ui.continuePushButton, &QPushButton::clicked, this, [=]()
-				{
-					if (m_ptrVideoDecoder)
-					{
-						m_ptrVideoDecoder->resumeDecoder();
-					}
-				});
+	connect(ui.continuePushButton, &QPushButton::clicked, this, [=]()
+		{
+			if (m_ptrVideoDecoder)
+			{
+				m_ptrVideoDecoder->resumeDecoder();
+			}
+		});
+
+	connect(ui.atomRadioButton, &QRadioButton::clicked, this, [=]() 
+		{
+			if (ui.atomRadioButton->isChecked())
+			{
+				ui.pausePushButton->hide();
+				ui.continuePushButton->hide();
+			}
+			else
+			{
+				ui.pausePushButton->show();
+				ui.continuePushButton->show();
+			}
+		});
 }
 
 VideoPlayback::~VideoPlayback()
@@ -291,7 +305,7 @@ void VideoPlayback::onSignalSelectedDeviceChanged(int index)
 #endif
 		initSDIOutput();
 		LOG_INFO("Selected device is {}", strDeviceName.toStdString().c_str());
-}
+	}
 	else
 	{
 		m_ptrSelectedDeckLinkOutput = nullptr;
