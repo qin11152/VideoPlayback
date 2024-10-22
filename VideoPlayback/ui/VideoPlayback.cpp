@@ -140,16 +140,16 @@ void VideoPlayback::AudioCallback(std::vector<Buffer*> audioBuffer)
 {
 	//从buffer中按顺序取出pcm数据，然后按照交错的方式将数据组合起来
 	int channelNum = (int)audioBuffer.size();
-	uint8_t* pcmData = new uint8_t[channelNum * 1920 * 2]{ 0 };
+	uint8_t* pcmData = new uint8_t[channelNum * m_uiAtomAudioSampleCntPerFrame * 2]{ 0 };
 
 	std::vector<uint8_t*> vecAudioBuffer;
 	for (int i = 0; i < channelNum; ++i)
 	{
-		uint8_t* pSrc = new uint8_t[1920 * 2]{ 0 };
-		audioBuffer[i]->getBuffer(pSrc, 1920 * 2);
+		uint8_t* pSrc = new uint8_t[m_uiAtomAudioSampleCntPerFrame * 2]{ 0 };
+		audioBuffer[i]->getBuffer(pSrc, m_uiAtomAudioSampleCntPerFrame * 2);
 		if (0 == i)
 		{
-			QByteArray data((char*)pSrc, 1920 * 2);
+			QByteArray data((char*)pSrc, m_uiAtomAudioSampleCntPerFrame * 2);
 			m_ptrAudioPlay->inputPcmData(data);
 		}
 		vecAudioBuffer.push_back(pSrc);
@@ -163,8 +163,8 @@ void VideoPlayback::AudioCallback(std::vector<Buffer*> audioBuffer)
 	//		pcmData[(i * channelNum + j) * 2] = vecAudioBuffer[j][i * 2];
 	//	}
 	//}
-	memcpy(pcmData, vecAudioBuffer[0], 1920 * 2);
-	memcpy(pcmData + 1920 * 2, vecAudioBuffer[1], 1920 * 2);
+	memcpy(pcmData, vecAudioBuffer[0], m_uiAtomAudioSampleCntPerFrame * 2);
+	memcpy(pcmData + m_uiAtomAudioSampleCntPerFrame * 2, vecAudioBuffer[1], m_uiAtomAudioSampleCntPerFrame * 2);
 	//fs.write((char*)vecAudioBuffer[0], 1920 * 2);
 	//fs1.write((char*)pcmData, 1920 * 4);
 	for (auto& item : vecAudioBuffer)
@@ -226,6 +226,10 @@ QString VideoPlayback::onSignalChooseFileClicked()
 		if (!fileNames.isEmpty())
 		{
 			ui.fileNameLabel->setText(fileNames.first());
+		}
+		else
+		{
+			return "";
 		}
 		int vNum = 0;
 		for (auto& item : fileNames)
