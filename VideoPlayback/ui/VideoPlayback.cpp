@@ -1,7 +1,10 @@
 #include "VideoPlayback.h"
 #include "ui/MySlider/MySlider.h"
 #include "module/VideoInfo/VideoInfoAcqure.h"
-#include "module/AtomDecoder/avid_mxf_info.h"
+
+#if defined(WIN32)
+	#include "module/AtomDecoder/avid_mxf_info.h"
+#endif
 
 #include <QTimer>
 #include <QDebug>
@@ -253,6 +256,7 @@ QString VideoPlayback::onSignalChooseFileClicked()
 
 		for (auto& item : fileNames)
 		{
+#if defined(WIN32)
 			AvidMXFInfo mxfInfo;
 
 			auto datad = item.toLocal8Bit();
@@ -274,7 +278,7 @@ QString VideoPlayback::onSignalChooseFileClicked()
 			}
 
 			ami_free_info(&mxfInfo);
-
+#endif
 			MediaInfo mediaInfo;
 			VideoInfoAcqure::getInstance()->getVideoInfo(item.toStdString().c_str(), mediaInfo);
 			if (MediaType::VideoAndAudio == mediaInfo.mediaType)
