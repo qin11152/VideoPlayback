@@ -9,9 +9,7 @@
 #include <QFileDialog>
 
 #include <sstream>
-#if defined(WIN32)
-	#include <iomanip>
-#endif
+#include <iomanip>
 
 std::string umidToString(const mxfUMID* umid) 
 {
