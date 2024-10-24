@@ -14,6 +14,7 @@
 #include <sstream>
 #include <iomanip>
 
+#if defined(WIN32)
 std::string umidToString(const mxfUMID* umid) 
 {
 	std::stringstream ss;
@@ -25,6 +26,7 @@ std::string umidToString(const mxfUMID* umid)
 	}
 	return ss.str();
 }
+#endif
 
 IDeckLinkMutableVideoFrame* kDecklinkOutputFrame = nullptr;
 //std::fstream fs("audio.pcm1", std::ios::out | std::ios::binary);
