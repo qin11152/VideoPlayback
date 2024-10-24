@@ -103,6 +103,9 @@
     <ClCompile Include="module\AtomDecoder\Buffer.cpp">
       <Filter>module\AtomDecoder</Filter>
     </ClCompile>
+    <ClCompile Include="module\AtomDecoder\avid_mxf_info.c">
+      <Filter>module\AtomDecoder</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="ui\VideoPlayback.h">
@@ -146,6 +149,9 @@
       <Filter>module\AtomDecoder</Filter>
     </ClInclude>
     <ClInclude Include="module\AtomDecoder\Buffer.h">
+      <Filter>module\AtomDecoder</Filter>
+    </ClInclude>
+    <ClInclude Include="module\AtomDecoder\avid_mxf_info.h">
       <Filter>module\AtomDecoder</Filter>
     </ClInclude>
   </ItemGroup>

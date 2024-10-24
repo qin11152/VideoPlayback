@@ -1,15 +1,33 @@
 #include "VideoPlayback.h"
 #include "ui/MySlider/MySlider.h"
 #include "module/VideoInfo/VideoInfoAcqure.h"
+#include "module/AtomDecoder/avid_mxf_info.h"
 
 #include <QTimer>
 #include <QDebug>
 #include <QDateTime>
 #include <QFileDialog>
 
+#include <sstream>
+#if defined(WIN32)
+	#include <iomanip>
+#endif
+
+std::string umidToString(const mxfUMID* umid) 
+{
+	std::stringstream ss;
+	ss << std::hex << std::setfill('0');
+
+	const unsigned char* bytes = reinterpret_cast<const unsigned char*>(umid);
+	for (int i = 0; i < 32; ++i) {
+		ss << std::setw(2) << static_cast<int>(bytes[i]);
+	}
+	return ss.str();
+}
+
 IDeckLinkMutableVideoFrame* kDecklinkOutputFrame = nullptr;
-std::fstream fs("audio.pcm1", std::ios::out | std::ios::binary);
-std::fstream fs1("audio.pcm2", std::ios::out | std::ios::binary);
+//std::fstream fs("audio.pcm1", std::ios::out | std::ios::binary);
+//std::fstream fs1("audio.pcm2", std::ios::out | std::ios::binary);
 VideoPlayback::VideoPlayback(QWidget* parent)
 	: QWidget(parent)
 {
@@ -83,8 +101,8 @@ VideoPlayback::VideoPlayback(QWidget* parent)
 
 VideoPlayback::~VideoPlayback()
 {
-	fs.close();
-	fs1.close();
+	//fs.close();
+	//fs1.close();
 	if (m_ptrVideoDecoder)
 	{
 		delete m_ptrVideoDecoder;
@@ -232,8 +250,33 @@ QString VideoPlayback::onSignalChooseFileClicked()
 			return "";
 		}
 		int vNum = 0;
+
+		std::string strMaterialId = "";
+
 		for (auto& item : fileNames)
 		{
+			AvidMXFInfo mxfInfo;
+
+			auto datad = item.toLocal8Bit();
+			std::string strFilePath(datad.constData(), datad.length());
+			int result = ami_read_info(strFilePath.c_str(), &mxfInfo, 1);
+
+			if (strMaterialId.empty())
+			{
+				strMaterialId = umidToString(&mxfInfo.materialPackageUID);
+			}
+			else
+			{
+				if (strMaterialId != umidToString(&mxfInfo.materialPackageUID))
+				{
+					m_strChooseFileName.clear();
+					m_vecChooseNameAtom.clear();
+					return "";
+				}
+			}
+
+			ami_free_info(&mxfInfo);
+
 			MediaInfo mediaInfo;
 			VideoInfoAcqure::getInstance()->getVideoInfo(item.toStdString().c_str(), mediaInfo);
 			if (MediaType::VideoAndAudio == mediaInfo.mediaType)
@@ -247,6 +290,8 @@ QString VideoPlayback::onSignalChooseFileClicked()
 				if (++vNum > 1)
 				{
 					m_bAtomFileValid = false;
+					m_strChooseFileName.clear();
+					m_vecChooseNameAtom.clear();
 					LOG_ERROR("file contains more than two video file");
 					return "";
 				}

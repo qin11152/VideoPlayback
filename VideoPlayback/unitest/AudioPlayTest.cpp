@@ -46,16 +46,16 @@ TEST_F(AudioPlayTest, DISABLED_inputDataTest)
 	
 	EXPECT_EQ(m_ptrAudioPlay->initOutputParameter(audioInfo), true);
 	m_ptrAudioPlay->startPlay();
-	std::fstream file("D:/audio.pcm", std::ios::in | std::ios::binary);
-	if (file.is_open())
-	{
-		while (!file.eof())
-		{
-			char buffer[4096] = { 0 };
-			file.read(buffer, 4096);
-			QByteArray data(buffer, 4096);
-			m_ptrAudioPlay->inputPcmData(data);
-			std::this_thread::sleep_for(std::chrono::milliseconds(24));
-		}
-	}
+	//std::fstream file("D:/audio.pcm", std::ios::in | std::ios::binary);
+	//if (file.is_open())
+	//{
+	//	while (!file.eof())
+	//	{
+	//		char buffer[4096] = { 0 };
+	//		file.read(buffer, 4096);
+	//		QByteArray data(buffer, 4096);
+	//		m_ptrAudioPlay->inputPcmData(data);
+	//		std::this_thread::sleep_for(std::chrono::milliseconds(24));
+	//	}
+	//}
 }

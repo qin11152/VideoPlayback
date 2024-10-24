@@ -67,25 +67,26 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir)/ui;$(ProjectDir)/../include;$(ProjectDir)/../include/ffmpeg;$(ProjectDir)/../include/blackmagic_win;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)/ui;$(ProjectDir)/../include;$(ProjectDir)/../include/ffmpeg;$(ProjectDir)/../include/blackmagic_win;$(ProjectDir)/../include/libMXF++;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>$(ProjectDir)/../lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>gtest.lib;gmock.lib;avformat.lib;avcodec.lib;avutil.lib;swscale.lib;swresample.lib;yuv.lib;spdlog.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gtest.lib;gmock.lib;avformat.lib;avcodec.lib;avutil.lib;swscale.lib;swresample.lib;yuv.lib;spdlog.lib;MXF++.lib;MXF.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <UACExecutionLevel>RequireAdministrator</UACExecutionLevel>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir)/ui;$(ProjectDir)/../include;$(ProjectDir)/../include/ffmpeg;$(ProjectDir)/../include/blackmagic_win;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)/ui;$(ProjectDir)/../include;$(ProjectDir)/../include/ffmpeg;$(ProjectDir)/../include/blackmagic_win;$(ProjectDir)/../include/libMXF++;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>$(ProjectDir)/../lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>gtestd.lib;gmockd.lib;avformat.lib;avcodec.lib;avutil.lib;swscale.lib;swresample.lib;yuv.lib;spdlogd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>gtestd.lib;gmockd.lib;avformat.lib;avcodec.lib;avutil.lib;swscale.lib;swresample.lib;yuv.lib;spdlogd.lib;MXFD++.lib;MXFD.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'" Label="Configuration">
@@ -119,6 +120,7 @@
   <ItemGroup>
     <ClCompile Include="..\include\blackmagic_win\DeckLinkAPI_i.c" />
     <ClCompile Include="module\AtomDecoder\AtomDecoder.cpp" />
+    <ClCompile Include="module\AtomDecoder\avid_mxf_info.c" />
     <ClCompile Include="module\AtomDecoder\Buffer.cpp" />
     <ClCompile Include="module\AudioPlay\AudioPlay.cpp" />
     <ClCompile Include="module\BlackMagic\DeckLinkDeviceDiscovery\DeckLinkDeviceDiscovery.cpp" />
@@ -145,6 +147,7 @@
   <ItemGroup>
     <ClInclude Include="CommonDef.h" />
     <ClInclude Include="module\AtomDecoder\AtomDecoder.h" />
+    <ClInclude Include="module\AtomDecoder\avid_mxf_info.h" />
     <ClInclude Include="module\AtomDecoder\Buffer.h" />
     <ClInclude Include="stdafx.h" />
     <QtMoc Include="ui\MySlider\MySlider.h" />
