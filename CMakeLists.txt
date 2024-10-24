@@ -11,6 +11,7 @@ set(CMAKE_AUTORCC ON)
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/ffmpeg)
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/libMXF++)
 
 if(UNIX)
     include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include/blackmagic_linux)
@@ -34,6 +35,7 @@ endif()
 find_package(Qt5 COMPONENTS Core Gui OpenGL Widgets Multimedia REQUIRED)
 
 file(GLOB_RECURSE src_file ${CMAKE_CURRENT_SOURCE_DIR}/VideoPlayback/*.cpp)
+file(GLOB_RECURSE c_file ${CMAKE_CURRENT_SOURCE_DIR}/VideoPlayback/*.c)
 
 message(STATUS "src_file: ${src_file}")
 
@@ -43,14 +45,14 @@ elseif(WIN32)
     list(APPEND src_file ${CMAKE_CURRENT_SOURCE_DIR}/include/blackmagic_win/DeckLinkAPI_i.c)
 endif()
 
-add_executable(VideoPlayback ${src_file})
+add_executable(VideoPlayback ${src_file} ${c_file})
 
 if(WIN32)
     # 判断是debug还是release
     if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-        target_link_libraries(VideoPlayback Qt5::Core Qt5::Gui Qt5::OpenGL Qt5::Widgets Qt5::Multimedia yuv gtestd gmockd avformat avcodec avutil swscale swresample spdlogd)
+        target_link_libraries(VideoPlayback Qt5::Core Qt5::Gui Qt5::OpenGL Qt5::Widgets Qt5::Multimedia yuv gtestd gmockd avformat avcodec avutil swscale swresample spdlogd MXFD MXFD++)
     else()
-        target_link_libraries(VideoPlayback Qt5::Core Qt5::Gui Qt5::OpenGL Qt5::Widgets Qt5::Multimedia yuv gtest gmock avformat avcodec avutil swscale swresample spdlog)
+        target_link_libraries(VideoPlayback Qt5::Core Qt5::Gui Qt5::OpenGL Qt5::Widgets Qt5::Multimedia yuv gtest gmock avformat avcodec avutil swscale swresample spdlog MXF MXF++) 
     endif()
 elseif(UNIX)
     target_link_libraries(VideoPlayback Qt5::Core Qt5::Gui Qt5::OpenGL Qt5::Widgets Qt5::Multimedia pthread yuv gtest gmock avformat avcodec avutil swscale swresample z X11 fdk-aac openjp2 x264 x265 rtmp dl spdlog)
