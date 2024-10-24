@@ -47,7 +47,7 @@ endif()
 
 if(WIN32)
     add_executable(VideoPlayback ${src_file} ${c_file})
-elseif(unix)
+elseif(UNIX)
     add_executable(VideoPlayback ${src_file})
 endif()
 
