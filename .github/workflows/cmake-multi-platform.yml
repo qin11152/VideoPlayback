@@ -63,17 +63,6 @@ jobs:
         arch: ${{ matrix.qt_arch }}
         dir: '${{ github.workspace }}/Qt'
         install-deps: 'true'
-        
-    - name: Install libmxfpp on Linux
-      if: runner.os == 'Linux'
-      run: |
-        # Clone the libmxfpp repository
-        git clone https://github.com/bbc/libmxfpp.git
-        cd libmxfpp
-        ./bootstrap
-        ./configure
-        make
-        sudo make install
 
     - name: Set reusable strings
       # Turn repeated input strings (such as the build output directory) into step outputs. These step outputs can be used throughout the workflow file.
