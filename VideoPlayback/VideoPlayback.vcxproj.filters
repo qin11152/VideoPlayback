@@ -45,6 +45,9 @@
     <Filter Include="module\AtomDecoder">
       <UniqueIdentifier>{dcc1010f-7eb8-4f5e-be4c-cf82aeed186c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="ui\MyTipDialog">
+      <UniqueIdentifier>{380ae465-c2a6-4a1b-be1d-8f23c6154b0e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <QtRcc Include="VideoPlayback.qrc">
@@ -106,6 +109,9 @@
     <ClCompile Include="module\AtomDecoder\avid_mxf_info.c">
       <Filter>module\AtomDecoder</Filter>
     </ClCompile>
+    <ClCompile Include="ui\MyTipDialog\MyTipDialog.cpp">
+      <Filter>ui\MyTipDialog</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="ui\VideoPlayback.h">
@@ -119,6 +125,9 @@
     </QtMoc>
     <QtMoc Include="ui\MySlider\MySlider.h">
       <Filter>ui\MySlider</Filter>
+    </QtMoc>
+    <QtMoc Include="ui\MyTipDialog\MyTipDialog.h">
+      <Filter>ui\MyTipDialog</Filter>
     </QtMoc>
   </ItemGroup>
   <ItemGroup>
