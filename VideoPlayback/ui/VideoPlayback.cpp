@@ -275,6 +275,7 @@ QString VideoPlayback::onSignalChooseFileClicked()
 				{
 					m_strChooseFileName.clear();
 					m_vecChooseNameAtom.clear();
+					MyTipDialog::show(QString::fromLocal8Bit("error"), QString::fromLocal8Bit("匼第渣昫"), true);
 					return "";
 				}
 			}
@@ -287,6 +288,9 @@ QString VideoPlayback::onSignalChooseFileClicked()
 			{
 				m_bAtomFileValid = false;
 				LOG_ERROR("The file not atom format{}", item.toStdString().c_str());
+				m_strChooseFileName.clear();
+				m_vecChooseNameAtom.clear();
+				MyTipDialog::show(QString::fromLocal8Bit("error"), QString::fromLocal8Bit("準atom匼第"), true);
 				return "";
 			}
 			else if (MediaType::Video == mediaInfo.mediaType)
@@ -297,6 +301,7 @@ QString VideoPlayback::onSignalChooseFileClicked()
 					m_strChooseFileName.clear();
 					m_vecChooseNameAtom.clear();
 					LOG_ERROR("file contains more than two video file");
+					MyTipDialog::show(QString::fromLocal8Bit("error"), QString::fromLocal8Bit("秞け匼第衄昫"), true);
 					return "";
 				}
 				m_uiAtomFrameCnt = mediaInfo.fps;
