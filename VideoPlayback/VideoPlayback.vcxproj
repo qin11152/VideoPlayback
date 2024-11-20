@@ -67,7 +67,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir)/ui;$(ProjectDir)/../include;$(ProjectDir)/../include/ffmpeg;$(ProjectDir)/../include/blackmagic_win;$(ProjectDir)/../include/libMXF++;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)/ui;$(ProjectDir)/../include;$(ProjectDir)/../include/ffmpeg;$(ProjectDir)/../include/blackmagic_win;$(ProjectDir)/../include/libMXF++;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
@@ -79,7 +79,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
-      <AdditionalIncludeDirectories>$(ProjectDir)/ui;$(ProjectDir)/../include;$(ProjectDir)/../include/ffmpeg;$(ProjectDir)/../include/blackmagic_win;$(ProjectDir)/../include/libMXF++;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)/ui;$(ProjectDir)/../include;$(ProjectDir)/../include/ffmpeg;$(ProjectDir)/../include/blackmagic_win;$(ProjectDir)/../include/libMXF++;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
