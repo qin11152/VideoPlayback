@@ -3,10 +3,9 @@
 name: CMake on multiple platforms
 
 on:
-  push:
-    branches: [ "master" ]
-  pull_request:
-    branches: [ "master" ]
+  schedule:
+    - cron: '0 0 */3 * *'  # 每两天的 UTC 时间凌晨 0 点运行
+
 
 jobs:
   build:
