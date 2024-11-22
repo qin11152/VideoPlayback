@@ -72,7 +72,7 @@ VideoPlayback::VideoPlayback(QWidget* parent)
 
 	connect(ui.pausePushButton, &QPushButton::clicked, this, [=]()
 		{
-			if (ui.atomRadioButton->isChecked())
+			if (!ui.atomRadioButton->isChecked())
 				if (m_ptrVideoDecoder)
 				{
 					m_ptrVideoDecoder->pauseDecoder();
@@ -140,18 +140,18 @@ bool VideoPlayback::initModule()
 	return initConnect();
 }
 
-void VideoPlayback::previewCallback(const VideoCallbackInfo& videoInfo, int64_t currentTime)
+void VideoPlayback::previewCallback(std::shared_ptr<VideoCallbackInfo> videoInfo, int64_t currentTime)
 {
 	// 将YUV数据发送出去
-	if (nullptr == videoInfo.yuvData)
+	if (nullptr == videoInfo->yuvData)
 	{
 		return;
 	}
 	VideoInfo video;
-	video.width = videoInfo.width;
-	video.height = videoInfo.height;
-	video.videoFormat = videoInfo.videoFormat;
-	QByteArray data((char*)videoInfo.yuvData, videoInfo.dataSize);
+	video.width = videoInfo->width;
+	video.height = videoInfo->height;
+	video.videoFormat = videoInfo->videoFormat;
+	QByteArray data((char*)videoInfo->yuvData, videoInfo->dataSize);
 	emit signalYUVData(data, video);
 	updateTimeLabel(currentTime, m_stuMediaInfo.duration);
 	updateTimeSliderPosition(currentTime);
@@ -216,8 +216,8 @@ void VideoPlayback::SDIOutputCallback(const VideoCallbackInfo& videoInfo)
 
 void VideoPlayback::AudioPlayCallBack(uint8_t* audioData, uint32_t channelSampleNumber)
 {
-	int cvafd = kOutputAudioChannels * channelSampleNumber * av_get_bytes_per_sample((AVSampleFormat)kOutputAudioFormat);
-	QByteArray data((char*)audioData, kOutputAudioChannels * channelSampleNumber * av_get_bytes_per_sample((AVSampleFormat)kOutputAudioFormat));
+	//int cvafd = kOutputAudioChannels * channelSampleNumber * av_get_bytes_per_sample((AVSampleFormat)kOutputAudioFormat);
+	QByteArray data((char*)audioData, channelSampleNumber);
 	m_ptrAudioPlay->inputPcmData(data);
 	if (nullptr != m_ptrSelectedDeckLinkOutput)
 	{
@@ -416,7 +416,7 @@ bool VideoPlayback::initConnect()
 {
 	bool flag = true;
 	flag = flag && connect(ui.choosePushButton, &QPushButton::clicked, this, &VideoPlayback::onSignalChooseFileClicked);
-	flag = flag && connect(this, &VideoPlayback::signalYUVData, ui.openGLWidget, &OpenGLPreviewWidget::onSignalYUVData);
+	flag = flag && connect(this, &VideoPlayback::signalYUVData, ui.openGLWidget, &OpenGLPreviewWidget::onSignalYUVData, Qt::QueuedConnection);
 	flag = flag && connect(ui.videoTImeSlider, &MySlider::signalSliderValueChanged, this, &VideoPlayback::onSignalSliderValueChanged);
 	flag = flag && connect(ui.deckLinkComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &VideoPlayback::onSignalSelectedDeviceChanged);
 	return flag;
@@ -460,7 +460,7 @@ bool VideoPlayback::initDecoder()
 			vecTmp.push_back(std::pair<std::string, AudioInfo>(item.toStdString(), audioInfo));
 		}
 		m_ptrAtomDecoder->initModule(m_strChooseFileName.toStdString().c_str(), vecTmp, videoInfo);
-		m_ptrAtomDecoder->initVideoCallBack(std::bind(&VideoPlayback::previewCallback, this, std::placeholders::_1, std::placeholders::_2), std::bind(&VideoPlayback::SDIOutputCallback, this, std::placeholders::_1));
+		//m_ptrAtomDecoder->initVideoCallBack(std::bind(&VideoPlayback::previewCallback, this, std::placeholders::_1, std::placeholders::_2), std::bind(&VideoPlayback::SDIOutputCallback, this, std::placeholders::_1));
 		m_ptrAtomDecoder->initAudioCallback(std::bind(&VideoPlayback::AudioCallback, this, std::placeholders::_1));
 	}
 	else

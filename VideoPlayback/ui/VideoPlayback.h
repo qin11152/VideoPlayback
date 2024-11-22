@@ -20,7 +20,7 @@ public:
 
     bool initModule();
 
-    void previewCallback(const VideoCallbackInfo& videoInfo, int64_t currentTime);
+    void previewCallback(std::shared_ptr<VideoCallbackInfo> videoInfo, int64_t currentTime);
 
     void AudioCallback(std::vector<Buffer*> audioBuffer);
 

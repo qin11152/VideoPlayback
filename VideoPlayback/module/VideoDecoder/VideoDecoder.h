@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CommonDef.h"
+#include "module/AtomDecoder/Buffer.h"
 
 extern "C"
 {
@@ -23,12 +24,11 @@ extern "C"
 extern std::function<void(AVFrame *)> avframedel;
 using avframe_ptr = std::unique_ptr<AVFrame, decltype(avframedel)>;
 
-using PreviewCallback = std::function<void(const VideoCallbackInfo& videoInfo, int64_t currentTime)>;
-using AudioPlayCallback = std::function<void(uint8_t *, uint32_t channelSampleNumber)>;
-using VideoOutputCallback = std::function<void(const VideoCallbackInfo& videoInfo)>;
-
 class VideoDecoder
 {
+	using PreviewCallback = std::function<void(std::shared_ptr<VideoCallbackInfo> videoInfo, int64_t currentTime)>;
+	using AudioPlayCallback = std::function<void(uint8_t*, uint32_t channelSampleNumber)>;
+	using VideoOutputCallback = std::function<void(const VideoCallbackInfo& videoInfo)>;
 public:
 	VideoDecoder();
 	~VideoDecoder();
@@ -39,8 +39,13 @@ public:
 
 	void readFrameFromFile();
 
-	void decodeVideo();
-	void decodeAudio();
+	void decoder();
+	void decoderVideo(AVPacket* packet);
+	void decoderAudio(AVPacket* packet);
+
+	void consume();
+	//void decodeVideo();
+	//void decodeAudio();
 
 	AVCodecContext *getVideoCodecContext() const { return videoCodecContext; }
 	AVCodecContext *getAudioCodecContext() const { return audioCodecContext; }
@@ -77,25 +82,35 @@ private:
 	SwsContext *swsContext{nullptr};
 	SwrContext *swrContext{nullptr};
 
+	Buffer* m_ptrPCMBuffer{ nullptr };
+
 	PreviewCallback m_previewCallback;
 	AudioPlayCallback m_audioPlayCallback;
 	VideoOutputCallback m_videoOutputCallback;
 
 	std::thread m_ReadThread;
-	std::thread m_VideoDecoderThread;
-	std::thread m_AudioDecoderThread;
+	std::thread m_ConsumeThread;
+	std::thread m_DecoderThread;
+	//std::thread m_VideoDecoderThread;
+	//std::thread m_AudioDecoderThread;
 	// std::mutex m_VideoMutex;
 	// std::mutex m_AudioMutex;
 	std::mutex m_PauseMutex;
-	std::mutex m_PacketMutex;
-	std::condition_variable m_VideoCV;
-	std::condition_variable m_AudioCV;
-	std::condition_variable m_ReadCV;
+	std::mutex m_queueMutex;		//avpacket队列的锁，用于读取和编码线程
+	std::mutex m_afterDecoderInfoMutex;	//编码后队列的锁，用于解码和渲染线程
+	//std::mutex m_PacketMutex;
+	//std::condition_variable m_VideoCV;
+	//std::condition_variable m_AudioCV;
+	std::condition_variable m_ReadCV;	//从文件中读的条件变量
+	std::condition_variable m_queueWaitDecodedCV;	//待解码队列的条件变量
+	std::condition_variable m_queueWaitConsumedCV;	//待消费队列的条件变量
+	std::condition_variable m_PauseCV; // 暂停时的条件变量
 
-	std::condition_variable m_PauseCV; // 暂停时所有线程暂停工作
-
-	std::queue<AVPacket> m_queueVideoFrame;
-	std::queue<AVPacket> m_queueAudioFrame;
+	//std::queue<AVPacket> m_queueVideoFrame;
+	//std::queue<AVPacket> m_queueAudioFrame;
+	std::queue<std::pair<AVPacket*, PacketType>> m_queueNeedDecoderPacket;
+	std::queue<std::shared_ptr<VideoCallbackInfo>> m_queueVideoInfo;		//解码的视频帧，等待消费
+	std::queue<std::shared_ptr<AudioCallbackInfo>> m_queueAudioInfo;		//解码的音频帧，等待消费
 
 	std::atomic<bool> m_bSeekState{false};
 	std::atomic<double_t> m_dSeekTime{0};
@@ -103,19 +118,20 @@ private:
 	bool m_bInitState{false};
 	bool m_bRunningState{false};
 	bool m_bPauseState{false};
-	bool m_bFirstVideoPacketAfterSeek{false};
-	bool m_bFirstAudioPacketAfterSeek{false};
-	bool m_bFirstReadedVideoPakcet{false};
+	//bool m_bFirstVideoPacketAfterSeek{false};
+	//bool m_bFirstAudioPacketAfterSeek{false};
+	//bool m_bFirstReadedVideoPakcet{false};
 
 	AudioInfo m_stuAudioInfo;
 	VideoInfo m_stuVideoInfo;
 
-	int64_t m_iStartTime{0};
-	int64_t m_iPauseTime{0};
+	//int64_t m_iStartTime{0};
+	//int64_t m_iPauseTime{0};
 	uint32_t m_uiReadThreadSleepTime{0};
-	int64_t m_iTotalVideoSeekTime{0}; // 记录总共快进的时间，用于计算快进量，微妙为单位
-	int64_t m_iTotalAudioSeekTime{0}; // 记录总共快进的时间，用于计算快进量，微妙为单位
+	uint32_t m_uiPerFrameSampleCnt{ 0 };
+	//int64_t m_iTotalVideoSeekTime{0}; // 记录总共快进的时间，用于计算快进量，微妙为单位
+	//int64_t m_iTotalAudioSeekTime{0}; // 记录总共快进的时间，用于计算快进量，微妙为单位
 
-	uint64_t m_uiVideoCurrentTime{0}; // 记录当前视频时间，用于计算快进量，微妙为单位
-	uint64_t m_uiAudioCurrentTime{0}; // 记录当前音频时间，用于计算快进量,微妙为单位
+	//uint64_t m_uiVideoCurrentTime{0}; // 记录当前视频时间，用于计算快进量，微妙为单位
+	//uint64_t m_uiAudioCurrentTime{0}; // 记录当前音频时间，用于计算快进量,微妙为单位
 };

@@ -33,10 +33,17 @@ constexpr int kOutputAudioFormat = AV_SAMPLE_FMT_S16;
 
 constexpr int kSDIOutputFormat = bmdModeHD1080i50;
 
-constexpr int kBufferWaterLevel = 20;
+constexpr int kBufferWaterLevel = 50;
+constexpr int kAfterDecoderCachedCnt = 50;
 
 constexpr int kmicroSecondsPerSecond = 1000000;
 constexpr int kmilliSecondsPerSecond = 1000;
+
+enum class PacketType
+{
+	Video = 0,
+	Audio,
+};
 
 enum class MediaType
 {
@@ -103,6 +110,20 @@ struct VideoCallbackInfo
 		{
 			delete[] yuvData;
 			yuvData = nullptr;
+		}
+	}
+};
+
+struct AudioCallbackInfo
+{
+	uint32_t m_ulPCMLength{ 0 };
+	uint8_t* m_pPCMData{ nullptr };
+	~AudioCallbackInfo()
+	{
+		if (m_pPCMData)
+		{
+			delete[]m_pPCMData;
+			m_pPCMData = nullptr;
 		}
 	}
 };
