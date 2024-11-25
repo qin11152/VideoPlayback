@@ -118,6 +118,8 @@ private:
 	bool m_bInitState{false};
 	bool m_bRunningState{false};
 	bool m_bPauseState{false};
+	std::atomic<bool> m_bReadFinished{ false };
+	std::atomic<bool> m_bDecoderFinished{ false };
 	//bool m_bFirstVideoPacketAfterSeek{false};
 	//bool m_bFirstAudioPacketAfterSeek{false};
 	//bool m_bFirstReadedVideoPakcet{false};

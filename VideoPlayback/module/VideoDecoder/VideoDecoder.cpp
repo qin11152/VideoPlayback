@@ -90,8 +90,10 @@ int32_t VideoDecoder::initModule(const char* fileName, const VideoInfo& outVideo
 
 			swsContext = sws_getContext(
 				videoCodecContext->width, videoCodecContext->height, videoCodecContext->pix_fmt,
-				m_stuVideoInfo.width, m_stuVideoInfo.height, m_stuVideoInfo.videoFormat,
+				videoCodecContext->width, videoCodecContext->height, m_stuVideoInfo.videoFormat,
 				SWS_BILINEAR, nullptr, nullptr, nullptr);
+			m_stuVideoInfo.width = videoCodecContext->width;
+			m_stuVideoInfo.height = videoCodecContext->height;
 		}
 		else if (codecParameters->codec_type == AVMEDIA_TYPE_AUDIO && audioStreamIndex == -1)
 		{
@@ -137,6 +139,8 @@ int32_t VideoDecoder::initModule(const char* fileName, const VideoInfo& outVideo
 	auto fps = av_q2d(frameRate);
 	m_uiReadThreadSleepTime = (kmilliSecondsPerSecond / fps);
 	m_uiPerFrameSampleCnt = m_stuAudioInfo.audioSampleRate / fps;
+	m_bReadFinished = false;
+	m_bDecoderFinished = false;
 	if (nullptr == m_ptrPCMBuffer)
 	{
 		m_ptrPCMBuffer = new Buffer();
@@ -176,11 +180,26 @@ void VideoDecoder::unInitModule()
 		delete m_ptrPCMBuffer;
 		m_ptrPCMBuffer = nullptr;
 	}
-	sws_freeContext(swsContext);
-	swr_free(&swrContext);
-	avcodec_free_context(&videoCodecContext);
-	avcodec_free_context(&audioCodecContext);
-	avformat_close_input(&formatContext);
+	if (swsContext)
+	{
+		sws_freeContext(swsContext);
+	}
+	if (swrContext)
+	{
+		swr_free(&swrContext);
+	}
+	if (videoCodecContext)
+	{
+		avcodec_free_context(&videoCodecContext);
+	}
+	if (audioCodecContext)
+	{
+		avcodec_free_context(&audioCodecContext);
+	}
+	if (formatContext)
+	{
+		avformat_close_input(&formatContext);
+	}
 }
 
 void VideoDecoder::readFrameFromFile()
@@ -245,6 +264,7 @@ void VideoDecoder::readFrameFromFile()
 		}
 		LOG_INFO("Read End");
 	}
+	m_bReadFinished = true;
 }
 
 void VideoDecoder::decoder()
@@ -259,6 +279,10 @@ void VideoDecoder::decoder()
 	{
 		{
 			std::unique_lock<std::mutex> lck(m_afterDecoderInfoMutex);
+			if (m_bReadFinished && m_queueNeedDecoderPacket.size() <= 0)
+			{
+				break;
+			}
 			//解码后的视频队列大于阈值，就等待消费线程消费，暂停解码
 			if (m_queueVideoInfo.size() > kAfterDecoderCachedCnt)
 			{
@@ -318,6 +342,7 @@ void VideoDecoder::decoder()
 		LOG_INFO("Decoder End");
 	}
 	av_packet_unref(packet);
+	m_bDecoderFinished = true;
 }
 
 void VideoDecoder::decoderVideo(AVPacket* packet)
@@ -455,7 +480,7 @@ void VideoDecoder::consume()
 	{
 		return;
 	}
-	while (m_queueVideoInfo.size() < kAfterDecoderCachedCnt)
+	while (m_queueVideoInfo.size() < 15)
 	{
 		std::this_thread::sleep_for(std::chrono::milliseconds(5));
 	}
@@ -478,6 +503,10 @@ void VideoDecoder::consume()
 		//解码后的视频队列和音频队列都为空，就等待解码线程解码
 		if (m_queueVideoInfo.size() <= 0 )
 		{
+			if (m_bDecoderFinished)
+			{
+				break;
+			}
 			printf("wait................\n");
 			m_queueWaitConsumedCV.wait(lck, [this]
 				{ return !m_bRunningState || m_queueVideoInfo.size() > 0; });
@@ -528,10 +557,33 @@ void VideoDecoder::consume()
 		{
 			int length = m_uiPerFrameSampleCnt * kOutputAudioChannels * av_get_bytes_per_sample((AVSampleFormat)kOutputAudioFormat);
 			uint8_t* pcmData = new uint8_t[length]{ 0 };
+			m_ptrPCMBuffer->getBuffer(pcmData, length);
 			m_audioPlayCallback(pcmData, length);
 			delete[]pcmData;
 		}
 		LOG_INFO("Consume End");
+	}
+	delete m_ptrPCMBuffer;
+	m_ptrPCMBuffer = nullptr;
+	if (swsContext)
+	{
+		sws_freeContext(swsContext);
+	}
+	if (swrContext)
+	{
+		swr_free(&swrContext);
+	}
+	if (videoCodecContext)
+	{
+		avcodec_free_context(&videoCodecContext);
+	}
+	if (audioCodecContext)
+	{
+		avcodec_free_context(&audioCodecContext);
+	}
+	if (formatContext)
+	{
+		avformat_close_input(&formatContext);
 	}
 }
 

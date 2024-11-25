@@ -20,6 +20,7 @@ Buffer::Buffer(const Buffer& l)
 
 Buffer::~Buffer()
 {
+	unInitBuffer();
 }
 
 void Buffer::initBuffer(uint32_t bufferSize)
@@ -40,7 +41,7 @@ void Buffer::unInitBuffer()
 void Buffer::appendData(uint8_t* data, uint32_t size)
 {
 	std::lock_guard<std::mutex> lck(m_mutex);
-	QByteArray datas((char*)data, 1920 * 2);
+	QByteArray datas((char*)data, size);
 	//如果datas的收个成员是0x0D，则打印hh
 	if (m_uiEndPos + size > m_uiBufferSize)
 	{
