@@ -24,7 +24,7 @@ extern "C"
 constexpr int kOutputVideoWidth = 1920;
 constexpr int kOutputVideoHeight = 1080;
 constexpr int kOutputVideoFormat = AV_PIX_FMT_UYVY422;
-constexpr int kOutputAudioChannels = 8;
+constexpr int kOutputAudioChannels = 2;
 constexpr int kAtomOutputAudioChannels = 1;
 constexpr int kOutputAudioSampleRate = 48000;
 constexpr int kOutputAudioSamplePerChannel = 1024;
@@ -104,6 +104,7 @@ struct VideoCallbackInfo
 	uint32_t dataSize;
 	AVPixelFormat videoFormat;
 	uint8_t* yuvData{ nullptr };
+	double m_dPts{ 0.0 };
 	~VideoCallbackInfo()
 	{
 		if (yuvData)

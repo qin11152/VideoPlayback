@@ -97,6 +97,7 @@ int32_t VideoDecoder::initModule(const char* fileName, const VideoInfo& outVideo
 		{
 			audioStreamIndex = i;
 
+			//解码器参数
 			audioCodecContext = avcodec_alloc_context3(codec);
 			avcodec_parameters_to_context(audioCodecContext, codecParameters);
 			avcodec_open2(audioCodecContext, codec, nullptr);
@@ -328,14 +329,15 @@ void VideoDecoder::decoderVideo(AVPacket* packet)
 		while (ret == 0)
 		{
 			LOG_INFO("Video Decoder Begin Handle");
-			auto start = std::chrono::system_clock::now();
 			AVFrame* yuvFrame = av_frame_alloc();
+			double pts = frame->pts * av_q2d(formatContext->streams[videoStreamIndex]->time_base);
 			av_image_alloc(yuvFrame->data, yuvFrame->linesize, m_stuVideoInfo.width, m_stuVideoInfo.height, m_stuVideoInfo.videoFormat, 1);
 			sws_scale(swsContext, frame->data, frame->linesize, 0, videoCodecContext->height, yuvFrame->data, yuvFrame->linesize);
 			std::shared_ptr<VideoCallbackInfo> videoInfo = std::make_shared<VideoCallbackInfo>();
 			videoInfo->width = m_stuVideoInfo.width;
 			videoInfo->height = m_stuVideoInfo.height;
 			videoInfo->videoFormat = m_stuVideoInfo.videoFormat;
+			videoInfo->m_dPts = pts;
 			// 计算avframe中的数据量
 			switch (m_stuVideoInfo.videoFormat)
 			{
@@ -388,6 +390,10 @@ void VideoDecoder::decoderVideo(AVPacket* packet)
 void VideoDecoder::decoderAudio(AVPacket* packet)
 {
 	AVFrame* frame = av_frame_alloc();
+	int swr_size = 0;
+	int resampled_linesize;
+	int max_resampled_samples = 0;
+	uint8_t** resampled_data = nullptr;
 	if (avcodec_send_packet(audioCodecContext, packet) == 0)
 	{
 		while (avcodec_receive_frame(audioCodecContext, frame) == 0)
@@ -397,38 +403,50 @@ void VideoDecoder::decoderAudio(AVPacket* packet)
 			////把重采样之前的数据保存本地
 			//fs.write((const char *)frame->data[0], frame->linesize[0]);
 			//fs.close();
-			auto start = std::chrono::system_clock::now();
-			int data_size = av_samples_get_buffer_size(nullptr,
-				audioCodecContext->ch_layout.nb_channels,
-				frame->nb_samples,
-				audioCodecContext->sample_fmt, 1);
-			int32_t out_buffer_size = av_samples_get_buffer_size(nullptr, m_stuAudioInfo.audioChannels, frame->nb_samples, m_stuAudioInfo.audioFormat, 1);
 
-			//// 分配输出缓冲区的空间
-			uint8_t* out_buff = (unsigned char*)av_malloc(out_buffer_size);
-			auto swr_size = swr_convert(swrContext,										  // 音频采样器的实例
-				&out_buff, frame->nb_samples,					  // 输出的数据内容和数据大小
-				(const uint8_t**)frame->data, frame->nb_samples); // 输入的数据内容和数据大小
+			int resampled_samples = av_rescale_rnd(
+				swr_get_delay(swrContext, audioCodecContext->sample_rate) + frame->nb_samples,
+				m_stuAudioInfo.audioSampleRate, audioCodecContext->sample_rate, AV_ROUND_UP);
 
-			int pcmNumber = kOutputAudioChannels * frame->nb_samples * av_get_bytes_per_sample((AVSampleFormat)kOutputAudioFormat);
-			//std::shared_ptr< AudioCallbackInfo> audioInfo = std::make_shared<AudioCallbackInfo>();
-			//audioInfo->m_ulPCMLength = pcmNumber;
-			//audioInfo->m_pPCMData = new uint8_t[pcmNumber];
-			m_ptrPCMBuffer->appendData(out_buff, pcmNumber);
-			//memcpy(audioInfo->m_pPCMData, out_buff, pcmNumber);
-			//std::lock_guard<std::mutex> lck(m_afterDecoderInfoMutex);
-			//m_queueAudioInfo.push(audioInfo);
-			//完成了一个音频解码，通知消费线程
-			//m_queueWaitConsumedCV.notify_one();
-			// file.write((const char*)out_buff, out_buffer_size);
-			if (out_buff)
+			if (resampled_samples > max_resampled_samples) 
 			{
-				av_freep(&out_buff);
+				if (resampled_data) 
+				{
+					av_freep(&resampled_data[0]);
+				}
+				av_samples_alloc_array_and_samples(&resampled_data, &resampled_linesize,
+					kOutputAudioChannels, resampled_samples,
+					m_stuAudioInfo.audioFormat, 0);
+				max_resampled_samples = resampled_samples;
 			}
+
+			int converted_samples = swr_convert(swrContext, resampled_data, resampled_samples,
+				(const uint8_t**)frame->data, frame->nb_samples);
+
+			int pcmNumber = converted_samples * kOutputAudioChannels * av_get_bytes_per_sample(m_stuAudioInfo.audioFormat);
+
+			//std::fstream fsbefore("audio_before_resample", std::ios::app | std::ios::binary);
+			//fsbefore.write((const char*)frame->data[0], audioCodecContext->channels*frame->nb_samples* av_get_bytes_per_sample(audioCodecContext->sample_fmt));
+			//fsbefore.close();
+
+			//std::fstream fs("audio.pcm", std::ios::app | std::ios::binary);
+			////把重采样之后的数据保存本地
+			//fs.write((const char*)resampled_data[0], pcmNumber);
+			//fs.close();
+
+			if (resampled_data)
+			{
+				m_ptrPCMBuffer->appendData(resampled_data[0], pcmNumber);
+			}
+
 		}
 	}
 	LOG_INFO("Decoder Audio End");
 	av_frame_free(&frame);
+	if (resampled_data)
+	{
+		av_freep(&resampled_data[0]);
+	}
 }
 
 void VideoDecoder::consume()
@@ -450,6 +468,8 @@ void VideoDecoder::consume()
 			if (m_bPauseState)
 			{
 				m_PauseCV.wait(lck, [this]() {return !m_bRunningState || !m_bPauseState; });
+				//每次暂停恢复之后都需要更新下此次paint的时间
+				needPaintTime = std::chrono::system_clock::now();
 			}
 		}
 		LOG_INFO("Consumer Wait Consume Lock");
@@ -502,12 +522,14 @@ void VideoDecoder::consume()
 		LOG_INFO("Need Paint Time:{},Get Frame Time{},Next Paint Time:{}", t2, t1, t);
 		if (m_previewCallback)
 		{
-			m_previewCallback(videoInfo, 0);
+			m_previewCallback(videoInfo, videoInfo->m_dPts);
 		}
 		if (m_audioPlayCallback)
 		{
-			uint8_t* pcmData = new uint8_t[m_uiPerFrameSampleCnt * kOutputAudioChannels * av_get_bytes_per_sample((AVSampleFormat)kOutputAudioFormat)]{ 0 };
-			//m_audioPlayCallback(audioInfo->m_pPCMData, audioInfo->m_ulPCMLength);
+			int length = m_uiPerFrameSampleCnt * kOutputAudioChannels * av_get_bytes_per_sample((AVSampleFormat)kOutputAudioFormat);
+			uint8_t* pcmData = new uint8_t[length]{ 0 };
+			m_audioPlayCallback(pcmData, length);
+			delete[]pcmData;
 		}
 		LOG_INFO("Consume End");
 	}
