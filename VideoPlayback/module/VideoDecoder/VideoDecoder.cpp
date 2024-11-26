@@ -183,22 +183,27 @@ void VideoDecoder::unInitModule()
 	if (swsContext)
 	{
 		sws_freeContext(swsContext);
+		swsContext = nullptr;
 	}
 	if (swrContext)
 	{
 		swr_free(&swrContext);
+		swrContext = nullptr;
 	}
 	if (videoCodecContext)
 	{
 		avcodec_free_context(&videoCodecContext);
+		videoCodecContext = nullptr;
 	}
 	if (audioCodecContext)
 	{
 		avcodec_free_context(&audioCodecContext);
+		audioCodecContext = nullptr;
 	}
 	if (formatContext)
 	{
 		avformat_close_input(&formatContext);
+		formatContext = nullptr;
 	}
 }
 
@@ -357,7 +362,11 @@ void VideoDecoder::decoderVideo(AVPacket* packet)
 			AVFrame* yuvFrame = av_frame_alloc();
 			double pts = frame->pts * av_q2d(formatContext->streams[videoStreamIndex]->time_base);
 			av_image_alloc(yuvFrame->data, yuvFrame->linesize, m_stuVideoInfo.width, m_stuVideoInfo.height, m_stuVideoInfo.videoFormat, 1);
-			sws_scale(swsContext, frame->data, frame->linesize, 0, videoCodecContext->height, yuvFrame->data, yuvFrame->linesize);
+			if (swrContext)
+			{
+				sws_scale(swsContext, frame->data, frame->linesize, 0, videoCodecContext->height, yuvFrame->data, yuvFrame->linesize);
+				LOG_INFO("Video Decoder Convert");
+			}
 			std::shared_ptr<VideoCallbackInfo> videoInfo = std::make_shared<VideoCallbackInfo>();
 			videoInfo->width = m_stuVideoInfo.width;
 			videoInfo->height = m_stuVideoInfo.height;
@@ -563,27 +572,35 @@ void VideoDecoder::consume()
 		}
 		LOG_INFO("Consume End");
 	}
-	delete m_ptrPCMBuffer;
-	m_ptrPCMBuffer = nullptr;
+	if (m_ptrPCMBuffer)
+	{
+		delete m_ptrPCMBuffer;
+		m_ptrPCMBuffer = nullptr;
+	}
 	if (swsContext)
 	{
 		sws_freeContext(swsContext);
+		swsContext = nullptr;
 	}
 	if (swrContext)
 	{
 		swr_free(&swrContext);
+		swrContext = nullptr;
 	}
 	if (videoCodecContext)
 	{
 		avcodec_free_context(&videoCodecContext);
+		videoCodecContext = nullptr;
 	}
 	if (audioCodecContext)
 	{
 		avcodec_free_context(&audioCodecContext);
+		audioCodecContext = nullptr;
 	}
 	if (formatContext)
 	{
 		avformat_close_input(&formatContext);
+		formatContext = nullptr;
 	}
 }
 
