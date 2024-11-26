@@ -85,6 +85,11 @@ int32_t VideoDecoder::initModule(const char* fileName, const VideoInfo& outVideo
 		{
 			videoStreamIndex = i;
 			videoCodecContext = avcodec_alloc_context3(codec);
+
+			//AVBufferRef* hwDeviceCtx = nullptr;
+			//av_hwdevice_ctx_create(&hwDeviceCtx, AV_HWDEVICE_TYPE_D3D11VA, nullptr, nullptr, 0);
+			//videoCodecContext->hw_device_ctx = av_buffer_ref(hwDeviceCtx);
+
 			avcodec_parameters_to_context(videoCodecContext, codecParameters);
 			avcodec_open2(videoCodecContext, codec, nullptr);
 
@@ -359,43 +364,108 @@ void VideoDecoder::decoderVideo(AVPacket* packet)
 		while (ret == 0)
 		{
 			LOG_INFO("Video Decoder Begin Handle");
-			AVFrame* yuvFrame = av_frame_alloc();
 			double pts = frame->pts * av_q2d(formatContext->streams[videoStreamIndex]->time_base);
-			av_image_alloc(yuvFrame->data, yuvFrame->linesize, m_stuVideoInfo.width, m_stuVideoInfo.height, m_stuVideoInfo.videoFormat, 1);
-			if (swrContext)
-			{
-				sws_scale(swsContext, frame->data, frame->linesize, 0, videoCodecContext->height, yuvFrame->data, yuvFrame->linesize);
-				LOG_INFO("Video Decoder Convert");
-			}
+
 			std::shared_ptr<VideoCallbackInfo> videoInfo = std::make_shared<VideoCallbackInfo>();
-			videoInfo->width = m_stuVideoInfo.width;
-			videoInfo->height = m_stuVideoInfo.height;
-			videoInfo->videoFormat = m_stuVideoInfo.videoFormat;
+			videoInfo->width = videoCodecContext->width;
+			videoInfo->height = videoCodecContext->height;
+			videoInfo->videoFormat = videoCodecContext->pix_fmt;
 			videoInfo->m_dPts = pts;
 			// 计算avframe中的数据量
-			switch (m_stuVideoInfo.videoFormat)
+			switch (videoCodecContext->pix_fmt)
 			{
 			case AV_PIX_FMT_YUV420P:
 			{
-				videoInfo->yuvData = new uint8_t[m_stuVideoInfo.width * m_stuVideoInfo.height * 3 / 2];
-				videoInfo->dataSize = m_stuVideoInfo.width * m_stuVideoInfo.height * 3 / 2;
-				memcpy(videoInfo->yuvData, yuvFrame->data[0], videoInfo->dataSize);
+				videoInfo->yuvData = new uint8_t[videoCodecContext->width * videoCodecContext->height * 3 / 2];
+				videoInfo->dataSize = videoCodecContext->width * videoCodecContext->height * 3 / 2;
+				memcpy(videoInfo->yuvData, frame->data[0], videoCodecContext->width * videoCodecContext->height);
+				memcpy(videoInfo->yuvData + videoCodecContext->width * videoCodecContext->height,
+					frame->data[1],
+					videoCodecContext->width / 2 * videoCodecContext->height / 2);
+
+				// 4. 拷贝 V 分量
+				memcpy(videoInfo->yuvData + videoCodecContext->width * videoCodecContext->height +
+					videoCodecContext->width / 2 * videoCodecContext->height / 2,
+					frame->data[2],
+					videoCodecContext->width / 2 * videoCodecContext->height / 2);
 			}
 			break;
 			case AV_PIX_FMT_YUV422P:
+			{
+				videoInfo->yuvData = new uint8_t[videoCodecContext->width * videoCodecContext->height * 2];
+				videoInfo->dataSize = videoCodecContext->width * videoCodecContext->height * 2;
+				int ySize = videoCodecContext->width * videoCodecContext->height;
+				int uSize = videoCodecContext->width * videoCodecContext->height / 2; // U 和 V 的大小是 Y 的一半
+				memcpy(videoInfo->yuvData, frame->data[0], ySize);
+				memcpy(videoInfo->yuvData + ySize, frame->data[1], uSize);
+				memcpy(videoInfo->yuvData + ySize + uSize, frame->data[2], uSize);
+			}
+			break;
 			case AV_PIX_FMT_YUYV422:
+			{
+				videoInfo->yuvData = new uint8_t[videoCodecContext->width * videoCodecContext->height * 2];
+				videoInfo->dataSize = videoCodecContext->width * videoCodecContext->height * 2;
+				int size = videoCodecContext->width * videoCodecContext->height * 2; // 每个像素 2 字节
+
+				// 拷贝 YUYV 数据
+				for (int y = 0; y < videoCodecContext->height; ++y) 
+				{
+					// 计算源数据的起始位置
+					uint8_t* src = frame->data[0] + y * frame->linesize[0];
+					// 计算目标数据的起始位置
+					uint8_t* dst = videoInfo->yuvData + y * videoCodecContext->width * 2;
+
+					// 拷贝每一行的数据
+					for (int x = 0; x < videoCodecContext->width; x += 2) {
+						// 拷贝 Y0 和 U
+						dst[0] = src[2 * x];     // Y0
+						dst[1] = src[2 * x + 1]; // U
+						dst[2] = src[2 * x + 2]; // Y1
+						dst[3] = src[2 * x + 3]; // V
+						dst += 4; // 移动到下一个像素
+					}
+				}
+			}
+			break;
 			case AV_PIX_FMT_UYVY422:
 			{
-				videoInfo->yuvData = new uint8_t[m_stuVideoInfo.width * m_stuVideoInfo.height * 2];
-				videoInfo->dataSize = m_stuVideoInfo.width * m_stuVideoInfo.height * 2;
-				memcpy(videoInfo->yuvData, yuvFrame->data[0], videoInfo->dataSize);
+				videoInfo->yuvData = new uint8_t[videoCodecContext->width * videoCodecContext->height * 2];
+				videoInfo->dataSize = videoCodecContext->width * videoCodecContext->height * 2;
+				int size = videoCodecContext->width * videoCodecContext->height * 2; // 每个像素 2 字节
+
+				// 拷贝 UYVY 数据
+				for (int y = 0; y < videoCodecContext->height; ++y) {
+					// 计算源数据的起始位置
+					uint8_t* src = frame->data[0] + y * frame->linesize[0];
+					// 计算目标数据的起始位置
+					uint8_t* dst = videoInfo->yuvData + y * videoCodecContext->width * 2;
+
+					for (int x = 0; x < videoCodecContext->width; x += 2) {
+						// 拷贝 U 和 Y
+						dst[0] = src[2 * x];     // U
+						dst[1] = src[2 * x + 1]; // Y
+						dst[2] = src[2 * x + 2]; // V
+						dst[3] = src[2 * x + 1]; // Y
+						dst += 4; // 移动到下一个像素
+					}
+				}
 			}
 			break;
 			default:
+			{
+				AVFrame* yuvFrame = av_frame_alloc();
+				av_image_alloc(yuvFrame->data, yuvFrame->linesize, m_stuVideoInfo.width, m_stuVideoInfo.height, m_stuVideoInfo.videoFormat, 1);
+				if (swrContext)
+				{
+					sws_scale(swsContext, frame->data, frame->linesize, 0, videoCodecContext->height, yuvFrame->data, yuvFrame->linesize);
+					LOG_INFO("Video Decoder Convert");
+				}
+				videoInfo->videoFormat = m_stuVideoInfo.videoFormat;
+				av_freep(yuvFrame->data);
+				av_frame_free(&yuvFrame);
+			}
 				break;
 			}
-			av_freep(yuvFrame->data);
-			av_frame_free(&yuvFrame);
 			if (nullptr == videoInfo->yuvData)
 			{
 				LOG_ERROR("videoInfo.yuvData is nullptr");

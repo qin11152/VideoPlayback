@@ -97,6 +97,11 @@ void OpenGLPreviewWidget::onSignalYUVData(QByteArray data, const VideoInfo &vide
 			ConvertYUV422pToYUV420p((const uint8_t*)data.data(), m_uiWidth, m_uiHeight, yuv420);
 			break;
 		}
+		case::AV_PIX_FMT_YUV420P:
+		{
+			memcpy(yuv420, data.data(), data.length());
+		}
+		break;
 	}
 	m_YUV420Data = QByteArray((char*)yuv420, m_uiWidth * m_uiHeight * 3 / 2);
 	delete[]yuv420;
