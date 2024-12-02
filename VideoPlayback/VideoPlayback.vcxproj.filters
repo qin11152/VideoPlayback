@@ -48,6 +48,9 @@
     <Filter Include="ui\MyTipDialog">
       <UniqueIdentifier>{380ae465-c2a6-4a1b-be1d-8f23c6154b0e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="module\ThreadPool">
+      <UniqueIdentifier>{66d238eb-cf99-4662-b00d-bad17103cad7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <QtRcc Include="VideoPlayback.qrc">
@@ -112,6 +115,9 @@
     <ClCompile Include="ui\MyTipDialog\MyTipDialog.cpp">
       <Filter>ui\MyTipDialog</Filter>
     </ClCompile>
+    <ClCompile Include="module\ThreadPool\ThreadPool.cpp">
+      <Filter>module\ThreadPool</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="ui\VideoPlayback.h">
@@ -162,6 +168,9 @@
     </ClInclude>
     <ClInclude Include="module\AtomDecoder\avid_mxf_info.h">
       <Filter>module\AtomDecoder</Filter>
+    </ClInclude>
+    <ClInclude Include="module\ThreadPool\ThreadPool.h">
+      <Filter>module\ThreadPool</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

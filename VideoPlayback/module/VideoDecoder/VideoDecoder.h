@@ -46,6 +46,8 @@ public:
 	void decoderAudio(AVPacket* packet);
 
 	void consume();
+
+	void seekOperate();
 	//void decodeVideo();
 	//void decodeAudio();
 
@@ -98,7 +100,7 @@ private:
 	// std::mutex m_VideoMutex;
 	// std::mutex m_AudioMutex;
 	std::mutex m_PauseMutex;
-	std::mutex m_queueMutex;		//avpacket队列的锁，用于读取和编码线程
+	std::mutex m_queueMutex;		//avpacket队列的锁，用于读取和解码线程
 	std::mutex m_afterDecoderInfoMutex;	//编码后队列的锁，用于解码和渲染线程
 	//std::mutex m_PacketMutex;
 	//std::condition_variable m_VideoCV;
@@ -107,6 +109,7 @@ private:
 	std::condition_variable m_queueWaitDecodedCV;	//待解码队列的条件变量
 	std::condition_variable m_queueWaitConsumedCV;	//待消费队列的条件变量
 	std::condition_variable m_PauseCV; // 暂停时的条件变量
+	std::condition_variable m_SeekCV;	//seek时的条件变量
 
 	//std::queue<AVPacket> m_queueVideoFrame;
 	//std::queue<AVPacket> m_queueAudioFrame;
@@ -120,8 +123,8 @@ private:
 	bool m_bInitState{false};
 	bool m_bRunningState{false};
 	bool m_bPauseState{false};
-	std::atomic<bool> m_bReadFinished{ false };
-	std::atomic<bool> m_bDecoderFinished{ false };
+	//std::atomic<bool> m_bReadFinished{ false };
+	//std::atomic<bool> m_bDecoderFinished{ false };
 	//bool m_bFirstVideoPacketAfterSeek{false};
 	//bool m_bFirstAudioPacketAfterSeek{false};
 	//bool m_bFirstReadedVideoPakcet{false};

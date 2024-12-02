@@ -16,6 +16,7 @@ int main(int argc, char *argv[])
 #endif
     qRegisterMetaType<VideoCallbackInfo>("VideoCallbackInfo");
     qRegisterMetaType<VideoInfo>("VideoInfo");
+    ThreadPool::get_mutable_instance().startPool(10);
     LogConfig conf("info", "log/VideoPlayback.log", 50 * 1024 * 1024, 10);
     INITLOG(conf);
     LOG_INFO("VideoPlayback start");

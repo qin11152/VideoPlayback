@@ -125,6 +125,7 @@
     <ClCompile Include="module\AudioPlay\AudioPlay.cpp" />
     <ClCompile Include="module\BlackMagic\DeckLinkDeviceDiscovery\DeckLinkDeviceDiscovery.cpp" />
     <ClCompile Include="module\LogModule\Log.cpp" />
+    <ClCompile Include="module\ThreadPool\ThreadPool.cpp" />
     <ClCompile Include="module\VideoDecoder\VideoDecoder.cpp" />
     <ClCompile Include="module\VideoInfo\VideoInfoAcqure.cpp" />
     <ClCompile Include="stdafx.cpp" />
@@ -150,6 +151,7 @@
     <ClInclude Include="module\AtomDecoder\AtomDecoder.h" />
     <ClInclude Include="module\AtomDecoder\avid_mxf_info.h" />
     <ClInclude Include="module\AtomDecoder\Buffer.h" />
+    <ClInclude Include="module\ThreadPool\ThreadPool.h" />
     <ClInclude Include="stdafx.h" />
     <QtMoc Include="ui\MyTipDialog\MyTipDialog.h" />
     <QtMoc Include="ui\MySlider\MySlider.h" />

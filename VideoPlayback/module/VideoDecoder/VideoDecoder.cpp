@@ -21,7 +21,7 @@ std::string getTime(const std::chrono::system_clock::time_point currentTime)
 	return oss.str();
 }
 
-void preciseSleep(std::chrono::microseconds duration) 
+void preciseSleep(std::chrono::microseconds duration)
 {
 	auto start = std::chrono::high_resolution_clock::now();
 	while (std::chrono::high_resolution_clock::now() - start < duration) {
@@ -44,7 +44,7 @@ std::function<void(AVFrame*)> avframedel = [](AVFrame* _frame)
 
 VideoDecoder::VideoDecoder(VideoPlayback* videoPlayback)
 	: formatContext(nullptr), videoCodecContext(nullptr), audioCodecContext(nullptr),
-	videoStreamIndex(-1), audioStreamIndex(-1), swsContext(nullptr), swrContext(nullptr),m_ptrVideoPlayback(videoPlayback)
+	videoStreamIndex(-1), audioStreamIndex(-1), swsContext(nullptr), swrContext(nullptr), m_ptrVideoPlayback(videoPlayback)
 {
 }
 
@@ -145,8 +145,6 @@ int32_t VideoDecoder::initModule(const char* fileName, const VideoInfo& outVideo
 	auto fps = av_q2d(frameRate);
 	m_uiReadThreadSleepTime = (kmilliSecondsPerSecond / fps);
 	m_uiPerFrameSampleCnt = m_stuAudioInfo.audioSampleRate / fps;
-	m_bReadFinished = false;
-	m_bDecoderFinished = false;
 	if (nullptr == m_ptrPCMBuffer)
 	{
 		m_ptrPCMBuffer = new Buffer();
@@ -165,7 +163,7 @@ void VideoDecoder::unInitModule()
 		m_PauseCV.notify_all();
 	}
 	m_ReadCV.notify_all();
-	m_queueWaitDecodedCV.notify_all ();
+	m_queueWaitDecodedCV.notify_all();
 	m_queueWaitConsumedCV.notify_all();
 	if (m_ReadThread.joinable())
 	{
@@ -227,6 +225,11 @@ void VideoDecoder::readFrameFromFile()
 		std::unique_lock<std::mutex> lck(m_queueMutex);
 		//首先查看等待解码的队列是否已经满了，如果满了就等待解码线程消费
 		LOG_INFO("Read Get Lock");
+		if (m_bSeekState)
+		{
+			m_SeekCV.wait(lck, [this]
+				{ return !m_bRunningState || !m_bSeekState; });
+		}
 		if (m_queueNeedDecoderPacket.size() > kBufferWaterLevel)
 		{
 			m_ReadCV.wait(lck, [this]
@@ -253,7 +256,7 @@ void VideoDecoder::readFrameFromFile()
 				m_queueWaitDecodedCV.notify_one();
 			}
 			else if (packet->stream_index == videoStreamIndex)
-			{	
+			{
 				// 视频包需要解码
 				LOG_INFO("Video Wait Get Lock");
 				std::unique_lock<std::mutex> lck(m_queueMutex); // 对视频队列锁加锁
@@ -279,7 +282,6 @@ void VideoDecoder::readFrameFromFile()
 	//{
 	//	m_ptrVideoPlayback->clearDecoder();
 	//}
-	m_bReadFinished = true;
 }
 
 void VideoDecoder::decoder()
@@ -294,9 +296,9 @@ void VideoDecoder::decoder()
 	{
 		{
 			std::unique_lock<std::mutex> lck(m_afterDecoderInfoMutex);
-			if (m_bReadFinished && m_queueNeedDecoderPacket.size() <= 0)
+			if (m_bSeekState)
 			{
-				break;
+				m_SeekCV.wait(lck, [this]() {return !m_bSeekState || !m_bRunningState; });
 			}
 			//解码后的视频队列大于阈值，就等待消费线程消费，暂停解码
 			if (m_queueVideoInfo.size() > kAfterDecoderCachedCnt)
@@ -365,7 +367,6 @@ void VideoDecoder::decoder()
 			m_queueNeedDecoderPacket.pop();
 		}
 	}
-	m_bDecoderFinished = true;
 }
 
 void VideoDecoder::decoderVideo(AVPacket* packet)
@@ -421,7 +422,7 @@ void VideoDecoder::decoderVideo(AVPacket* packet)
 				int size = videoCodecContext->width * videoCodecContext->height * 2; // 每个像素 2 字节
 
 				// 拷贝 YUYV 数据
-				for (int y = 0; y < videoCodecContext->height; ++y) 
+				for (int y = 0; y < videoCodecContext->height; ++y)
 				{
 					// 计算源数据的起始位置
 					uint8_t* src = frame->data[0] + y * frame->linesize[0];
@@ -483,7 +484,7 @@ void VideoDecoder::decoderVideo(AVPacket* packet)
 				av_freep(yuvFrame->data);
 				av_frame_free(&yuvFrame);
 			}
-				break;
+			break;
 			}
 			if (nullptr == videoInfo->yuvData)
 			{
@@ -531,9 +532,9 @@ void VideoDecoder::decoderAudio(AVPacket* packet)
 				swr_get_delay(swrContext, audioCodecContext->sample_rate) + frame->nb_samples,
 				m_stuAudioInfo.audioSampleRate, audioCodecContext->sample_rate, AV_ROUND_UP);
 
-			if (resampled_samples > max_resampled_samples) 
+			if (resampled_samples > max_resampled_samples)
 			{
-				if (resampled_data) 
+				if (resampled_data)
 				{
 					av_freep(&resampled_data[0]);
 				}
@@ -561,7 +562,6 @@ void VideoDecoder::decoderAudio(AVPacket* packet)
 			{
 				m_ptrPCMBuffer->appendData(resampled_data[0], pcmNumber);
 			}
-
 		}
 	}
 	LOG_INFO("Decoder Audio End");
@@ -598,14 +598,14 @@ void VideoDecoder::consume()
 		LOG_INFO("Consumer Wait Consume Lock");
 		std::unique_lock<std::mutex> lck(m_afterDecoderInfoMutex);
 		LOG_INFO("Consumer Get Consume Lock,Before Size:{}", m_queueVideoInfo.size());
-		//解码后的视频队列和音频队列都为空，就等待解码线程解码
-		if (m_queueVideoInfo.size() <= 0 )
+		if (m_bSeekState)
 		{
-			//正常退出
-			if (m_bDecoderFinished)
-			{
-				break;
-			}
+			m_SeekCV.wait(lck, [this]() {return !m_bSeekState || !m_bRunningState; });
+			needPaintTime = std::chrono::system_clock::now();
+		}
+		//解码后的视频队列和音频队列都为空，就等待解码线程解码
+		if (m_queueVideoInfo.size() <= 0)
+		{
 			printf("wait................\n");
 			m_queueWaitConsumedCV.wait(lck, [this]
 				{ return !m_bRunningState || m_queueVideoInfo.size() > 0; });
@@ -624,11 +624,7 @@ void VideoDecoder::consume()
 		}
 		LOG_INFO("Consumer Release Consume Lock");
 		lck.unlock();
-		//if (m_queueAudioInfo.size() > 0)
-		//{
-		//	audioInfo = m_queueAudioInfo.front();
-		//	m_queueAudioInfo.pop();
-		//}
+
 		if (/*nullptr == audioInfo ||*/ nullptr == videoInfo)
 		{
 			continue;
@@ -675,6 +671,75 @@ void VideoDecoder::consume()
 			m_ptrPCMBuffer = nullptr;
 		}
 	}
+}
+
+void VideoDecoder::seekOperate()
+{
+	//首先拿到带解码队列锁和解码后队列锁
+	std::unique_lock<std::mutex> lck(m_queueMutex);
+	std::unique_lock<std::mutex> lck1(m_afterDecoderInfoMutex);
+
+	//清空两个队列
+	while (m_queueNeedDecoderPacket.size() > 0)
+	{
+		av_packet_unref(m_queueNeedDecoderPacket.front().first);
+		m_queueNeedDecoderPacket.pop();
+	}
+	while (m_queueVideoInfo.size() > 0)
+	{
+		m_queueVideoInfo.pop();
+	}
+	//清空音频队列
+	while (m_queueAudioInfo.size() > 0)
+	{
+		m_queueAudioInfo.pop();
+	}
+
+	//准备移动操作，计算要移动的位置
+	auto midva = (double)r2d(formatContext->streams[videoStreamIndex]->time_base);
+	long long videoPos = m_dSeekTime / midva;
+
+	int ret = av_seek_frame(formatContext, videoStreamIndex, videoPos, AVSEEK_FLAG_BACKWARD);
+	if (0 != ret)
+	{
+		LOG_ERROR("seek video error:{}", ret);
+	}
+	avcodec_flush_buffers(videoCodecContext);
+	avcodec_flush_buffers(audioCodecContext);
+
+	//移动之后看一下实际上移动到了那个位置，然后再seek一下
+	AVPacket* packet = av_packet_alloc(); // 分配一个数据包
+
+	while (true)
+	{
+		if (av_read_frame(formatContext, packet) >= 0)
+		{
+			if (packet->stream_index == audioStreamIndex)
+			{
+				continue;
+			}
+			else if (packet->stream_index == videoStreamIndex)
+			{													 // 视频包需要解码
+				//获取这一帧的时间戳，
+				double pts = packet->pts * av_q2d(formatContext->streams[videoStreamIndex]->time_base);
+				m_dSeekTime = pts;
+				//根据此时间戳，seek到这个时间戳
+				auto midva = (double)r2d(formatContext->streams[videoStreamIndex]->time_base);
+				auto videoPos = pts / midva;
+				//根据实际的位置再seek一下
+				av_seek_frame(formatContext, videoStreamIndex, videoPos, AVSEEK_FLAG_BACKWARD);
+				LOG_INFO("Try Seek Time:{},Really Seek Time Is:{}", m_dSeekTime.load(), videoPos);
+				avcodec_flush_buffers(videoCodecContext);
+				avcodec_flush_buffers(audioCodecContext);
+				break;
+			}
+		}
+	}
+	m_bSeekState = false;
+	m_SeekCV.notify_all();
+	m_ReadCV.notify_all();
+	m_queueWaitConsumedCV.notify_all();
+	m_queueWaitDecodedCV.notify_all();
 }
 
 /*
@@ -933,10 +998,12 @@ void VideoDecoder::resumeDecoder()
 
 void VideoDecoder::seekTo(double_t time)
 {
+	//正在快进或者快退，不处理
 	if (m_bSeekState)
 	{
 		return;
 	}
+	//未初始化的时候不处理
 	if (!m_bInitState)
 	{
 		return;
@@ -947,7 +1014,7 @@ void VideoDecoder::seekTo(double_t time)
 	}
 	m_dSeekTime = time;
 	m_bSeekState = true;
-	m_ReadCV.notify_one();
+	ThreadPool::get_mutable_instance().submit(std::bind(&VideoDecoder::seekOperate, this));
 }
 
 void VideoDecoder::clearBuffer()

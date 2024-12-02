@@ -16,6 +16,8 @@ extern "C"
 #include <QDebug>
 
 #include "module/LogModule/Log.h"
+#include "module/ThreadPool/ThreadPool.h"
+
 #include "ui/MyTipDialog/MyTipDialog.h"
 
 #include <cstdint>
