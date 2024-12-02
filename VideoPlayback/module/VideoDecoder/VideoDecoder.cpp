@@ -469,7 +469,7 @@ void VideoDecoder::decoderVideo(AVPacket* packet)
 			{
 				AVFrame* yuvFrame = av_frame_alloc();
 				av_image_alloc(yuvFrame->data, yuvFrame->linesize, m_stuVideoInfo.width, m_stuVideoInfo.height, m_stuVideoInfo.videoFormat, 1);
-				if (swrContext)
+				if (swsContext)
 				{
 					sws_scale(swsContext, frame->data, frame->linesize, 0, videoCodecContext->height, yuvFrame->data, yuvFrame->linesize);
 					LOG_INFO("Video Decoder Convert");

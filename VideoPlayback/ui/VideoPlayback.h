@@ -10,6 +10,8 @@
 #include <map>
 #include <mutex>
 
+class HardDecoder;
+
 class VideoPlayback : public QWidget
 {
     Q_OBJECT
@@ -63,6 +65,7 @@ private:
 
     std::shared_ptr<VideoDecoder> m_ptrVideoDecoder{ nullptr };
     AtomDecoder* m_ptrAtomDecoder{ nullptr };
+    HardDecoder* m_ptrHardDecoder{ nullptr };
     AudioPlay* m_ptrAudioPlay{ nullptr };
     QString m_strChooseFileName{ "" };
     MediaInfo m_stuMediaInfo;

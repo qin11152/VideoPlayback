@@ -1,6 +1,7 @@
 #include "VideoPlayback.h"
 #include "ui/MySlider/MySlider.h"
 #include "module/VideoInfo/VideoInfoAcqure.h"
+#include "module/VideoDecoder/HardDecoder.h"
 
 #if defined(WIN32)
 	#include "module/AtomDecoder/avid_mxf_info.h"
@@ -56,15 +57,22 @@ VideoPlayback::VideoPlayback(QWidget* parent)
 			}
 			else
 			{
+				if (m_ptrHardDecoder)
+				{
+					delete m_ptrHardDecoder;
+					m_ptrHardDecoder = nullptr;
+				}
 				if (m_ptrVideoDecoder)
 				{
 					m_ptrVideoDecoder = nullptr;
 				}
 				initAudioOutput();
 				m_ptrVideoDecoder = std::make_shared< VideoDecoder>(this);
+				m_ptrHardDecoder = new HardDecoder();
 				if (initDecoder())
 				{
-					m_ptrVideoDecoder->startDecoder();
+					//m_ptrVideoDecoder->startDecoder();
+					m_ptrHardDecoder->startDecoder();
 				}
 			}
 		});
@@ -115,7 +123,11 @@ VideoPlayback::~VideoPlayback()
 		delete m_ptrAtomDecoder;
 		m_ptrAtomDecoder = nullptr;
 	}
-
+	if (m_ptrHardDecoder)
+	{
+		delete m_ptrHardDecoder;
+		m_ptrHardDecoder = nullptr;
+	}
 	if (m_ptrAudioPlay)
 	{
 		delete m_ptrAudioPlay;
@@ -127,6 +139,7 @@ bool VideoPlayback::initModule()
 {
 	m_ptrVideoDecoder = std::make_shared< VideoDecoder>(this);
 	m_ptrAtomDecoder = new AtomDecoder();
+	m_ptrHardDecoder = new HardDecoder();
 	m_ptrAudioPlay = new AudioPlay(nullptr);
 #if defined(WIN32)
 	m_ptrDeckLinkDeviceDiscovery = new DeckLinkDeviceDiscovery();
@@ -472,6 +485,7 @@ bool VideoPlayback::initDecoder()
 	else
 	{
 		m_ptrVideoDecoder->unInitModule();
+		m_ptrHardDecoder->unInitModule();
 		VideoInfo videoInfo;
 		videoInfo.width = kOutputVideoWidth;
 		videoInfo.height = kOutputVideoHeight;
@@ -481,7 +495,8 @@ bool VideoPlayback::initDecoder()
 		audioInfo.audioSampleRate = kOutputAudioSampleRate;
 		audioInfo.audioFormat = (AVSampleFormat)kOutputAudioFormat;
 		audioInfo.samplePerChannel = kOutputAudioSamplePerChannel;
-		m_ptrVideoDecoder->initModule(m_strChooseFileName.toStdString().c_str(), videoInfo, audioInfo);
+		m_ptrHardDecoder->initModule(m_strChooseFileName.toStdString().c_str(), videoInfo, audioInfo, AV_HWDEVICE_TYPE_QSV);
+		//m_ptrVideoDecoder->initModule(m_strChooseFileName.toStdString().c_str(), videoInfo, audioInfo);
 		m_ptrVideoDecoder->initVideoCallBack(std::bind(&VideoPlayback::previewCallback, this, std::placeholders::_1, std::placeholders::_2), std::bind(&VideoPlayback::SDIOutputCallback, this, std::placeholders::_1));
 		m_ptrVideoDecoder->initAudioCallback(std::bind(&VideoPlayback::AudioPlayCallBack, this, std::placeholders::_1, std::placeholders::_2));
 	}
