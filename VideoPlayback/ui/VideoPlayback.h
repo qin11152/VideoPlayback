@@ -28,6 +28,8 @@ public:
 
     void AudioPlayCallBack(uint8_t* audioData, uint32_t channelSampleNumber);
 
+    void clearDecoder();
+
 signals:
     void signalYUVData(QByteArray data, const VideoInfo& videoInfo);
 
@@ -59,7 +61,7 @@ private:
 private:
     Ui::VideoPlaybackClass ui;
 
-    VideoDecoder* m_ptrVideoDecoder{ nullptr };
+    std::shared_ptr<VideoDecoder> m_ptrVideoDecoder{ nullptr };
     AtomDecoder* m_ptrAtomDecoder{ nullptr };
     AudioPlay* m_ptrAudioPlay{ nullptr };
     QString m_strChooseFileName{ "" };

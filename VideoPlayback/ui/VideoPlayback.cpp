@@ -58,11 +58,10 @@ VideoPlayback::VideoPlayback(QWidget* parent)
 			{
 				if (m_ptrVideoDecoder)
 				{
-					delete m_ptrVideoDecoder;
 					m_ptrVideoDecoder = nullptr;
 				}
 				initAudioOutput();
-				m_ptrVideoDecoder = new VideoDecoder();
+				m_ptrVideoDecoder = std::make_shared< VideoDecoder>(this);
 				if (initDecoder())
 				{
 					m_ptrVideoDecoder->startDecoder();
@@ -108,7 +107,6 @@ VideoPlayback::~VideoPlayback()
 	//fs1.close();
 	if (m_ptrVideoDecoder)
 	{
-		delete m_ptrVideoDecoder;
 		m_ptrVideoDecoder = nullptr;
 	}
 
@@ -127,7 +125,7 @@ VideoPlayback::~VideoPlayback()
 
 bool VideoPlayback::initModule()
 {
-	m_ptrVideoDecoder = new VideoDecoder();
+	m_ptrVideoDecoder = std::make_shared< VideoDecoder>(this);
 	m_ptrAtomDecoder = new AtomDecoder();
 	m_ptrAudioPlay = new AudioPlay(nullptr);
 #if defined(WIN32)
@@ -234,6 +232,14 @@ void VideoPlayback::AudioPlayCallBack(uint8_t* audioData, uint32_t channelSample
 		{
 			LOG_ERROR("WriteAudioSamplesSync error,iWritten={},dest cnt={}", iWritten, kOutputAudioChannels * channelSampleNumber * av_get_bytes_per_sample((AVSampleFormat)kOutputAudioFormat));
 		}
+	}
+}
+
+void VideoPlayback::clearDecoder()
+{
+	if (m_ptrVideoDecoder)
+	{
+		m_ptrVideoDecoder = nullptr;
 	}
 }
 

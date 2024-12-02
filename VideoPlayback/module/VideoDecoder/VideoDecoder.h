@@ -24,13 +24,15 @@ extern "C"
 extern std::function<void(AVFrame *)> avframedel;
 using avframe_ptr = std::unique_ptr<AVFrame, decltype(avframedel)>;
 
-class VideoDecoder
+class VideoPlayback;
+
+class VideoDecoder : public std::enable_shared_from_this<VideoDecoder>
 {
 	using PreviewCallback = std::function<void(std::shared_ptr<VideoCallbackInfo> videoInfo, int64_t currentTime)>;
 	using AudioPlayCallback = std::function<void(uint8_t*, uint32_t channelSampleNumber)>;
 	using VideoOutputCallback = std::function<void(const VideoCallbackInfo& videoInfo)>;
 public:
-	VideoDecoder();
+	VideoDecoder(VideoPlayback* videoPlayback);
 	~VideoDecoder();
 
 	int32_t initModule(const char *fileName, const VideoInfo &outVideoInfo, const AudioInfo &outAudioInfo);
@@ -136,4 +138,6 @@ private:
 
 	//uint64_t m_uiVideoCurrentTime{0}; // 记录当前视频时间，用于计算快进量，微妙为单位
 	//uint64_t m_uiAudioCurrentTime{0}; // 记录当前音频时间，用于计算快进量,微妙为单位
+
+	VideoPlayback* m_ptrVideoPlayback{ nullptr };
 };

@@ -1,6 +1,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 
 #include "VideoDecoder.h"
+#include "ui/VideoPlayback.h"
 
 #include <fstream>
 #include <thread>
@@ -41,9 +42,9 @@ std::function<void(AVFrame*)> avframedel = [](AVFrame* _frame)
 		av_frame_free(&_frame); /*fprintf(stdout, "AVFrame clear\n");*/
 	};
 
-VideoDecoder::VideoDecoder()
+VideoDecoder::VideoDecoder(VideoPlayback* videoPlayback)
 	: formatContext(nullptr), videoCodecContext(nullptr), audioCodecContext(nullptr),
-	videoStreamIndex(-1), audioStreamIndex(-1), swsContext(nullptr), swrContext(nullptr)
+	videoStreamIndex(-1), audioStreamIndex(-1), swsContext(nullptr), swrContext(nullptr),m_ptrVideoPlayback(videoPlayback)
 {
 }
 
@@ -95,10 +96,10 @@ int32_t VideoDecoder::initModule(const char* fileName, const VideoInfo& outVideo
 
 			swsContext = sws_getContext(
 				videoCodecContext->width, videoCodecContext->height, videoCodecContext->pix_fmt,
-				videoCodecContext->width, videoCodecContext->height, m_stuVideoInfo.videoFormat,
+				m_stuVideoInfo.width, m_stuVideoInfo.height, m_stuVideoInfo.videoFormat,
 				SWS_BILINEAR, nullptr, nullptr, nullptr);
-			m_stuVideoInfo.width = videoCodecContext->width;
-			m_stuVideoInfo.height = videoCodecContext->height;
+			//m_stuVideoInfo.width = videoCodecContext->width;
+			//m_stuVideoInfo.height = videoCodecContext->height;
 		}
 		else if (codecParameters->codec_type == AVMEDIA_TYPE_AUDIO && audioStreamIndex == -1)
 		{
@@ -274,6 +275,10 @@ void VideoDecoder::readFrameFromFile()
 		}
 		LOG_INFO("Read End");
 	}
+	//if (m_ptrVideoPlayback)
+	//{
+	//	m_ptrVideoPlayback->clearDecoder();
+	//}
 	m_bReadFinished = true;
 }
 
@@ -352,6 +357,14 @@ void VideoDecoder::decoder()
 		LOG_INFO("Decoder End");
 	}
 	av_packet_unref(packet);
+	{
+		std::unique_lock<std::mutex> lck(m_queueMutex);
+		while (m_queueNeedDecoderPacket.size() > 0)
+		{
+			av_packet_unref(m_queueNeedDecoderPacket.front().first);
+			m_queueNeedDecoderPacket.pop();
+		}
+	}
 	m_bDecoderFinished = true;
 }
 
@@ -461,6 +474,12 @@ void VideoDecoder::decoderVideo(AVPacket* packet)
 					LOG_INFO("Video Decoder Convert");
 				}
 				videoInfo->videoFormat = m_stuVideoInfo.videoFormat;
+				videoInfo->width = m_stuVideoInfo.width;
+				videoInfo->height = m_stuVideoInfo.height;
+				//int bufferSize = av_image_get_buffer_size(videoCodecContext->pix_fmt, videoCodecContext->width, videoCodecContext->height, 1);
+				videoInfo->dataSize = m_stuVideoInfo.width * m_stuVideoInfo.height * 2;
+				videoInfo->yuvData = new uint8_t[m_stuVideoInfo.width * m_stuVideoInfo.height * 2];
+				memcpy(videoInfo->yuvData, yuvFrame->data[0], m_stuVideoInfo.width * m_stuVideoInfo.height * 2);
 				av_freep(yuvFrame->data);
 				av_frame_free(&yuvFrame);
 			}
@@ -559,7 +578,7 @@ void VideoDecoder::consume()
 	{
 		return;
 	}
-	while (m_queueVideoInfo.size() < 15)
+	while (m_queueVideoInfo.size() < 5)
 	{
 		std::this_thread::sleep_for(std::chrono::milliseconds(5));
 	}
@@ -582,6 +601,7 @@ void VideoDecoder::consume()
 		//解码后的视频队列和音频队列都为空，就等待解码线程解码
 		if (m_queueVideoInfo.size() <= 0 )
 		{
+			//正常退出
 			if (m_bDecoderFinished)
 			{
 				break;
@@ -590,6 +610,7 @@ void VideoDecoder::consume()
 			m_queueWaitConsumedCV.wait(lck, [this]
 				{ return !m_bRunningState || m_queueVideoInfo.size() > 0; });
 		}
+		//强制退出
 		if (!m_bRunningState)
 		{
 			break;
@@ -642,35 +663,17 @@ void VideoDecoder::consume()
 		}
 		LOG_INFO("Consume End");
 	}
-	if (m_ptrPCMBuffer)
 	{
-		delete m_ptrPCMBuffer;
-		m_ptrPCMBuffer = nullptr;
-	}
-	if (swsContext)
-	{
-		sws_freeContext(swsContext);
-		swsContext = nullptr;
-	}
-	if (swrContext)
-	{
-		swr_free(&swrContext);
-		swrContext = nullptr;
-	}
-	if (videoCodecContext)
-	{
-		avcodec_free_context(&videoCodecContext);
-		videoCodecContext = nullptr;
-	}
-	if (audioCodecContext)
-	{
-		avcodec_free_context(&audioCodecContext);
-		audioCodecContext = nullptr;
-	}
-	if (formatContext)
-	{
-		avformat_close_input(&formatContext);
-		formatContext = nullptr;
+		std::unique_lock<std::mutex> lck(m_afterDecoderInfoMutex);
+		while (m_queueVideoInfo.size() > 0)
+		{
+			m_queueVideoInfo.pop();
+		}
+		if (m_ptrPCMBuffer)
+		{
+			delete m_ptrPCMBuffer;
+			m_ptrPCMBuffer = nullptr;
+		}
 	}
 }
 
