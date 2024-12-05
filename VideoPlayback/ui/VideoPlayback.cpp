@@ -71,8 +71,8 @@ VideoPlayback::VideoPlayback(QWidget* parent)
 				m_ptrHardDecoder = new HardDecoder();
 				if (initDecoder())
 				{
-					//m_ptrVideoDecoder->startDecoder();
-					m_ptrHardDecoder->startDecoder();
+					m_ptrVideoDecoder->startDecoder();
+					//m_ptrHardDecoder->startDecoder();
 				}
 			}
 		});
@@ -495,8 +495,8 @@ bool VideoPlayback::initDecoder()
 		audioInfo.audioSampleRate = kOutputAudioSampleRate;
 		audioInfo.audioFormat = (AVSampleFormat)kOutputAudioFormat;
 		audioInfo.samplePerChannel = kOutputAudioSamplePerChannel;
-		m_ptrHardDecoder->initModule(m_strChooseFileName.toStdString().c_str(), videoInfo, audioInfo, AV_HWDEVICE_TYPE_QSV);
-		//m_ptrVideoDecoder->initModule(m_strChooseFileName.toStdString().c_str(), videoInfo, audioInfo);
+		//m_ptrHardDecoder->initModule(m_strChooseFileName.toStdString().c_str(), videoInfo, audioInfo, AV_HWDEVICE_TYPE_QSV);
+		m_ptrVideoDecoder->initModule(m_strChooseFileName.toStdString().c_str(), videoInfo, audioInfo);
 		m_ptrVideoDecoder->initVideoCallBack(std::bind(&VideoPlayback::previewCallback, this, std::placeholders::_1, std::placeholders::_2), std::bind(&VideoPlayback::SDIOutputCallback, this, std::placeholders::_1));
 		m_ptrVideoDecoder->initAudioCallback(std::bind(&VideoPlayback::AudioPlayCallBack, this, std::placeholders::_1, std::placeholders::_2));
 	}

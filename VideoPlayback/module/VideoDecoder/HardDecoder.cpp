@@ -196,6 +196,12 @@ void HardDecoder::startDecoder()
 	m_DecoderThread = std::thread(&HardDecoder::decoder, this);
 }
 
+void HardDecoder::initVideoCallBack(PreviewCallback preCallback, VideoOutputCallback videoOutputCallback)
+{
+	m_previewCallback = preCallback;
+	m_videoOutputCallback = videoOutputCallback;
+}
+
 void HardDecoder::decoder()
 {
 	if (!m_bInitState)
@@ -290,6 +296,12 @@ void HardDecoder::decoderVideo(AVPacket* packet)
 
 		while (ret == 0)
 		{
+			double pts = frame->pts * av_q2d(formatContext->streams[videoStreamIndex]->time_base);
+			std::shared_ptr<VideoCallbackInfo> videoInfo = std::make_shared<VideoCallbackInfo>();
+			videoInfo->width = videoCodecContext->width;
+			videoInfo->height = videoCodecContext->height;
+			videoInfo->videoFormat = videoCodecContext->pix_fmt;
+			videoInfo->m_dPts = pts;
 			// 如果是硬件帧，需要转换到系统内存
 			if (frame->hw_frames_ctx) 
 			{
@@ -303,7 +315,7 @@ void HardDecoder::decoderVideo(AVPacket* packet)
 					return;
 				}
 				auto transfer_end = std::chrono::steady_clock::now();
-
+				std::shared_ptr<VideoCallbackInfo> videoInfo = nullptr;
 				// 转换为目标格式
 				if (!swsContext)
 				{
@@ -321,6 +333,12 @@ void HardDecoder::decoderVideo(AVPacket* packet)
 					auto convert_end = std::chrono::steady_clock::now();
 					printf("decoder time:%lld,transfer time: %lld, convert time: %lld\n", std::chrono::duration_cast<std::chrono::milliseconds>(decode_end-decode_start).count(), std::chrono::duration_cast<std::chrono::milliseconds>(transfer_end - transfer_start).count(), std::chrono::duration_cast<std::chrono::milliseconds>(convert_end - convert_start).count());
 					LOG_INFO("Video Decoder Convert");
+					videoInfo->videoFormat = m_stuVideoInfo.videoFormat;
+					videoInfo->width = m_stuVideoInfo.width;
+					videoInfo->height = m_stuVideoInfo.height;
+					videoInfo->dataSize = m_stuVideoInfo.width * m_stuVideoInfo.height * 2;
+					videoInfo->yuvData = new uint8_t[m_stuVideoInfo.width * m_stuVideoInfo.height * 2];
+					memcpy(videoInfo->yuvData, yuvFrame->data[0], m_stuVideoInfo.width * m_stuVideoInfo.height * 2);
 					av_freep(yuvFrame->data);
 					av_frame_free(&yuvFrame);
 				}
@@ -337,14 +355,6 @@ void HardDecoder::decoderVideo(AVPacket* packet)
 						m_stuVideoInfo.width, m_stuVideoInfo.height, m_stuVideoInfo.videoFormat,
 						SWS_BILINEAR, nullptr, nullptr, nullptr);
 				}
-				//switch (frame->format)
-				//{
-				//case AV_PIX_FMT_YUV420P:
-				//{}
-				//break;
-				//default:
-				//	break;
-				//}
 				auto convert_start = std::chrono::steady_clock::now();
 				AVFrame* yuvFrame = av_frame_alloc();
 				av_image_alloc(yuvFrame->data, yuvFrame->linesize, m_stuVideoInfo.width, m_stuVideoInfo.height, m_stuVideoInfo.videoFormat, 1);
@@ -353,8 +363,19 @@ void HardDecoder::decoderVideo(AVPacket* packet)
 				auto convert_end = std::chrono::steady_clock::now();
 				printf("decoder time:%lld, convert time: %lld\n", std::chrono::duration_cast<std::chrono::milliseconds>(decode_end - decode_start).count(), std::chrono::duration_cast<std::chrono::milliseconds>(convert_end - convert_start).count());
 				LOG_INFO("Video Decoder Convert");
+				videoInfo->videoFormat = m_stuVideoInfo.videoFormat;
+				videoInfo->width = m_stuVideoInfo.width;
+				videoInfo->height = m_stuVideoInfo.height;
+				videoInfo->dataSize = m_stuVideoInfo.width * m_stuVideoInfo.height * 2;
+				videoInfo->yuvData = new uint8_t[m_stuVideoInfo.width * m_stuVideoInfo.height * 2];
+				memcpy(videoInfo->yuvData, yuvFrame->data[0], m_stuVideoInfo.width * m_stuVideoInfo.height * 2);
 				av_freep(yuvFrame->data);
 				av_frame_free(&yuvFrame);
+			}
+			
+			if (m_previewCallback)
+			{
+				m_previewCallback(videoInfo, videoInfo->m_dPts);
 			}
 			decode_start = std::chrono::steady_clock::now();
 			ret = avcodec_receive_frame(videoCodecContext, frame);

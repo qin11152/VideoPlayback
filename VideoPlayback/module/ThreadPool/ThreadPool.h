@@ -3,8 +3,14 @@
 #include "boost/noncopyable.hpp"
 #include "boost/serialization/singleton.hpp"
 
+#include <mutex>
 #include <deque>
+#include <memory>
 #include <future>
+#include <vector>
+#include <thread>
+#include <functional>
+#include <condition_variable>
 
 using ThreadTask = std::function<void()>;
 

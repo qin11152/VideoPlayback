@@ -23,6 +23,10 @@ extern "C"
 
 class HardDecoder
 {
+	using PreviewCallback = std::function<void(std::shared_ptr<VideoCallbackInfo> videoInfo, int64_t currentTime)>;
+	using AudioPlayCallback = std::function<void(uint8_t*, uint32_t channelSampleNumber)>;
+	using VideoOutputCallback = std::function<void(const VideoCallbackInfo& videoInfo)>;
+
 public:
 	HardDecoder();
 	~HardDecoder();
@@ -32,6 +36,10 @@ public:
 	void unInitModule();
 
 	void startDecoder();
+
+	//void initAudioCallback(AudioPlayCallback audioCallback);
+
+	void initVideoCallBack(PreviewCallback preCallback, VideoOutputCallback videoOutputCallback);
 
 private:
 	void decoder();
@@ -66,6 +74,9 @@ private:
 	std::condition_variable m_PauseCV; // 暂停时的条件变量
 	std::condition_variable m_SeekCV;	//seek时的条件变量
 
+	PreviewCallback m_previewCallback;
+	AudioPlayCallback m_audioPlayCallback;
+	VideoOutputCallback m_videoOutputCallback;
 
 	std::queue<std::pair<AVPacket*, PacketType>> m_queueNeedDecoderPacket;
 	std::queue<std::shared_ptr<VideoCallbackInfo>> m_queueVideoInfo;		//解码的视频帧，等待消费

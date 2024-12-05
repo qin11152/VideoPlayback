@@ -344,7 +344,10 @@ void VideoDecoder::decoder()
 			{
 			case PacketType::Video:
 			{
+				auto start = std::chrono::steady_clock::now();
 				decoderVideo(packet);
+				auto end = std::chrono::steady_clock::now();
+				//printf("Video Decoder Time:%lld\n", std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
 				break;
 			}
 			case PacketType::Audio:
