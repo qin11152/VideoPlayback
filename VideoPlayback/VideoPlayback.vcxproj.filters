@@ -118,6 +118,9 @@
     <ClCompile Include="module\ThreadPool\ThreadPool.cpp">
       <Filter>module\ThreadPool</Filter>
     </ClCompile>
+    <ClCompile Include="module\VideoDecoder\HardDecoder.cpp">
+      <Filter>module\VideoDecoder</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="ui\VideoPlayback.h">
@@ -171,6 +174,9 @@
     </ClInclude>
     <ClInclude Include="module\ThreadPool\ThreadPool.h">
       <Filter>module\ThreadPool</Filter>
+    </ClInclude>
+    <ClInclude Include="module\VideoDecoder\HardDecoder.h">
+      <Filter>module\VideoDecoder</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

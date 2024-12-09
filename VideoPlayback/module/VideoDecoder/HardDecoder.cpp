@@ -62,6 +62,9 @@ int32_t HardDecoder::initModule(const char* fileName, const VideoInfo& outVideoI
 			videoCodecContext->hw_device_ctx = av_buffer_ref(hwDeviceCtx);
 			av_buffer_unref(&hwDeviceCtx);
 
+			videoCodecContext->thread_count = 8; // 根据实际 CPU 核心数调整
+			videoCodecContext->thread_type = FF_THREAD_FRAME; // 按帧并行解码
+
 			if (avcodec_parameters_to_context(videoCodecContext, codecParameters) < 0) 
 			{
 				avcodec_free_context(&videoCodecContext);
@@ -331,7 +334,7 @@ void HardDecoder::decoderVideo(AVPacket* packet)
 
 					sws_scale(swsContext, swFrame->data, swFrame->linesize, 0, videoCodecContext->height, yuvFrame->data, yuvFrame->linesize);
 					auto convert_end = std::chrono::steady_clock::now();
-					printf("decoder time:%lld,transfer time: %lld, convert time: %lld\n", std::chrono::duration_cast<std::chrono::milliseconds>(decode_end-decode_start).count(), std::chrono::duration_cast<std::chrono::milliseconds>(transfer_end - transfer_start).count(), std::chrono::duration_cast<std::chrono::milliseconds>(convert_end - convert_start).count());
+					//printf("decoder time:%lld,transfer time: %lld, convert time: %lld\n", std::chrono::duration_cast<std::chrono::milliseconds>(decode_end-decode_start).count(), std::chrono::duration_cast<std::chrono::milliseconds>(transfer_end - transfer_start).count(), std::chrono::duration_cast<std::chrono::milliseconds>(convert_end - convert_start).count());
 					LOG_INFO("Video Decoder Convert");
 					videoInfo->videoFormat = m_stuVideoInfo.videoFormat;
 					videoInfo->width = m_stuVideoInfo.width;
@@ -361,7 +364,7 @@ void HardDecoder::decoderVideo(AVPacket* packet)
 
 				sws_scale(swsContext, frame->data, frame->linesize, 0, videoCodecContext->height, yuvFrame->data, yuvFrame->linesize);
 				auto convert_end = std::chrono::steady_clock::now();
-				printf("decoder time:%lld, convert time: %lld\n", std::chrono::duration_cast<std::chrono::milliseconds>(decode_end - decode_start).count(), std::chrono::duration_cast<std::chrono::milliseconds>(convert_end - convert_start).count());
+				//printf("decoder time:%lld, convert time: %lld\n", std::chrono::duration_cast<std::chrono::milliseconds>(decode_end - decode_start).count(), std::chrono::duration_cast<std::chrono::milliseconds>(convert_end - convert_start).count());
 				LOG_INFO("Video Decoder Convert");
 				videoInfo->videoFormat = m_stuVideoInfo.videoFormat;
 				videoInfo->width = m_stuVideoInfo.width;

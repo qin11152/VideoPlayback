@@ -94,6 +94,9 @@ int32_t VideoDecoder::initModule(const char* fileName, const VideoInfo& outVideo
 			avcodec_parameters_to_context(videoCodecContext, codecParameters);
 			avcodec_open2(videoCodecContext, codec, nullptr);
 
+			videoCodecContext->thread_count = 16; // 根据实际 CPU 核心数调整
+			videoCodecContext->thread_type = FF_THREAD_FRAME; // 按帧并行解码
+
 			swsContext = sws_getContext(
 				videoCodecContext->width, videoCodecContext->height, videoCodecContext->pix_fmt,
 				m_stuVideoInfo.width, m_stuVideoInfo.height, m_stuVideoInfo.videoFormat,
@@ -347,7 +350,7 @@ void VideoDecoder::decoder()
 				auto start = std::chrono::steady_clock::now();
 				decoderVideo(packet);
 				auto end = std::chrono::steady_clock::now();
-				//printf("Video Decoder Time:%lld\n", std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
+				printf("Video Decoder Time:%lld\n", std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
 				break;
 			}
 			case PacketType::Audio:
