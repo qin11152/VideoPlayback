@@ -2,6 +2,7 @@
 #include "ui/MySlider/MySlider.h"
 #include "module/VideoInfo/VideoInfoAcqure.h"
 #include "module/VideoDecoder/HardDecoder.h"
+#include "module/utils/utils.h"
 
 #if defined(WIN32)
 	#include "module/AtomDecoder/avid_mxf_info.h"
@@ -29,7 +30,10 @@ std::string umidToString(const mxfUMID* umid)
 }
 #endif
 
-IDeckLinkMutableVideoFrame* kDecklinkOutputFrame = nullptr;
+#if defined(BlackMagicEnabled)
+	IDeckLinkMutableVideoFrame* kDecklinkOutputFrame = nullptr;
+#endif(BlackMagicEnabled)
+
 //std::fstream fs("audio.pcm1", std::ios::out | std::ios::binary);
 //std::fstream fs1("audio.pcm2", std::ios::out | std::ios::binary);
 VideoPlayback::VideoPlayback(QWidget* parent)
@@ -50,29 +54,17 @@ VideoPlayback::VideoPlayback(QWidget* parent)
 				}
 				initAudioOutput();
 				m_ptrAtomDecoder = new AtomDecoder();
-				if (initDecoder())
+				if (initAllModule())
 				{
 					m_ptrAtomDecoder->startDecoder();
 				}
 			}
 			else
 			{
-				if (m_ptrHardDecoder)
-				{
-					delete m_ptrHardDecoder;
-					m_ptrHardDecoder = nullptr;
-				}
-				if (m_ptrVideoDecoder)
-				{
-					m_ptrVideoDecoder = nullptr;
-				}
+				uninitAllModule();
 				initAudioOutput();
-				m_ptrVideoDecoder = std::make_shared< VideoDecoder>(this);
-				m_ptrHardDecoder = new HardDecoder();
-				if (initDecoder())
+				if (!initAllModule())
 				{
-					//m_ptrVideoDecoder->startDecoder();
-					m_ptrHardDecoder->startDecoder();
 				}
 			}
 		});
@@ -80,17 +72,17 @@ VideoPlayback::VideoPlayback(QWidget* parent)
 	connect(ui.pausePushButton, &QPushButton::clicked, this, [=]()
 		{
 			if (!ui.atomRadioButton->isChecked())
-				if (m_ptrVideoDecoder)
+				if (m_ptrPreviewAndPlay)
 				{
-					m_ptrVideoDecoder->pauseDecoder();
+					m_ptrPreviewAndPlay->pause();
 				}
 		});
 
 	connect(ui.continuePushButton, &QPushButton::clicked, this, [=]()
 		{
-			if (m_ptrVideoDecoder)
+			if (m_ptrPreviewAndPlay)
 			{
-				m_ptrVideoDecoder->resumeDecoder();
+				m_ptrPreviewAndPlay->resume();
 			}
 		});
 
@@ -113,20 +105,12 @@ VideoPlayback::~VideoPlayback()
 {
 	//fs.close();
 	//fs1.close();
-	if (m_ptrVideoDecoder)
-	{
-		m_ptrVideoDecoder = nullptr;
-	}
+	uninitAllModule();
 
 	if (m_ptrAtomDecoder)
 	{
 		delete m_ptrAtomDecoder;
 		m_ptrAtomDecoder = nullptr;
-	}
-	if (m_ptrHardDecoder)
-	{
-		delete m_ptrHardDecoder;
-		m_ptrHardDecoder = nullptr;
 	}
 	if (m_ptrAudioPlay)
 	{
@@ -137,10 +121,16 @@ VideoPlayback::~VideoPlayback()
 
 bool VideoPlayback::initModule()
 {
-	m_ptrVideoDecoder = std::make_shared< VideoDecoder>(this);
-	m_ptrAtomDecoder = new AtomDecoder();
-	m_ptrHardDecoder = new HardDecoder();
+	m_eDeviceType = utils::getSupportedHWDeviceType();
+	if (AV_HWDEVICE_TYPE_NONE == m_eDeviceType)
+	{
+		LOG_ERROR("No supported hardware device found");
+		return false;
+	}
+	//m_ptrAtomDecoder = new AtomDecoder();
 	m_ptrAudioPlay = new AudioPlay(nullptr);
+
+#if defined(BlackMagicEnabled)
 #if defined(WIN32)
 	m_ptrDeckLinkDeviceDiscovery = new DeckLinkDeviceDiscovery();
 	m_ptrDeckLinkDeviceDiscovery->OnDeviceArrival(std::bind(&VideoPlayback::deviceDiscovered, this, std::placeholders::_1));
@@ -148,10 +138,21 @@ bool VideoPlayback::initModule()
 	m_ptrDeckLinkDeviceDiscovery = new DeckLinkDeviceDiscovery(this);
 #endif
 	m_ptrDeckLinkDeviceDiscovery->Enable();
+#endif(BlackMagicEnabled)
+
+	m_stuVideoInfo.width = kOutputVideoWidth;
+	m_stuVideoInfo.height = kOutputVideoHeight;
+	m_stuVideoInfo.videoFormat = (AVPixelFormat)kOutputVideoFormat;
+
+	m_stuAudioInfo.audioChannels = kOutputAudioChannels;
+	m_stuAudioInfo.audioSampleRate = kOutputAudioSampleRate;
+	m_stuAudioInfo.audioFormat = (AVSampleFormat)kOutputAudioFormat;
+	m_stuAudioInfo.samplePerChannel = kOutputAudioSamplePerChannel;
+
 	return initConnect();
 }
 
-void VideoPlayback::previewCallback(std::shared_ptr<VideoCallbackInfo> videoInfo, int64_t currentTime)
+void VideoPlayback::previewCallback(std::shared_ptr<VideoCallbackInfo> videoInfo)
 {
 	// 将YUV数据发送出去
 	if (nullptr == videoInfo->yuvData)
@@ -164,11 +165,11 @@ void VideoPlayback::previewCallback(std::shared_ptr<VideoCallbackInfo> videoInfo
 	video.videoFormat = videoInfo->videoFormat;
 	QByteArray data((char*)videoInfo->yuvData, videoInfo->dataSize);
 	emit signalYUVData(data, video);
-	updateTimeLabel(currentTime, m_stuMediaInfo.duration);
-	updateTimeSliderPosition(currentTime);
+	updateTimeLabel(videoInfo->m_dPts, m_stuMediaInfo.duration);
+	updateTimeSliderPosition(videoInfo->m_dPts);
 }
 
-void VideoPlayback::AudioCallback(std::vector<Buffer*> audioBuffer)
+void VideoPlayback::audioCallback(std::vector<Buffer*> audioBuffer)
 {
 	//从buffer中按顺序取出pcm数据，然后按照交错的方式将数据组合起来
 	int channelNum = (int)audioBuffer.size();
@@ -225,35 +226,31 @@ void VideoPlayback::SDIOutputCallback(const VideoCallbackInfo& videoInfo)
 	}
 }
 
-void VideoPlayback::AudioPlayCallBack(uint8_t* audioData, uint32_t channelSampleNumber)
+void VideoPlayback::audioPlayCallBack(std::shared_ptr<AudioCallbackInfo> audioInfo)
 {
 	//int cvafd = kOutputAudioChannels * channelSampleNumber * av_get_bytes_per_sample((AVSampleFormat)kOutputAudioFormat);
-	QByteArray data((char*)audioData, channelSampleNumber);
+	QByteArray data((char*)audioInfo->m_pPCMData, audioInfo->m_ulPCMLength);
 	m_ptrAudioPlay->inputPcmData(data);
+
+	//TODO单独摘出来
+#if defined(BlackMagicEnabled)
 	if (nullptr != m_ptrSelectedDeckLinkOutput)
 	{
 		uint8_t* destData = nullptr;
 		uint32_t iWritten = 0;
 		std::unique_lock<std::mutex> lck(m_mutex);
-		uint64_t ret = m_ptrSelectedDeckLinkOutput->WriteAudioSamplesSync(audioData, channelSampleNumber, &iWritten);
+		uint64_t ret = m_ptrSelectedDeckLinkOutput->WriteAudioSamplesSync(audioInfo->m_pPCMData, audioInfo->m_ulPCMLength, &iWritten);
 		lck.unlock();
 		if (ret != S_OK)
 		{
 			LOG_ERROR("WriteAudioSamplesSync error,ret={}", ret);
 		}
-		if (iWritten != channelSampleNumber)
+		if (iWritten != audioInfo->m_ulPCMLength)
 		{
-			LOG_ERROR("WriteAudioSamplesSync error,iWritten={},dest cnt={}", iWritten, kOutputAudioChannels * channelSampleNumber * av_get_bytes_per_sample((AVSampleFormat)kOutputAudioFormat));
+			LOG_ERROR("WriteAudioSamplesSync error,iWritten={},dest cnt={}", iWritten, audioInfo->m_ulPCMLength);
 		}
 	}
-}
-
-void VideoPlayback::clearDecoder()
-{
-	if (m_ptrVideoDecoder)
-	{
-		m_ptrVideoDecoder = nullptr;
-	}
+#endif(BlackMagicEnabled)
 }
 
 QString VideoPlayback::onSignalChooseFileClicked()
@@ -354,7 +351,7 @@ void VideoPlayback::onSignalSliderValueChanged(double vlaue)
 	disconnect(ui.videoTImeSlider, &MySlider::signalSliderValueChanged, this, &VideoPlayback::onSignalSliderValueChanged);
 	m_bSliderEnableConnect = false;
 	double time = vlaue * ((ui.videoTImeSlider->maximum() - ui.videoTImeSlider->minimum()) + ui.videoTImeSlider->minimum()) / 100.0;
-	m_ptrVideoDecoder->seekTo(time);
+	//m_ptrVideoDecoder->seekTo(time);
 	QTimer::singleShot(100, this, [=]()
 		{
 			m_bSliderEnableConnect = true;
@@ -445,13 +442,13 @@ bool VideoPlayback::initAudioOutput()
 {
 	m_ptrAudioPlay->clearAudioDevice();
 	AudioInfo audioInfo;
-	audioInfo.audioChannels = 1;
+	audioInfo.audioChannels = 2;
 	audioInfo.audioSampleRate = kOutputAudioSampleRate;
 	audioInfo.audioFormat = (AVSampleFormat)kOutputAudioFormat;
 	return m_ptrAudioPlay->initOutputParameter(audioInfo) && m_ptrAudioPlay->startPlay();
 }
 
-bool VideoPlayback::initDecoder()
+bool VideoPlayback::initAllModule()
 {
 	if ("" == m_strChooseFileName)
 	{
@@ -480,28 +477,73 @@ bool VideoPlayback::initDecoder()
 		}
 		m_ptrAtomDecoder->initModule(m_strChooseFileName.toStdString().c_str(), vecTmp, videoInfo);
 		//m_ptrAtomDecoder->initVideoCallBack(std::bind(&VideoPlayback::previewCallback, this, std::placeholders::_1, std::placeholders::_2), std::bind(&VideoPlayback::SDIOutputCallback, this, std::placeholders::_1));
-		m_ptrAtomDecoder->initAudioCallback(std::bind(&VideoPlayback::AudioCallback, this, std::placeholders::_1));
+		//m_ptrAtomDecoder->initAudioCallback(std::bind(&VideoPlayback::AudioCallback, this, std::placeholders::_1));
 	}
 	else
 	{
-		m_ptrVideoDecoder->unInitModule();
-		m_ptrHardDecoder->unInitModule();
-		VideoInfo videoInfo;
-		videoInfo.width = kOutputVideoWidth;
-		videoInfo.height = kOutputVideoHeight;
-		videoInfo.videoFormat = (AVPixelFormat)kOutputVideoFormat;
-		AudioInfo audioInfo;
-		audioInfo.audioChannels = kOutputAudioChannels;
-		audioInfo.audioSampleRate = kOutputAudioSampleRate;
-		audioInfo.audioFormat = (AVSampleFormat)kOutputAudioFormat;
-		audioInfo.samplePerChannel = kOutputAudioSamplePerChannel;
-		m_ptrHardDecoder->initModule(m_strChooseFileName.toStdString().c_str(), videoInfo, audioInfo, AV_HWDEVICE_TYPE_QSV);
-		m_ptrHardDecoder->initVideoCallBack(std::bind(&VideoPlayback::previewCallback, this, std::placeholders::_1, std::placeholders::_2), std::bind(&VideoPlayback::SDIOutputCallback, this, std::placeholders::_1));
-		//m_ptrVideoDecoder->initModule(m_strChooseFileName.toStdString().c_str(), videoInfo, audioInfo);
-		//m_ptrVideoDecoder->initVideoCallBack(std::bind(&VideoPlayback::previewCallback, this, std::placeholders::_1, std::placeholders::_2), std::bind(&VideoPlayback::SDIOutputCallback, this, std::placeholders::_1));
-		//m_ptrVideoDecoder->initAudioCallback(std::bind(&VideoPlayback::AudioPlayCallBack, this, std::placeholders::_1, std::placeholders::_2));
+		auto videoWaitDecodedQueue = std::make_shared<MyPacketQueue<std::shared_ptr<PacketWaitDecoded>>>();
+		auto videoAfterDecodedQueue = std::make_shared<MyPacketQueue<std::shared_ptr<VideoCallbackInfo>>>();
+		auto ptrPcmBuffer = std::make_shared<Buffer>();
+
+
+		videoWaitDecodedQueue->initModule();
+		videoAfterDecodedQueue->initModule();
+		ptrPcmBuffer->initBuffer(1024 * 10);
+
+		if (AV_HWDEVICE_TYPE_NONE == m_eDeviceType)
+		{
+		}
+		else
+		{
+			m_ptrVideoDecoder = std::make_shared< HardDecoder>();
+		}
+		m_ptrVideoReader = std::make_shared<VideoReader>();
+		m_ptrPreviewAndPlay = std::make_shared<PreviewAndPlay>();
+
+		VideoReaderInitedInfo videoInitedInfo;
+		DecoderInitedInfo decoderInitedInfo;
+		DataHandlerInitedInfo dataHandlerInfo;
+
+		videoInitedInfo.m_strFileName = m_strChooseFileName.toLocal8Bit().constData();
+		videoInitedInfo.m_eDeviceType = m_eDeviceType;
+		videoInitedInfo.outVideoInfo = m_stuVideoInfo;
+		videoInitedInfo.outAudioInfo = m_stuAudioInfo;
+		videoInitedInfo.ptrPacketQueue = videoWaitDecodedQueue;
+		videoInitedInfo.m_bAtom = false;
+
+		m_ptrVideoReader->initModule(videoInitedInfo, decoderInitedInfo);
+
+		m_ptrVideoDecoder->addPacketQueue(videoAfterDecodedQueue);
+		m_ptrVideoDecoder->addPCMBuffer(ptrPcmBuffer);
+		m_ptrVideoDecoder->initModule(decoderInitedInfo, dataHandlerInfo);
+
+		m_ptrPreviewAndPlay->setVideoQueue(videoAfterDecodedQueue);
+		m_ptrPreviewAndPlay->setAudioQueue(ptrPcmBuffer);
+		m_ptrPreviewAndPlay->setCallback(std::bind(&VideoPlayback::previewCallback, this, std::placeholders::_1));
+		m_ptrPreviewAndPlay->setCallback(std::bind(&VideoPlayback::audioPlayCallBack, this, std::placeholders::_1));
+		m_ptrPreviewAndPlay->initModule(dataHandlerInfo);
 	}
 	return true;
+}
+
+bool VideoPlayback::uninitAllModule()
+{
+	if (m_ptrVideoReader)
+	{
+		m_ptrVideoReader->uninitModule();
+		m_ptrVideoReader = nullptr;
+	}
+	if (m_ptrVideoDecoder)
+	{
+		m_ptrVideoDecoder->uninitModule();
+		m_ptrVideoDecoder = nullptr;
+	}
+	if (m_ptrPreviewAndPlay)
+	{
+		m_ptrPreviewAndPlay->uninitModule();
+		m_ptrPreviewAndPlay = nullptr;
+	}
+	return 0;
 }
 
 void VideoPlayback::updateTimeLabel(const int currentTime, const int totalTime)
@@ -542,7 +584,7 @@ void VideoPlayback::setTimeSliderRange(int64_t totalTime)
 {
 	ui.videoTImeSlider->setRange(0, totalTime);
 }
-
+#if defined(BlackMagicEnabled)
 void VideoPlayback::initSDIOutput()
 {
 	if (nullptr == m_ptrSelectedDeckLinkOutput)
@@ -569,29 +611,31 @@ void VideoPlayback::initSDIOutput()
 }
 
 #if defined(WIN32)
-void VideoPlayback::deviceDiscovered(CComPtr<IDeckLink>& deckLink)
-{
-	CComBSTR deviceNameBSTR = nullptr;
-	HRESULT hr;
-
-	hr = deckLink->GetDisplayName(&deviceNameBSTR);
-	if (FAILED(hr))
+	void VideoPlayback::deviceDiscovered(CComPtr<IDeckLink>& deckLink)
 	{
-		// 处理错误
-		return;
+		CComBSTR deviceNameBSTR = nullptr;
+		HRESULT hr;
+
+		hr = deckLink->GetDisplayName(&deviceNameBSTR);
+		if (FAILED(hr))
+		{
+			// 处理错误
+			return;
+		}
+
+		std::wstring deviceNameWStr = BSTRToWString(deviceNameBSTR.m_str);
+		std::string deviceNameStr = WStringToString(deviceNameWStr);
+		QString deviceName = QString::fromStdString(deviceNameStr);
+
+		// bool bActive = isDeviceActive(deckLink);
+		MyDeckLinkDevice device;
+		device.deckLink = deckLink;
+		device.m_strDisplayName = deviceName;
+		device.m_bActive = true;
+		m_mapDeviceNameIndex[device.m_strDisplayName] = device;
+
+		ui.deckLinkComboBox->addItem(device.m_strDisplayName);
 	}
+#endif(WIN32)
 
-	std::wstring deviceNameWStr = BSTRToWString(deviceNameBSTR.m_str);
-	std::string deviceNameStr = WStringToString(deviceNameWStr);
-	QString deviceName = QString::fromStdString(deviceNameStr);
-
-	// bool bActive = isDeviceActive(deckLink);
-	MyDeckLinkDevice device;
-	device.deckLink = deckLink;
-	device.m_strDisplayName = deviceName;
-	device.m_bActive = true;
-	m_mapDeviceNameIndex[device.m_strDisplayName] = device;
-
-	ui.deckLinkComboBox->addItem(device.m_strDisplayName);
-}
-#endif
+#endif(BlackMagicEnabled)

@@ -51,6 +51,21 @@
     <Filter Include="module\ThreadPool">
       <UniqueIdentifier>{66d238eb-cf99-4662-b00d-bad17103cad7}</UniqueIdentifier>
     </Filter>
+    <Filter Include="module\MyContainer">
+      <UniqueIdentifier>{72a405ac-3f3a-46c6-8313-666fc72179c9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="module\VideoReader">
+      <UniqueIdentifier>{6363a812-01e3-4542-9366-c1a9d0e5c1f4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="module\utils">
+      <UniqueIdentifier>{40b80c16-3dd8-495c-95fd-c84986c6a9dd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="module\decoderedDataHandler">
+      <UniqueIdentifier>{c8c40e35-3c02-47d9-807e-861727795f1a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="module\decoderedDataHandler\PreviewAndPlay">
+      <UniqueIdentifier>{4aa0adf4-4a5b-42c5-a2d9-7180199a47d4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <QtRcc Include="VideoPlayback.qrc">
@@ -106,9 +121,6 @@
     <ClCompile Include="module\AtomDecoder\AtomDecoder.cpp">
       <Filter>module\AtomDecoder</Filter>
     </ClCompile>
-    <ClCompile Include="module\AtomDecoder\Buffer.cpp">
-      <Filter>module\AtomDecoder</Filter>
-    </ClCompile>
     <ClCompile Include="module\AtomDecoder\avid_mxf_info.c">
       <Filter>module\AtomDecoder</Filter>
     </ClCompile>
@@ -120,6 +132,39 @@
     </ClCompile>
     <ClCompile Include="module\VideoDecoder\HardDecoder.cpp">
       <Filter>module\VideoDecoder</Filter>
+    </ClCompile>
+    <ClCompile Include="module\MyContainer\Buffer.cpp">
+      <Filter>module\MyContainer</Filter>
+    </ClCompile>
+    <ClCompile Include="module\MyContainer\MyQueue.cpp">
+      <Filter>module\MyContainer</Filter>
+    </ClCompile>
+    <ClCompile Include="module\VideoDecoder\VideoDecoderBase.cpp">
+      <Filter>module\VideoDecoder</Filter>
+    </ClCompile>
+    <ClCompile Include="module\VideoReader\VideoReader.cpp">
+      <Filter>module\VideoReader</Filter>
+    </ClCompile>
+    <ClCompile Include="module\utils\utils.cpp">
+      <Filter>module\utils</Filter>
+    </ClCompile>
+    <ClCompile Include="module\decoderedDataHandler\YuvDataHandler.cpp">
+      <Filter>module\decoderedDataHandler</Filter>
+    </ClCompile>
+    <ClCompile Include="module\decoderedDataHandler\PcmDatahandler.cpp">
+      <Filter>module\decoderedDataHandler</Filter>
+    </ClCompile>
+    <ClCompile Include="module\decoderedDataHandler\PreviewAndPlay\PreviewAndPlay.cpp">
+      <Filter>module\decoderedDataHandler\PreviewAndPlay</Filter>
+    </ClCompile>
+    <ClCompile Include="unitest\VideoReaderTest.cpp">
+      <Filter>unitest</Filter>
+    </ClCompile>
+    <ClCompile Include="unitest\HardDecoderTest.cpp">
+      <Filter>unitest</Filter>
+    </ClCompile>
+    <ClCompile Include="unitest\PreviewAndPlayTest.cpp">
+      <Filter>unitest</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -166,9 +211,6 @@
     <ClInclude Include="module\AtomDecoder\AtomDecoder.h">
       <Filter>module\AtomDecoder</Filter>
     </ClInclude>
-    <ClInclude Include="module\AtomDecoder\Buffer.h">
-      <Filter>module\AtomDecoder</Filter>
-    </ClInclude>
     <ClInclude Include="module\AtomDecoder\avid_mxf_info.h">
       <Filter>module\AtomDecoder</Filter>
     </ClInclude>
@@ -177,6 +219,30 @@
     </ClInclude>
     <ClInclude Include="module\VideoDecoder\HardDecoder.h">
       <Filter>module\VideoDecoder</Filter>
+    </ClInclude>
+    <ClInclude Include="module\MyContainer\Buffer.h">
+      <Filter>module\MyContainer</Filter>
+    </ClInclude>
+    <ClInclude Include="module\MyContainer\MyQueue.h">
+      <Filter>module\MyContainer</Filter>
+    </ClInclude>
+    <ClInclude Include="module\VideoDecoder\VideoDecoderBase.h">
+      <Filter>module\VideoDecoder</Filter>
+    </ClInclude>
+    <ClInclude Include="module\VideoReader\VideoReader.h">
+      <Filter>module\VideoReader</Filter>
+    </ClInclude>
+    <ClInclude Include="module\utils\utils.h">
+      <Filter>module\utils</Filter>
+    </ClInclude>
+    <ClInclude Include="module\decoderedDataHandler\YuvDataHandler.h">
+      <Filter>module\decoderedDataHandler</Filter>
+    </ClInclude>
+    <ClInclude Include="module\decoderedDataHandler\PcmDatahandler.h">
+      <Filter>module\decoderedDataHandler</Filter>
+    </ClInclude>
+    <ClInclude Include="module\decoderedDataHandler\PreviewAndPlay\PreviewAndPlay.h">
+      <Filter>module\decoderedDataHandler\PreviewAndPlay</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

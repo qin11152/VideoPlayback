@@ -21,9 +21,10 @@ public:
 
 	void appendData(uint8_t* data, uint32_t size);
 
-	void getBuffer(uint8_t* buffer, uint32_t size);
+	bool getBuffer(uint8_t* buffer, uint32_t size);
 
 private:
+	bool m_bInited{ false };
 	std::mutex m_mutex;
 	uint32_t m_uiStartPos{ 0 };
 	uint32_t m_uiEndPos{ 0 };

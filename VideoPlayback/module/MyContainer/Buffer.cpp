@@ -27,15 +27,18 @@ void Buffer::initBuffer(uint32_t bufferSize)
 {
 	m_pBuffer = new uint8_t[bufferSize]{ 0 };
 	m_uiBufferSize = bufferSize;
+	m_bInited = true;
 }
 
 void Buffer::unInitBuffer()
 {
+	std::lock_guard<std::mutex> lck(m_mutex);
 	if (m_pBuffer)
 	{
 		delete[] m_pBuffer;
 		m_pBuffer = nullptr;
 	}
+	m_bInited = false;
 }
 
 void Buffer::appendData(uint8_t* data, uint32_t size)
@@ -62,13 +65,18 @@ void Buffer::appendData(uint8_t* data, uint32_t size)
 	m_uiEndPos += size;
 }
 
-void Buffer::getBuffer(uint8_t* buffer, uint32_t size)
+bool Buffer::getBuffer(uint8_t* buffer, uint32_t size)
 {
+	if (!m_bInited)
+	{
+		return false;
+	}
 	std::lock_guard<std::mutex> lck(m_mutex);
 	if (m_uiStartPos + size > m_uiEndPos)
 	{
-		return;
+		return false;
 	}
 	memcpy(buffer, m_pBuffer + m_uiStartPos, size);
 	m_uiStartPos += size;
+	return true;
 }

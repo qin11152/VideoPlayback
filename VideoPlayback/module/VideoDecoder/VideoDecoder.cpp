@@ -2,32 +2,7 @@
 
 #include "VideoDecoder.h"
 #include "ui/VideoPlayback.h"
-
-#include <fstream>
-#include <thread>
-#include <sstream>
-#include <iomanip>
-
-std::string getTime(const std::chrono::system_clock::time_point currentTime)
-{
-	auto in_time_t = std::chrono::system_clock::to_time_t(currentTime);
-	std::tm tm = *std::localtime(&in_time_t);
-
-	auto milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(currentTime.time_since_epoch()) % 1000;
-
-	std::ostringstream oss;
-	oss << std::put_time(&tm, "%Y-%m-%d %H:%M:%S");
-	oss << '.' << std::setw(3) << std::setfill('0') << milliseconds.count();
-	return oss.str();
-}
-
-void preciseSleep(std::chrono::microseconds duration)
-{
-	auto start = std::chrono::high_resolution_clock::now();
-	while (std::chrono::high_resolution_clock::now() - start < duration) {
-		// Ã¦µÈ´ý
-	}
-}
+#include "module/utils/utils.h"
 
 #define MAX_AUDIO_FRAME_SIZE 80960
 
@@ -644,12 +619,12 @@ void VideoDecoder::consume()
 		if (diff > 0)
 		{
 			//std::this_thread::sleep_for(std::chrono::microseconds(diff));
-			preciseSleep(std::chrono::duration_cast<std::chrono::microseconds>(needPaintTime - currentTime));
+			utils::preciseSleep(std::chrono::duration_cast<std::chrono::microseconds>(needPaintTime - currentTime));
 		}
-		std::string t1 = getTime(currentTime);
-		std::string t2 = getTime(needPaintTime);
+		std::string t1 = utils::getTime(currentTime);
+		std::string t2 = utils::getTime(needPaintTime);
 		needPaintTime = needPaintTime + std::chrono::milliseconds(m_uiReadThreadSleepTime);
-		std::string t = getTime(needPaintTime);
+		std::string t = utils::getTime(needPaintTime);
 		LOG_INFO("Need Paint Time:{},Get Frame Time{},Next Paint Time:{}", t2, t1, t);
 		if (m_previewCallback)
 		{

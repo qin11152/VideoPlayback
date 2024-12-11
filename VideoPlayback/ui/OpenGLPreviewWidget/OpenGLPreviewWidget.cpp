@@ -2,7 +2,7 @@
 
 #include <libyuv/libyuv.h>
 
-void ConvertYUYV422ToYUV420(const uint8_t *yuyv, int width, int height,
+void convertYUYV422ToYUV420(const uint8_t *yuyv, int width, int height,
 							uint8_t *y_plane, uint8_t *u_plane, uint8_t *v_plane)
 {
 	int yuyv_stride = width * 2;
@@ -23,7 +23,7 @@ void convertUYVY422ToYUV420(const uint8_t *uyvy, int width, int height, uint8_t 
 	libyuv::UYVYToI420(uyvy, uyvy_stride, y_plane, y_stride, u_plane, uv_stride, v_plane, uv_stride, width, height);
 }
 
-void ConvertYUV422pToYUV420p(const uint8_t *src_yuv422p, int width, int height, uint8_t *dst_yuv420p)
+void convertYUV422pToYUV420p(const uint8_t *src_yuv422p, int width, int height, uint8_t *dst_yuv420p)
 {
 	// 计算YUV422p平面的起始位置
 	// 计算YUV422p平面的起始位置
@@ -58,117 +58,71 @@ OpenGLPreviewWidget::~OpenGLPreviewWidget()
 
 void OpenGLPreviewWidget::onSignalYUVData(QByteArray data, const VideoInfo &videoInfo)
 {
+	if (AV_PIX_FMT_YUV420P != videoInfo.videoFormat && AV_PIX_FMT_UYVY422 != videoInfo.videoFormat)
+	{
+		return;
+	}
+	setVideoFormat(videoInfo.videoFormat);
 	if (m_uiWidth != videoInfo.width || m_uiHeight != videoInfo.height)
 	{
 		m_uiWidth = videoInfo.width;
 		m_uiHeight = videoInfo.height;
-		glBindTexture(GL_TEXTURE_2D, texs[0]);							  // 绑定材质
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); // 设置纹理参数，放大过滤，线性插值 GL_NEAREST(效率高，效果差)
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, m_uiWidth, m_uiHeight, 0, GL_RED, GL_UNSIGNED_BYTE, 0); // 创建材质显卡空间
+		makeCurrent();
+		if (m_format == AV_PIX_FMT_YUV420P)
+		{
+			glBindTexture(GL_TEXTURE_2D, yuv420Textures[0]);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, m_uiWidth, m_uiHeight, 0, GL_RED, GL_UNSIGNED_BYTE, nullptr);
 
-		//  U
-		glBindTexture(GL_TEXTURE_2D, texs[1]);							  // 绑定材质
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); // 设置纹理参数，放大过滤，线性插值
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, m_uiWidth / 2, m_uiHeight / 2, 0, GL_RED, GL_UNSIGNED_BYTE, 0); // 创建材质显卡空间
+			glBindTexture(GL_TEXTURE_2D, yuv420Textures[1]);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, m_uiWidth / 2, m_uiHeight / 2, 0, GL_RED, GL_UNSIGNED_BYTE, nullptr);
 
-		// 创建材质 V
-		glBindTexture(GL_TEXTURE_2D, texs[2]);							  // 绑定材质
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); // 设置纹理参数，放大过滤，线性插值
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, m_uiWidth / 2, m_uiHeight / 2, 0, GL_RED, GL_UNSIGNED_BYTE, 0); // 创建材质显卡空间
+			glBindTexture(GL_TEXTURE_2D, yuv420Textures[2]);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, m_uiWidth / 2, m_uiHeight / 2, 0, GL_RED, GL_UNSIGNED_BYTE, nullptr);
+		}
+		else // VideoFormat::UYVY
+		{
+			glBindTexture(GL_TEXTURE_2D, uyvyTexture);
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_uiWidth / 2, m_uiHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+		}
+		doneCurrent();
 	}
-	uint8_t* yuv420 = new uint8_t[m_uiWidth * m_uiHeight * 3 / 2];
-	switch(videoInfo.videoFormat)
-	{
-		case::AV_PIX_FMT_UYVY422:
-		{
-			convertUYVY422ToYUV420((const uint8_t*)data.data(), m_uiWidth, m_uiHeight, yuv420, yuv420 + m_uiWidth * m_uiHeight, yuv420 + m_uiWidth * m_uiHeight * 5 / 4);
-		}
-			break;
-		case::AV_PIX_FMT_YUYV422:
-		{
-			ConvertYUYV422ToYUV420((const uint8_t*)data.data(), m_uiWidth, m_uiHeight, yuv420, yuv420 + m_uiWidth * m_uiHeight, yuv420 + m_uiWidth * m_uiHeight * 5 / 4);
-		}
-			break;
-		case::AV_PIX_FMT_YUV422P:
-		{
-			ConvertYUV422pToYUV420p((const uint8_t*)data.data(), m_uiWidth, m_uiHeight, yuv420);
-			break;
-		}
-		case::AV_PIX_FMT_YUV420P:
-		{
-			memcpy(yuv420, data.data(), data.length());
-		}
-		break;
-	}
-	m_YUV420Data = QByteArray((char*)yuv420, m_uiWidth * m_uiHeight * 3 / 2);
-	delete[]yuv420;
+	m_videoData = data;
 	update();
 }
 
 void OpenGLPreviewWidget::initializeGL()
 {
-	initializeOpenGLFunctions(); // 初始化opengl
+	initializeOpenGLFunctions();
 
-	// program加载shader脚本(顶点和片元)
-	program.addShaderFromSourceCode(QGLShader::Fragment, tString); // 片元
-	program.addShaderFromSourceCode(QGLShader::Vertex, vString);   // 顶点
+	// 初始化两种格式的程序
+	initYUV420Program();
+	initUYVYProgram();
 
-	//// 设置顶点坐标的变量
-	program.bindAttributeLocation("vertexIn", A_VER);
-	// 设置材质坐标
-	program.bindAttributeLocation("textureIn", T_VER);
-	program.link();
-	program.bind();
+	// 设置默认程序
+	currentProgram = (m_format == AV_PIX_FMT_YUV420P) ? &yuv420Program : &uyvyProgram;
 
-	// 传递顶点和材质坐标
-	// 顶点
+	// 设置顶点数据（两种格式共用）
 	static const GLfloat ver[] = {
 		-1.0f, -1.0f,
 		1.0f, -1.0f,
 		-1.0f, 1.0f,
-		1.0f, 1.0f};
-	// 材质
+		1.0f, 1.0f
+	};
 	static const GLfloat tex[] = {
 		0.0f, 1.0f,
 		1.0f, 1.0f,
 		0.0f, 0.0f,
-		1.0f, 0.0f};
-	/*
-	attribute vec4 vertexIn;
-	attribute vec2 textureIn;
-	varying vec2 textureOut;*/
-	glVertexAttribPointer(A_VER, 2, GL_FLOAT, 0, 0, ver); // 顶点 vertexIn
-	glEnableVertexAttribArray(A_VER);					  // 启用顶点数组
-	glVertexAttribPointer(T_VER, 2, GL_FLOAT, 0, 0, tex); // 材质
-	glEnableVertexAttribArray(T_VER);					  // 生效
+		1.0f, 0.0f
+	};
 
-	// 从shader获取材质
-	unis[0] = program.uniformLocation("tex_y");
-	unis[1] = program.uniformLocation("tex_u");
-	unis[2] = program.uniformLocation("tex_v");
+	currentProgram->bind();
+	GLuint verLocation = currentProgram->attributeLocation("vertexIn");
+	GLuint texLocation = currentProgram->attributeLocation("textureIn");
 
-	// 创建材质
-	glGenTextures(3, texs);
-	// Y
-	glBindTexture(GL_TEXTURE_2D, texs[0]);							  // 绑定材质
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); // 设置纹理参数，放大过滤，线性插值 GL_NEAREST(效率高，效果差)
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, m_uiWidth, m_uiHeight, 0, GL_RED, GL_UNSIGNED_BYTE, 0); // 创建材质显卡空间
-
-	//  U
-	glBindTexture(GL_TEXTURE_2D, texs[1]);							  // 绑定材质
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); // 设置纹理参数，放大过滤，线性插值
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, m_uiWidth / 2, m_uiHeight / 2, 0, GL_RED, GL_UNSIGNED_BYTE, 0); // 创建材质显卡空间
-
-	// 创建材质 V
-	glBindTexture(GL_TEXTURE_2D, texs[2]);							  // 绑定材质
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); // 设置纹理参数，放大过滤，线性插值
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, m_uiWidth / 2, m_uiHeight / 2, 0, GL_RED, GL_UNSIGNED_BYTE, 0); // 创建材质显卡空间
+	glVertexAttribPointer(verLocation, 2, GL_FLOAT, 0, 0, ver);
+	glEnableVertexAttribArray(verLocation);
+	glVertexAttribPointer(texLocation, 2, GL_FLOAT, 0, 0, tex);
+	glEnableVertexAttribArray(texLocation);
 }
 
 void OpenGLPreviewWidget::resizeGL(int w, int h)
@@ -178,27 +132,134 @@ void OpenGLPreviewWidget::resizeGL(int w, int h)
 
 void OpenGLPreviewWidget::paintGL()
 {
-	if (m_YUV420Data.isEmpty())
-	{
+	if (m_videoData.isEmpty() || !currentProgram)
 		return;
+
+	currentProgram->bind();
+	updateTextures();
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+}
+
+void OpenGLPreviewWidget::initYUV420Program()
+{
+	yuv420Program.addShaderFromSourceCode(QGLShader::Vertex, vString);
+	yuv420Program.addShaderFromSourceCode(QGLShader::Fragment, yuv420String);
+	yuv420Program.link();
+
+	yuv420Program.bind();
+	// 获取YUV纹理uniform位置
+	yuv420Uniforms[0] = yuv420Program.uniformLocation("tex_y");
+	yuv420Uniforms[1] = yuv420Program.uniformLocation("tex_u");
+	yuv420Uniforms[2] = yuv420Program.uniformLocation("tex_v");
+
+	// 创建YUV纹理
+	glGenTextures(3, yuv420Textures);
+
+	// 初始化Y纹理
+	glBindTexture(GL_TEXTURE_2D, yuv420Textures[0]);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, m_uiWidth, m_uiHeight, 0, GL_RED, GL_UNSIGNED_BYTE, nullptr);
+
+	// 初始化U纹理
+	glBindTexture(GL_TEXTURE_2D, yuv420Textures[1]);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, m_uiWidth / 2, m_uiHeight / 2, 0, GL_RED, GL_UNSIGNED_BYTE, nullptr);
+
+	// 初始化V纹理
+	glBindTexture(GL_TEXTURE_2D, yuv420Textures[2]);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, m_uiWidth / 2, m_uiHeight / 2, 0, GL_RED, GL_UNSIGNED_BYTE, nullptr);
+}
+
+void OpenGLPreviewWidget::initUYVYProgram()
+{
+	uyvyProgram.addShaderFromSourceCode(QGLShader::Vertex, vString);
+	uyvyProgram.addShaderFromSourceCode(QGLShader::Fragment, uyvyString);
+	uyvyProgram.link();
+
+	uyvyProgram.bind();
+	// 获取UYVY相关uniform位置
+	uyvyWidthUniform = uyvyProgram.uniformLocation("texWidth");
+	GLuint uyvyUniform = uyvyProgram.uniformLocation("tex_uyvy");
+
+	// 创建UYVY纹理
+	glGenTextures(1, &uyvyTexture);
+	glBindTexture(GL_TEXTURE_2D, uyvyTexture);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_uiWidth / 2, m_uiHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+
+	glUniform1i(uyvyUniform, 0);
+}
+
+void OpenGLPreviewWidget::updateTextures()
+{
+	if (m_format == AV_PIX_FMT_YUV420P)
+	{
+		// 更新Y纹理
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, yuv420Textures[0]);
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_uiWidth, m_uiHeight, GL_RED, GL_UNSIGNED_BYTE,
+			m_videoData.left(m_uiWidth * m_uiHeight).data());
+		glUniform1i(yuv420Uniforms[0], 0);
+
+		// 更新U纹理
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, yuv420Textures[1]);
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_uiWidth / 2, m_uiHeight / 2, GL_RED, GL_UNSIGNED_BYTE,
+			m_videoData.mid(m_uiWidth * m_uiHeight, m_uiWidth * m_uiHeight / 4).data());
+		glUniform1i(yuv420Uniforms[1], 1);
+
+		// 更新V纹理
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, yuv420Textures[2]);
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_uiWidth / 2, m_uiHeight / 2, GL_RED, GL_UNSIGNED_BYTE,
+			m_videoData.right(m_uiWidth * m_uiHeight / 4).data());
+		glUniform1i(yuv420Uniforms[2], 2);
 	}
-	glActiveTexture(GL_TEXTURE0);		   // 激活第0层
-	glBindTexture(GL_TEXTURE_2D, texs[0]); // 0层绑定到y材质中
-	// 修改材质内容（复制内存内容）
-	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_uiWidth, m_uiHeight, GL_RED, GL_UNSIGNED_BYTE, m_YUV420Data.left(m_uiWidth * m_uiHeight).data());
-	glUniform1i(unis[0], 0); // 与shader的uni变量关联  unis[0] = program.uniformLocation("tex_y")
+	else // VideoFormat::UYVY
+	{
+		glUniform1f(uyvyWidthUniform, m_uiWidth);
 
-	glActiveTexture(GL_TEXTURE0 + 1);	   // 激活第1层
-	glBindTexture(GL_TEXTURE_2D, texs[1]); // 1层绑定到U材质中
-	// 修改材质内容（复制内存内容）
-	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_uiWidth / 2, m_uiHeight / 2, GL_RED, GL_UNSIGNED_BYTE, m_YUV420Data.mid(m_uiWidth * m_uiHeight, m_uiWidth * m_uiHeight / 4).data());
-	glUniform1i(unis[1], 1); // 与shader的uni变量关联     unis[1] = program.uniformLocation("tex_u");
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, uyvyTexture);
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_uiWidth / 2, m_uiHeight,
+			GL_RGBA, GL_UNSIGNED_BYTE, m_videoData.data());
+	}
+}
 
-	glActiveTexture(GL_TEXTURE0 + 2);	   // 激活第2层  V
-	glBindTexture(GL_TEXTURE_2D, texs[2]); // 2层绑定到v材质中
-	// 修改材质内容（复制内存内容）
-	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_uiWidth / 2, m_uiHeight / 2, GL_RED, GL_UNSIGNED_BYTE, m_YUV420Data.right(m_uiWidth * m_uiHeight / 4).data());
-	glUniform1i(unis[2], 2); // 与shader的uni变量关联      unis[2] = program.uniformLocation("tex_v");
+void OpenGLPreviewWidget::setVideoFormat(AVPixelFormat format)
+{
+	if (m_format != format)
+	{
+		m_format = format;
+		currentProgram = (format == AV_PIX_FMT_YUV420P) ? &yuv420Program : &uyvyProgram;
 
-	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4); // 开始绘制
+		// 如果已经有数据，需要重新创建纹理
+		if (m_uiWidth > 0 && m_uiHeight > 0)
+		{
+			makeCurrent();
+			if (format == AV_PIX_FMT_YUV420P)
+			{
+				glBindTexture(GL_TEXTURE_2D, yuv420Textures[0]);
+				glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, m_uiWidth, m_uiHeight, 0, GL_RED, GL_UNSIGNED_BYTE, nullptr);
+
+				glBindTexture(GL_TEXTURE_2D, yuv420Textures[1]);
+				glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, m_uiWidth / 2, m_uiHeight / 2, 0, GL_RED, GL_UNSIGNED_BYTE, nullptr);
+
+				glBindTexture(GL_TEXTURE_2D, yuv420Textures[2]);
+				glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, m_uiWidth / 2, m_uiHeight / 2, 0, GL_RED, GL_UNSIGNED_BYTE, nullptr);
+			}
+			else
+			{
+				glBindTexture(GL_TEXTURE_2D, uyvyTexture);
+				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_uiWidth / 2, m_uiHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+			}
+			doneCurrent();
+		}
+		update();
+	}
 }

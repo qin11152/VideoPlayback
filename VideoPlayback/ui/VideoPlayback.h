@@ -5,7 +5,14 @@
 #include "module/AudioPlay/AudioPlay.h"
 #include "module/AtomDecoder/AtomDecoder.h"
 #include "module/VideoDecoder/VideoDecoder.h"
-#include "module/BlackMagic/DeckLinkDeviceDiscovery/DeckLinkDeviceDiscovery.h"
+#include "module/VideoReader/VideoReader.h"
+#include "module/VideoDecoder/VideoDecoderBase.h"
+#include "module/decoderedDataHandler/PcmDatahandler.h"
+#include "module/decoderedDataHandler/YuvDataHandler.h"
+
+#if defined(BlackMagicEnabled)
+    #include "module/BlackMagic/DeckLinkDeviceDiscovery/DeckLinkDeviceDiscovery.h"
+#endif(BlackMagicEnabled)
 
 #include <map>
 #include <mutex>
@@ -22,15 +29,13 @@ public:
 
     bool initModule();
 
-    void previewCallback(std::shared_ptr<VideoCallbackInfo> videoInfo, int64_t currentTime);
+    void previewCallback(std::shared_ptr<VideoCallbackInfo> videoInfo);
 
-    void AudioCallback(std::vector<Buffer*> audioBuffer);
+    void audioCallback(std::vector<Buffer*> audioBuffer);
 
     void SDIOutputCallback(const VideoCallbackInfo& videoInfo);
 
-    void AudioPlayCallBack(uint8_t* audioData, uint32_t channelSampleNumber);
-
-    void clearDecoder();
+    void audioPlayCallBack(std::shared_ptr<AudioCallbackInfo> audioInfo);
 
 signals:
     void signalYUVData(QByteArray data, const VideoInfo& videoInfo);
@@ -48,42 +53,54 @@ protected:
 private:
     bool initConnect();
     bool initAudioOutput();
-    bool initDecoder();
+    bool initAllModule();
+    bool uninitAllModule();
 
     void updateTimeLabel(const int currentTime, const int totalTime);
 	void updateTimeSliderPosition(int64_t currentTime);
     void setTimeSliderRange(int64_t totalTime);
 
-    void initSDIOutput();
-
-#if defined(WIN32)
-    void deviceDiscovered(CComPtr<IDeckLink>& deckLink);
-#endif
-
 private:
     Ui::VideoPlaybackClass ui;
 
-    std::shared_ptr<VideoDecoder> m_ptrVideoDecoder{ nullptr };
+    VideoInfo m_stuVideoInfo;
+    AudioInfo m_stuAudioInfo;
+
+    std::shared_ptr<VideoReader> m_ptrVideoReader{ nullptr };
+	std::shared_ptr<VideoDecoderBase> m_ptrVideoDecoder{ nullptr };
+	std::shared_ptr<PreviewAndPlay> m_ptrPreviewAndPlay{ nullptr };
+
+    //std::shared_ptr<VideoDecoder> m_ptrVideoDecoder{ nullptr };
     AtomDecoder* m_ptrAtomDecoder{ nullptr };
-    HardDecoder* m_ptrHardDecoder{ nullptr };
     AudioPlay* m_ptrAudioPlay{ nullptr };
     QString m_strChooseFileName{ "" };
     MediaInfo m_stuMediaInfo;
+
+	AVHWDeviceType m_eDeviceType{ AV_HWDEVICE_TYPE_NONE };
 
 	std::vector<QString> m_vecChooseNameAtom;
     uint32_t m_uiAtomFrameCnt{ 0 };
     uint32_t m_uiAtomAudioSampleRate{ 0 };
     uint32_t m_uiAtomAudioSampleCntPerFrame{ 0 };
 
-    DeckLinkDeviceDiscovery* m_ptrDeckLinkDeviceDiscovery{nullptr};
-#if defined(WIN32)
-	CComQIPtr<IDeckLinkOutput> m_ptrSelectedDeckLinkOutput{ nullptr };
-#elif defined(__linux__)
-    IDeckLinkOutput* m_ptrSelectedDeckLinkOutput{ nullptr };
-#endif
-    std::mutex m_mutex;
+	std::mutex m_mutex;
 
 	bool m_bSliderEnableConnect{ true };       //是否允许连接信号槽
-    bool m_bAtomFileValid{ false };
+	bool m_bAtomFileValid{ false };
+
+//////// 板卡相关内容
+private:
+#if defined(BlackMagicEnabled)
+	DeckLinkDeviceDiscovery* m_ptrDeckLinkDeviceDiscovery{ nullptr };
     std::map<QString, MyDeckLinkDevice> m_mapDeviceNameIndex;
+    void initSDIOutput();
+
+    #if defined(WIN32)
+	    void deviceDiscovered(CComPtr<IDeckLink>& deckLink);
+	    CComQIPtr<IDeckLinkOutput> m_ptrSelectedDeckLinkOutput{ nullptr };
+    #elif defined(__linux__)
+	    IDeckLinkOutput* m_ptrSelectedDeckLinkOutput{ nullptr };
+    #endif(WIN32)
+
+#endif(BlackMagicEnabled)
 };

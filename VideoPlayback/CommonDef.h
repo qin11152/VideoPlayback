@@ -12,16 +12,36 @@ extern "C"
 {
 #include <ffmpeg/libavutil/pixfmt.h>
 #include <ffmpeg/libavutil/samplefmt.h>
+#include <libavformat/avformat.h>
+#include <libavcodec/avcodec.h>
+#include <libavutil/time.h>
+#include <libavutil/imgutils.h>
+#include <libswscale/swscale.h>
+#include <libswresample/swresample.h>
 }
+
 #include <QDebug>
 
 #include "module/LogModule/Log.h"
 #include "module/ThreadPool/ThreadPool.h"
+#include "module/MyContainer/MyQueue.h"
 
 #include "ui/MyTipDialog/MyTipDialog.h"
 
+#include <atomic>
+#include <mutex>
+#include <memory>
+#include <queue>
+#include <thread>
+#include <algorithm>
+#include <functional>
+#include <condition_variable>
 #include <cstdint>
 #include <fstream>
+#include <sstream>
+#include <iomanip>
+
+#define BlackMagicEnabled 1;
 
 constexpr int kOutputVideoWidth = 1920;
 constexpr int kOutputVideoHeight = 1080;
@@ -43,6 +63,7 @@ constexpr int kmilliSecondsPerSecond = 1000;
 
 enum class PacketType
 {
+	None = 0,
 	Video = 0,
 	Audio,
 };
@@ -74,6 +95,14 @@ struct MediaInfo
 	MediaType mediaType{ MediaType::Invalid };
 };
 
+/*!
+ * \class VideoInfo
+ *
+ * \brief 解码后待使用的视频参数，宽高、持续时间、图片格式
+ *
+ * \author DELL
+ * \date 2024/12/10 14:28
+ */
 struct VideoInfo
 {
 	int width{ 0 };
@@ -86,7 +115,14 @@ struct VideoInfo
 };
 
 Q_DECLARE_METATYPE(VideoInfo);
-
+/*!
+ * \class AudioInfo
+ *
+ * \brief 解码后待使用的音频的参数，声道数、采样率、位深、每个通道采样数量、持续时间等
+ *
+ * \author DELL
+ * \date 2024/12/10 14:29
+ */
 struct AudioInfo
 {
 	int audioChannels{ 0 };
@@ -99,6 +135,14 @@ struct AudioInfo
 	AVSampleFormat audioFormat{ AV_SAMPLE_FMT_NONE };
 };
 
+/*!
+ * \class VideoCallbackInfo
+ *
+ * \brief 解码后的yuv数据存储结构体，包含yuv数据，宽高、图片格式、在视频中的pts等
+ *
+ * \author DELL
+ * \date 2024/12/10 14:30
+ */
 struct VideoCallbackInfo
 {
 	uint32_t width;
@@ -117,6 +161,14 @@ struct VideoCallbackInfo
 	}
 };
 
+/*!
+ * \class AudioCallbackInfo
+ *
+ * \brief 解码后的pcm数据存储结构体，包含pcm数据，音频长度等
+ *
+ * \author DELL
+ * \date 2024/12/10 14:39
+ */
 struct AudioCallbackInfo
 {
 	uint32_t m_ulPCMLength{ 0 };
@@ -132,6 +184,72 @@ struct AudioCallbackInfo
 };
 
 Q_DECLARE_METATYPE(VideoCallbackInfo);
+
+struct PacketWaitDecoded
+{
+	AVPacket* packet{ nullptr };
+	PacketType type{PacketType::None };
+
+	PacketWaitDecoded(AVPacket* p, PacketType t) : packet(p), type(t) {}
+
+	~PacketWaitDecoded()
+	{
+		if (packet)
+		{
+			av_packet_free(&packet);
+			packet = nullptr;
+		}
+	}
+};
+
+/*!
+ * \class VideoReaderInitedInfo
+ *
+ * \brief 文件读取类初始化所需结构体，包含文件名，音视频输出结构体，待编码队列等
+ *
+ * \author DELL
+ * \date 2024/12/10 14:45
+ */
+struct VideoReaderInitedInfo
+{
+	std::string m_strFileName{ "" };
+	AVHWDeviceType m_eDeviceType{ AV_HWDEVICE_TYPE_NONE };
+	bool m_bAtom{ false };
+	VideoInfo outVideoInfo;
+	AudioInfo outAudioInfo;
+	std::vector< std::pair<std::string, AudioInfo>> vecAudioFileNameAndInfo;
+	std::shared_ptr<MyPacketQueue<std::shared_ptr<PacketWaitDecoded>>> ptrPacketQueue;
+};
+
+/*!
+ * \class DecoderInitedInfo
+ *
+ * \brief 初始化编码器的入参，包含AVFormatContext，编码参数，音视频输出参数，是否硬编，音视频index，待编码avoacket队列
+ *
+ * \author DELL
+ * \date 2024/12/10 14:21
+ */
+struct DecoderInitedInfo
+{
+	AVFormatContext* formatContext{ nullptr };
+	AVHWDeviceType m_eDeviceType{ AV_HWDEVICE_TYPE_NONE };
+	AVCodecParameters* videoCodecParameters{ nullptr };
+	AVCodecParameters* audioCodecParameters{ nullptr };
+	AVCodec* videoCodec{ nullptr };
+	AVCodec* audioCodec{ nullptr };
+	bool m_bAtom{ false };
+	VideoInfo outVideoInfo;
+	int iVideoIndex{ -1 };
+	AudioInfo outAudioInfo;
+	int iAudioIndex{ -1 };
+	std::shared_ptr<MyPacketQueue<std::shared_ptr<PacketWaitDecoded>>> ptrPacketQueue;
+};
+
+struct DataHandlerInitedInfo
+{
+	uint32_t uiNeedSleepTime{ 0 };
+	uint32_t uiPerFrameSampleCnt{ 0 };
+};
 
 enum class ErrorCode
 {
