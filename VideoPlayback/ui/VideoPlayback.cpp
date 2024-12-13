@@ -491,8 +491,10 @@ bool VideoPlayback::initAllModule()
 		ptrPcmBuffer->initBuffer(1024 * 10);
 
 		m_ptrVideoReader = std::make_shared<VideoReader>();
+		m_eDeviceType = AV_HWDEVICE_TYPE_NONE;
 		if (AV_HWDEVICE_TYPE_NONE == m_eDeviceType)
 		{
+			m_ptrVideoDecoder = std::make_shared<VideoDecoder>(m_ptrVideoReader);
 		}
 		else
 		{

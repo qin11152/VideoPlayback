@@ -2,145 +2,151 @@
 
 #include "CommonDef.h"
 #include "module/MyContainer/Buffer.h"
-
-extern "C"
-{
-#include <libavformat/avformat.h>
-#include <libavcodec/avcodec.h>
-#include <libavutil/time.h>
-#include <libavutil/imgutils.h>
-#include <libswscale/swscale.h>
-#include <libswresample/swresample.h>
-}
-
-#include <atomic>
-#include <mutex>
-#include <memory>
-#include <queue>
-#include <thread>
-#include <functional>
-#include <condition_variable>
+#include "module/VideoReader/VideoReader.h"
+#include "module/VideoDecoder/VideoDecoderBase.h"
 
 extern std::function<void(AVFrame *)> avframedel;
 using avframe_ptr = std::unique_ptr<AVFrame, decltype(avframedel)>;
 
 class VideoPlayback;
 
-class VideoDecoder : public std::enable_shared_from_this<VideoDecoder>
+class VideoDecoder : public VideoDecoderBase
 {
-	using PreviewCallback = std::function<void(std::shared_ptr<VideoCallbackInfo> videoInfo, int64_t currentTime)>;
-	using AudioPlayCallback = std::function<void(uint8_t*, uint32_t channelSampleNumber)>;
-	using VideoOutputCallback = std::function<void(const VideoCallbackInfo& videoInfo)>;
 public:
-	VideoDecoder(VideoPlayback* videoPlayback);
+	VideoDecoder(std::shared_ptr<VideoReader> ptrVideoReader);
 	~VideoDecoder();
 
-	int32_t initModule(const char *fileName, const VideoInfo &outVideoInfo, const AudioInfo &outAudioInfo);
+	//************************************
+// Method:    initModule
+// FullName:  HardDecoder::initModule
+// Access:    public 
+// Returns:   int32_t 0:success -1:failed
+// Qualifier:
+// Parameter: const DecoderInitedInfo & info，入参
+// brief: 初始化解码器，开启解码工作线程
+//************************************
+	int32_t initModule(const DecoderInitedInfo& info, DataHandlerInitedInfo& dataHandlerInfo)override;
 
-	void unInitModule();
-
-	void readFrameFromFile();
-
-	void decoder();
-	void decoderVideo(AVPacket* packet);
-	void decoderAudio(AVPacket* packet);
-
-	void consume();
-
-	void seekOperate();
-	//void decodeVideo();
-	//void decodeAudio();
-
-	AVCodecContext *getVideoCodecContext() const { return videoCodecContext; }
-	AVCodecContext *getAudioCodecContext() const { return audioCodecContext; }
-
-	void initAudioCallback(AudioPlayCallback audioCallback);
-
-	void initVideoCallBack(PreviewCallback preCallback, VideoOutputCallback videoOutputCallback);
-
-	void startDecoder();
-
-	void pauseDecoder();
-
-	void resumeDecoder();
 
 	//************************************
-	// Method:    seekTo
-	// FullName:  VideoDecoder::seekTo
-	// Access:    public
-	// Returns:   void
+	// Method:    uninitModule
+	// FullName:  HardDecoder::uninitModule
+	// Access:    public 
+	// Returns:   int32_t
+	// brief: 反初始化，结束编码线程，释放资源
 	// Qualifier:
-	// Parameter: int64_t time
-	// brief:
 	//************************************
-	void seekTo(double_t time);
+	int32_t uninitModule()override;
 
-	void clearBuffer();
+
+	//************************************
+	// Method:    addPCMBuffer
+	// FullName:  HardDecoder::addPCMBuffer
+	// Access:    public 
+	// Returns:   int32_t
+	// Qualifier:
+	// brief: 添加PCMBuffer到vector中，解码后的音频数据会存放在vector中的PCMBuffer中
+	// Parameter: std::shared_ptr<Buffer> ptrPCMBuffer
+	//************************************
+	int32_t addPCMBuffer(std::shared_ptr<Buffer> ptrPCMBuffer);
+
+	//************************************
+	// Method:    addPacketQueue
+	// FullName:  HardDecoder::addPacketQueue
+	// Access:    public 
+	// Returns:   int32_t
+	// Qualifier:
+	// brief: 添加解码后的视频数据队列到vector中，解码后的视频数据会存放在vector中的队列中
+	// Parameter: std::shared_ptr<MyPacketQueue<VideoCallbackInfo>> ptrPacketQueue
+	//************************************
+	int32_t addPacketQueue(std::shared_ptr<MyPacketQueue<std::shared_ptr<VideoCallbackInfo>>> ptrPacketQueue);
+
+	int32_t seekTo(double_t seekTime)override;
+
+	void registerFinishedCallback(DecoderFinishedCallback callback)override;
 
 private:
-	AVFormatContext *formatContext{nullptr};
-	AVCodecContext *videoCodecContext{nullptr};
-	AVCodecContext *audioCodecContext{nullptr};
-	int videoStreamIndex;
-	int audioStreamIndex;
-	SwsContext *swsContext{nullptr};
-	SwrContext *swrContext{nullptr};
+	//************************************
+	// Method:    decode
+	// FullName:  HardDecoder::decode
+	// Access:    private 
+	// Returns:   void
+	// brief: 解码线程，从待解码队列中取出包，根据包的类型调用对应的解码函数
+	// Qualifier:
+	//************************************
+	void decode()override;
+	//************************************
+	// Method:    decodeVideo
+	// FullName:  HardDecoder::decodeVideo
+	// Access:    private 
+	// Returns:   void
+	// Qualifier:
+	// brief: 视频包解码函数
+	// Parameter: PacketWaitDecoded & packet待解码的包，包含数据和类型
+	//************************************
+	void decodeVideo(std::shared_ptr<PacketWaitDecoded> packet)override;
+	//************************************
+	// Method:    decodeAudio
+	// FullName:  HardDecoder::decodeAudio
+	// Access:    private 
+	// Returns:   void
+	// Qualifier:
+	// brief: 音频包解码函数
+	// Parameter: PacketWaitDecoded & packet 待解码的包，包含数据和类型
+	//************************************
+	void decodeAudio(std::shared_ptr<PacketWaitDecoded> packet)override;
 
-	Buffer* m_ptrPCMBuffer{ nullptr };
+	//************************************
+	// Method:    initVideoDecoder
+	// FullName:  HardDecoder::initVideoDecoder
+	// Access:    private 
+	// Returns:   int32_t
+	// Qualifier:
+	// Parameter: const DecoderInitedInfo & info
+	//************************************
+	int32_t initVideoDecoder(const DecoderInitedInfo& info);
+	int32_t initAudioDecoder(const DecoderInitedInfo& info);
 
-	PreviewCallback m_previewCallback;
-	AudioPlayCallback m_audioPlayCallback;
-	VideoOutputCallback m_videoOutputCallback;
+	void flushDecoder();
 
-	std::thread m_ReadThread;
-	std::thread m_ConsumeThread;
-	std::thread m_DecoderThread;
-	//std::thread m_VideoDecoderThread;
-	//std::thread m_AudioDecoderThread;
-	// std::mutex m_VideoMutex;
-	// std::mutex m_AudioMutex;
+	void seekOperate();
+
+private:
+	std::shared_ptr<VideoReader> m_ptrVideoReader{ nullptr };
+	AVFormatContext* fileFormat{ nullptr };
+
+	AVCodecContext* videoCodecContext{ nullptr };
+	AVCodecContext* audioCodecContext{ nullptr };
+	SwsContext* swsContext{ nullptr };
+	SwrContext* swrContext{ nullptr };
+	int m_iVideoStreamIndex;
+	int m_iAudioStreamIndex;
+	double m_dFrameDuration{ 1.0 };
+
+	bool m_bInitState{ false };
+	bool m_bRunningState{ false };
+
+	bool m_bPauseState = false;
 	std::mutex m_PauseMutex;
-	std::mutex m_queueMutex;		//avpacket队列的锁，用于读取和解码线程
-	std::mutex m_afterDecoderInfoMutex;	//编码后队列的锁，用于解码和渲染线程
-	//std::mutex m_PacketMutex;
-	//std::condition_variable m_VideoCV;
-	//std::condition_variable m_AudioCV;
-	std::condition_variable m_ReadCV;	//从文件中读的条件变量
-	std::condition_variable m_queueWaitDecodedCV;	//待解码队列的条件变量
-	std::condition_variable m_queueWaitConsumedCV;	//待消费队列的条件变量
-	std::condition_variable m_PauseCV; // 暂停时的条件变量
-	std::condition_variable m_SeekCV;	//seek时的条件变量
+	std::condition_variable m_PauseCV;
 
-	//std::queue<AVPacket> m_queueVideoFrame;
-	//std::queue<AVPacket> m_queueAudioFrame;
-	std::queue<std::pair<AVPacket*, PacketType>> m_queueNeedDecoderPacket;
-	std::queue<std::shared_ptr<VideoCallbackInfo>> m_queueVideoInfo;		//解码的视频帧，等待消费
-	std::queue<std::shared_ptr<AudioCallbackInfo>> m_queueAudioInfo;		//解码的音频帧，等待消费
+	bool m_bDecoderedFinished{ false };
 
-	std::atomic<bool> m_bSeekState{false};
-	std::atomic<double_t> m_dSeekTime{0};
-
-	bool m_bInitState{false};
-	bool m_bRunningState{false};
-	bool m_bPauseState{false};
-	//std::atomic<bool> m_bReadFinished{ false };
-	//std::atomic<bool> m_bDecoderFinished{ false };
-	//bool m_bFirstVideoPacketAfterSeek{false};
-	//bool m_bFirstAudioPacketAfterSeek{false};
-	//bool m_bFirstReadedVideoPakcet{false};
+	std::atomic<bool> m_bSeekState{ false };
+	std::atomic<double_t> m_dSeekTime{ 0 };
 
 	AudioInfo m_stuAudioInfo;
 	VideoInfo m_stuVideoInfo;
 
-	//int64_t m_iStartTime{0};
-	//int64_t m_iPauseTime{0};
-	uint32_t m_uiReadThreadSleepTime{0};
+	uint32_t m_uiReadThreadSleepTime{ 0 };
 	uint32_t m_uiPerFrameSampleCnt{ 0 };
-	//int64_t m_iTotalVideoSeekTime{0}; // 记录总共快进的时间，用于计算快进量，微妙为单位
-	//int64_t m_iTotalAudioSeekTime{0}; // 记录总共快进的时间，用于计算快进量，微妙为单位
 
-	//uint64_t m_uiVideoCurrentTime{0}; // 记录当前视频时间，用于计算快进量，微妙为单位
-	//uint64_t m_uiAudioCurrentTime{0}; // 记录当前音频时间，用于计算快进量,微妙为单位
+	//待解码的包队列
+	std::shared_ptr<MyPacketQueue<std::shared_ptr<PacketWaitDecoded>>> m_ptrQueNeedDecodedPacket;
 
-	VideoPlayback* m_ptrVideoPlayback{ nullptr };
+	//一个解码器可能有多个消耗者，对应多个队列
+	std::mutex m_PcmBufferAddMutex;
+	std::mutex m_VideoQueueAddMutex;
+	std::vector<std::shared_ptr<Buffer>> m_vecPCMBufferPtr;
+	std::vector<std::shared_ptr <MyPacketQueue<std::shared_ptr<VideoCallbackInfo>>>> m_vecQueNeedDecodedPacketPtr;
 };

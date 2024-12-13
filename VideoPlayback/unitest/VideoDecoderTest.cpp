@@ -13,7 +13,8 @@ public:
 protected:
 	void SetUp() override
 	{
-		videoDecoder = std::make_shared<VideoDecoder>(nullptr);
+		std::shared_ptr<VideoReader> ptrVideoReader = std::make_shared<VideoReader>();
+		videoDecoder = std::make_shared<VideoDecoder>(ptrVideoReader);
 		// Initialization code here
 	}
 
@@ -23,54 +24,39 @@ protected:
 	}
 };
 
-TEST_F(VideoDecoderTest, DISABLED_DifferentFileNameInputTest)
+TEST_F(VideoDecoderTest, videoDecoderInit)
 {
-	VideoInfo outVideoInfo;
-	outVideoInfo.width = 1920;
-	outVideoInfo.height = 1080;
-	outVideoInfo.fps = 25;
-	outVideoInfo.videoFormat = AV_PIX_FMT_YUV422P;
-	AudioInfo outAudioInfo;
-	outAudioInfo.audioChannels = 2;
-	outAudioInfo.audioSampleRate = 48000;
-	outAudioInfo.audioFormat = AV_SAMPLE_FMT_S16;
+	VideoReader tmp;
+	VideoInfo videoInfo;
+	videoInfo.width = 1920;
+	videoInfo.height = 1080;
+	videoInfo.fps = 25;
+	videoInfo.videoFormat = AV_PIX_FMT_YUV422P;
+	AudioInfo audioInfo;
+	audioInfo.audioChannels = 2;
+	audioInfo.audioSampleRate = 48000;
+	audioInfo.audioFormat = AV_SAMPLE_FMT_S16;
 
-	QFileInfo fileInfo("D:/1.mp4");
+	VideoReaderInitedInfo info;
+	DecoderInitedInfo decoderInfo;
+	DataHandlerInitedInfo dataHandlerInfo;
 
-	ASSERT_EQ(fileInfo.exists(), true);
-	EXPECT_EQ(videoDecoder->initModule("D:/1.mov", outVideoInfo, outAudioInfo), (int32_t)ErrorCode::OpenInputError);
-	
-	fileInfo.setFile("D:/2.mxf");
-	ASSERT_EQ(fileInfo.exists(), true);
-	EXPECT_EQ(videoDecoder->initModule("D:/2.mxf", outVideoInfo, outAudioInfo), (int32_t)ErrorCode::NoError);
+	info.outAudioInfo = audioInfo;
+	info.outVideoInfo = videoInfo;
+	info.ptrPacketQueue = nullptr;
+	info.m_strFileName = "D:/testmaterial/1.mp4";
+	info.m_eDeviceType = AV_HWDEVICE_TYPE_QSV;
+
+	ASSERT_EQ(tmp.initModule(info, decoderInfo), 0);
+	EXPECT_EQ(videoDecoder->initModule(decoderInfo, dataHandlerInfo), 0);
+
+	EXPECT_NE(dataHandlerInfo.uiNeedSleepTime, 0);
+	EXPECT_NE(dataHandlerInfo.uiPerFrameSampleCnt, 0);
+
+	EXPECT_EQ(tmp.uninitModule(), 0);
+	EXPECT_EQ(videoDecoder->uninitModule(), 0);
 }
 
-TEST_F(VideoDecoderTest, MedioInfoVerifity)
-{
-	VideoInfo outVideoInfo;
-	outVideoInfo.width = 1920;
-	outVideoInfo.height = 1080;
-	outVideoInfo.videoFormat = AV_PIX_FMT_YUV422P;
-	AudioInfo outAudioInfo;
-	outAudioInfo.audioChannels = 2;
-	outAudioInfo.audioSampleRate = 48000;
-	outAudioInfo.bitDepth = 8;
-	outAudioInfo.audioFormat = AV_SAMPLE_FMT_S16;
-
-	QFileInfo fileInfo("D:/testmaterial/1.mp4");
-	ASSERT_EQ(fileInfo.exists(), true);
-	EXPECT_EQ(videoDecoder->initModule("D:/testmaterial/1.mp4", outVideoInfo, outAudioInfo), (int32_t)ErrorCode::NoError);
-
-	auto videoCodecContext = videoDecoder->getVideoCodecContext();
-	auto audioCodexContext = videoDecoder->getAudioCodecContext();
-
-	EXPECT_EQ(videoCodecContext->width, 1920);
-	EXPECT_EQ(videoCodecContext->height, 1080);
-	//EXPECT_EQ(videoCodecContext->framerate.num, 50);
-	EXPECT_EQ(audioCodexContext->ch_layout.nb_channels, 2);
-	EXPECT_EQ(audioCodexContext->sample_rate, 48000);
-	//EXPECT_EQ(audioCodexContext->sample_fmt, AV_SAMPLE_FMT_S16);
-}
 
 
 

@@ -102,8 +102,11 @@ private:
 	int32_t initVideoDecoder(const DecoderInitedInfo& info);
 	int32_t initAudioDecoder(const DecoderInitedInfo& info);
 
+	void flushDecoder();
+
 	void seekOperate();
 
+private:
 	std::shared_ptr<VideoReader> m_ptrVideoReader{ nullptr };
 	AVFormatContext* fileFormat{ nullptr };
 
