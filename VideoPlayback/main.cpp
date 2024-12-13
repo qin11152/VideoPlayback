@@ -5,7 +5,7 @@
 #include "CommonDef.h"
 #include "module/utils/utils.h"
 
-#define UNITTEST 0
+#define UNITTEST 1
 
 int main(int argc, char *argv[])
 {

@@ -144,7 +144,7 @@ private:
 //一个解码器可能有多个消耗者，对应多个队列
 	std::mutex m_PcmBufferAddMutex;
 	std::mutex m_VideoQueueAddMutex;
-	std::vector<std::shared_ptr<Buffer>> m_vecPCMBufferPtr;
-	std::vector<std::shared_ptr <MyPacketQueue<std::shared_ptr<VideoCallbackInfo>>>> m_vecQueNeedDecodedPacketPtr;
+	std::vector<std::shared_ptr<Buffer>> m_vecPCMBufferPtr;	//解码后的音频数据队列
+	std::vector<std::shared_ptr <MyPacketQueue<std::shared_ptr<VideoCallbackInfo>>>> m_vecQueDecodedPacket;	//解码后的视频数据队列
 };
 

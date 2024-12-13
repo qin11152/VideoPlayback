@@ -1,30 +1,25 @@
 #pragma once
 
 #include "CommonDef.h"
-#include "module/MyContainer/Buffer.h"
 #include "module/VideoReader/VideoReader.h"
 #include "module/VideoDecoder/VideoDecoderBase.h"
 
-extern std::function<void(AVFrame *)> avframedel;
-using avframe_ptr = std::unique_ptr<AVFrame, decltype(avframedel)>;
-
-class VideoPlayback;
-
-class VideoDecoder : public VideoDecoderBase
+class AtomDecoder : public VideoDecoderBase
 {
 public:
-	VideoDecoder(std::shared_ptr<VideoReader> ptrVideoReader);
-	~VideoDecoder();
+
+	AtomDecoder(std::vector<std::shared_ptr<VideoReader>> vecVideoReader);
+	~AtomDecoder();
 
 	//************************************
-// Method:    initModule
-// FullName:  HardDecoder::initModule
-// Access:    public 
-// Returns:   int32_t 0:success -1:failed
-// Qualifier:
-// Parameter: const DecoderInitedInfo & info，入参
-// brief: 初始化解码器，开启解码工作线程
-//************************************
+	// Method:    initModule
+	// FullName:  HardDecoder::initModule
+	// Access:    public 
+	// Returns:   int32_t 0:success -1:failed
+	// Qualifier:
+	// Parameter: const DecoderInitedInfo & info，入参
+	// brief: 初始化解码器，开启解码工作线程
+	//************************************
 	int32_t initModule(const DecoderInitedInfo& info, DataHandlerInitedInfo& dataHandlerInfo)override;
 
 
@@ -38,43 +33,19 @@ public:
 	//************************************
 	int32_t uninitModule()override;
 
+	int32_t addAtomVideoPacketQueue(std::shared_ptr<MyPacketQueue<std::shared_ptr<VideoCallbackInfo>>> ptrPacketQueue)override;
 
-	//************************************
-	// Method:    addPCMBuffer
-	// FullName:  HardDecoder::addPCMBuffer
-	// Access:    public 
-	// Returns:   int32_t
-	// Qualifier:
-	// brief: 添加PCMBuffer到vector中，解码后的音频数据会存放在vector中的PCMBuffer中
-	// Parameter: std::shared_ptr<Buffer> ptrPCMBuffer
-	//************************************
-	int32_t addPCMBuffer(std::shared_ptr<Buffer> ptrPCMBuffer);
-
-	//************************************
-	// Method:    addPacketQueue
-	// FullName:  HardDecoder::addPacketQueue
-	// Access:    public 
-	// Returns:   int32_t
-	// Qualifier:
-	// brief: 添加解码后的视频数据队列到vector中，解码后的视频数据会存放在vector中的队列中
-	// Parameter: std::shared_ptr<MyPacketQueue<VideoCallbackInfo>> ptrPacketQueue
-	//************************************
-	int32_t addPacketQueue(std::shared_ptr<MyPacketQueue<std::shared_ptr<VideoCallbackInfo>>> ptrPacketQueue);
+	int32_t addAtomAudioPacketQueue(std::shared_ptr<std::vector<std::shared_ptr<Buffer>>> vecBuffer)override;
 
 	int32_t seekTo(double_t seekTime)override;
 
 	void registerFinishedCallback(DecoderFinishedCallback callback)override;
 
 private:
-	//************************************
-	// Method:    decode
-	// FullName:  HardDecoder::decode
-	// Access:    private 
-	// Returns:   void
-	// brief: 解码线程，从待解码队列中取出包，根据包的类型调用对应的解码函数
-	// Qualifier:
-	//************************************
-	void decode()override;
+	void readVideoPacket();
+
+	void readAudioPacket();
+
 	//************************************
 	// Method:    decodeVideo
 	// FullName:  HardDecoder::decodeVideo
@@ -85,6 +56,7 @@ private:
 	// Parameter: PacketWaitDecoded & packet待解码的包，包含数据和类型
 	//************************************
 	void decodeVideo(std::shared_ptr<PacketWaitDecoded> packet)override;
+
 	//************************************
 	// Method:    decodeAudio
 	// FullName:  HardDecoder::decodeAudio
@@ -94,7 +66,7 @@ private:
 	// brief: 音频包解码函数
 	// Parameter: PacketWaitDecoded & packet 待解码的包，包含数据和类型
 	//************************************
-	void decodeAudio(std::shared_ptr<PacketWaitDecoded> packet)override;
+	void decodeAudio(std::shared_ptr<PacketWaitDecoded> packet, int index)override;
 
 	//************************************
 	// Method:    initVideoDecoder
@@ -112,15 +84,18 @@ private:
 	void seekOperate();
 
 private:
-	std::shared_ptr<VideoReader> m_ptrVideoReader{ nullptr };
-	AVFormatContext* fileFormat{ nullptr };
+	std::thread m_VideoDecodeThread;
+	std::thread m_AudioDecodeThread;
 
-	AVCodecContext* videoCodecContext{ nullptr };
-	AVCodecContext* audioCodecContext{ nullptr };
+	std::vector< std::shared_ptr<VideoReader>> m_vecVideoReader;
+    AVFormatContext *formatContext{nullptr};
+    AVCodecContext *videoCodecContext{nullptr};
+
+    std::vector<std::pair<AVCodecContext*,int32_t>> m_vecAudioCodecContext;
+    std::vector<AVFormatContext*> m_vecAudioFormatContext;
 	SwsContext* swsContext{ nullptr };
-	SwrContext* swrContext{ nullptr };
+	std::vector<SwrContext*> m_vecSwrContext;
 	int m_iVideoStreamIndex;
-	int m_iAudioStreamIndex;
 	double m_dFrameDuration{ 1.0 };
 
 	bool m_bInitState{ false };
@@ -142,11 +117,14 @@ private:
 	uint32_t m_uiPerFrameSampleCnt{ 0 };
 
 	//待解码的包队列
-	std::shared_ptr<MyPacketQueue<std::shared_ptr<PacketWaitDecoded>>> m_ptrQueNeedDecodedPacket;
+	std::shared_ptr<MyPacketQueue<std::shared_ptr<PacketWaitDecoded>>> m_ptrQueNeedDecodedVideoPacket;
+	//待解码的音频包队列
+	std::vector <std::shared_ptr<MyPacketQueue<std::shared_ptr<PacketWaitDecoded>>>> m_vecQueueNeedDecodedAudioPacket;
 
 	//一个解码器可能有多个消耗者，对应多个队列
 	std::mutex m_PcmBufferAddMutex;
 	std::mutex m_VideoQueueAddMutex;
-	std::vector<std::shared_ptr<Buffer>> m_vecPCMBufferPtr;
-	std::vector<std::shared_ptr <MyPacketQueue<std::shared_ptr<VideoCallbackInfo>>>> m_vecQueDecodedPacket;
+	std::vector<std::shared_ptr<std::vector<std::shared_ptr<Buffer>>>> m_vecPCMBuffer;	//解码后的音频数据队列
+	std::vector<std::shared_ptr <MyPacketQueue<std::shared_ptr<VideoCallbackInfo>>>> m_vecQueDecodedVideoPacket;	//解码后的视频数据队列
+    
 };

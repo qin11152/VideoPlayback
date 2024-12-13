@@ -217,7 +217,6 @@ struct VideoReaderInitedInfo
 	bool m_bAtom{ false };
 	VideoInfo outVideoInfo;
 	AudioInfo outAudioInfo;
-	std::vector< std::pair<std::string, AudioInfo>> vecAudioFileNameAndInfo;
 	std::shared_ptr<MyPacketQueue<std::shared_ptr<PacketWaitDecoded>>> ptrPacketQueue;
 };
 
@@ -237,12 +236,23 @@ struct DecoderInitedInfo
 	AVCodecParameters* audioCodecParameters{ nullptr };
 	AVCodec* videoCodec{ nullptr };
 	AVCodec* audioCodec{ nullptr };
+	std::shared_ptr<MyPacketQueue<std::shared_ptr<PacketWaitDecoded>>> ptrPacketQueue;
+
+	//atom相关的内容
 	bool m_bAtom{ false };
+	AVFormatContext* atomVideoFormatContext{ nullptr };
+	std::vector<AVFormatContext*> vecAudioFormatContext;
+	AVCodecParameters* atomVideoCodecParameters{ nullptr };
+	std::vector<std::pair<AVCodecParameters*,int32_t>> vecAtomAudioCodecParameters;
+	AVCodec* atomVideoCodec{ nullptr };
+	std::vector<AVCodec*> vecAtomAudioCodec;
+	std::shared_ptr<MyPacketQueue<std::shared_ptr<PacketWaitDecoded>>> ptrAtomVideoPacketQueue;
+	std::vector < std::shared_ptr<MyPacketQueue<std::shared_ptr<PacketWaitDecoded>>>> vecAtomAudioPacketQueue;
+
 	VideoInfo outVideoInfo;
 	int iVideoIndex{ -1 };
 	AudioInfo outAudioInfo;
 	int iAudioIndex{ -1 };
-	std::shared_ptr<MyPacketQueue<std::shared_ptr<PacketWaitDecoded>>> ptrPacketQueue;
 };
 
 struct DataHandlerInitedInfo

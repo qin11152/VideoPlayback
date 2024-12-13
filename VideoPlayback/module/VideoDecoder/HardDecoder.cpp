@@ -65,7 +65,7 @@ int32_t HardDecoder::uninitModule()
 	{
 		it->unInitBuffer();
 	}
-	for (auto& it : m_vecQueNeedDecodedPacketPtr)
+	for (auto& it : m_vecQueDecodedPacket)
 	{
 		it->uninitModule();
 	}
@@ -77,7 +77,7 @@ int32_t HardDecoder::uninitModule()
 	{
 		m_DecoderThread.join();
 	}
-	m_vecQueNeedDecodedPacketPtr.clear();
+	m_vecQueDecodedPacket.clear();
 	m_vecPCMBufferPtr.clear();
 	m_iAudioStreamIndex = -1;
 	m_iVideoStreamIndex = -1;
@@ -123,9 +123,9 @@ int32_t HardDecoder::addPCMBuffer(std::shared_ptr<Buffer> ptrPCMBuffer)
 int32_t HardDecoder::addPacketQueue(std::shared_ptr<MyPacketQueue<std::shared_ptr<VideoCallbackInfo>>> ptrPacketQueue)
 {
 	std::unique_lock<std::mutex> lck(m_VideoQueueAddMutex);
-	if (std::find(m_vecQueNeedDecodedPacketPtr.begin(), m_vecQueNeedDecodedPacketPtr.end(), ptrPacketQueue) == m_vecQueNeedDecodedPacketPtr.end())
+	if (std::find(m_vecQueDecodedPacket.begin(), m_vecQueDecodedPacket.end(), ptrPacketQueue) == m_vecQueDecodedPacket.end())
 	{
-		m_vecQueNeedDecodedPacketPtr.push_back(ptrPacketQueue);
+		m_vecQueDecodedPacket.push_back(ptrPacketQueue);
 	}
 	else
 	{
@@ -332,7 +332,7 @@ void HardDecoder::flushDecoder()
 			av_freep(yuvFrame->data);
 			av_frame_free(&yuvFrame);
 		}
-		for (auto& it : m_vecQueNeedDecodedPacketPtr)
+		for (auto& it : m_vecQueDecodedPacket)
 		{
 			it->addPacket(videoInfo);
 		}
@@ -346,7 +346,7 @@ void HardDecoder::seekOperate()
 	m_bPauseState = true;
 
 	m_ptrQueNeedDecodedPacket->clearQueue();
-	for (auto iter : m_vecQueNeedDecodedPacketPtr)
+	for (auto iter : m_vecQueDecodedPacket)
 	{
 		iter->clearQueue();
 	}
@@ -398,7 +398,7 @@ void HardDecoder::seekOperate()
 	
 	m_ptrVideoReader->resume();
 	m_ptrQueNeedDecodedPacket->resume();
-	for (auto iter : m_vecQueNeedDecodedPacketPtr)
+	for (auto iter : m_vecQueDecodedPacket)
 	{
 		iter->resume();
 	}
@@ -565,7 +565,7 @@ void HardDecoder::decodeVideo(std::shared_ptr<PacketWaitDecoded> packet)
 				av_freep(yuvFrame->data);
 				av_frame_free(&yuvFrame);
 			}
-			for (auto& it : m_vecQueNeedDecodedPacketPtr)
+			for (auto& it : m_vecQueDecodedPacket)
 			{
 				it->addPacket(videoInfo);
 			}

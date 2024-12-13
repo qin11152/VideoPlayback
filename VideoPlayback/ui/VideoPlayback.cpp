@@ -5,7 +5,7 @@
 #include "module/utils/utils.h"
 
 #if defined(WIN32)
-	#include "module/AtomDecoder/avid_mxf_info.h"
+	#include "module/MXF++/avid_mxf_info.h"
 #endif
 
 #include <QTimer>
@@ -47,17 +47,6 @@ VideoPlayback::VideoPlayback(QWidget* parent)
 		{
 			if (ui.atomRadioButton->isChecked())
 			{
-				if (m_ptrAtomDecoder)
-				{
-					delete m_ptrAtomDecoder;
-					m_ptrAtomDecoder = nullptr;
-				}
-				initAudioOutput();
-				m_ptrAtomDecoder = new AtomDecoder();
-				if (initAllModule())
-				{
-					m_ptrAtomDecoder->startDecoder();
-				}
 			}
 			else
 			{
@@ -107,11 +96,6 @@ VideoPlayback::~VideoPlayback()
 	//fs1.close();
 	uninitAllModule();
 
-	if (m_ptrAtomDecoder)
-	{
-		delete m_ptrAtomDecoder;
-		m_ptrAtomDecoder = nullptr;
-	}
 	if (m_ptrAudioPlay)
 	{
 		delete m_ptrAudioPlay;
@@ -460,7 +444,6 @@ bool VideoPlayback::initAllModule()
 
 	if (ui.atomRadioButton->isChecked())
 	{
-		m_ptrAtomDecoder->unInitModule();
 		VideoInfo videoInfo;
 		videoInfo.width = kOutputVideoWidth;
 		videoInfo.height = kOutputVideoHeight;
@@ -475,9 +458,6 @@ bool VideoPlayback::initAllModule()
 			audioInfo.samplePerChannel = kOutputAudioSamplePerChannel;
 			vecTmp.push_back(std::pair<std::string, AudioInfo>(item.toStdString(), audioInfo));
 		}
-		m_ptrAtomDecoder->initModule(m_strChooseFileName.toStdString().c_str(), vecTmp, videoInfo);
-		//m_ptrAtomDecoder->initVideoCallBack(std::bind(&VideoPlayback::previewCallback, this, std::placeholders::_1, std::placeholders::_2), std::bind(&VideoPlayback::SDIOutputCallback, this, std::placeholders::_1));
-		//m_ptrAtomDecoder->initAudioCallback(std::bind(&VideoPlayback::AudioCallback, this, std::placeholders::_1));
 	}
 	else
 	{

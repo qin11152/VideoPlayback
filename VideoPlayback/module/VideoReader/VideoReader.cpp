@@ -41,24 +41,56 @@ int32_t VideoReader::initModule(const VideoReaderInitedInfo& info, DecoderInited
 		if (codecParameters->codec_type == AVMEDIA_TYPE_VIDEO && videoStreamIndex == -1)
 		{
 			videoStreamIndex = i;
-			decoderInfo.videoCodec = const_cast<AVCodec*>(codec);
-			decoderInfo.videoCodecParameters = codecParameters;
+			if (!info.m_bAtom)
+			{
+				decoderInfo.videoCodec = const_cast<AVCodec*>(codec);
+				decoderInfo.videoCodecParameters = codecParameters;
+			}
+			else
+			{
+				decoderInfo.atomVideoCodec = const_cast<AVCodec*>(codec);
+				decoderInfo.atomVideoCodecParameters = codecParameters;
+			}
 		}
 		else if (codecParameters->codec_type == AVMEDIA_TYPE_AUDIO && audioStreamIndex == -1)
 		{
 			audioStreamIndex = i;
-			decoderInfo.audioCodec = const_cast<AVCodec*>(codec);
-			decoderInfo.audioCodecParameters = codecParameters;
+			if (!info.m_bAtom)
+			{
+				decoderInfo.audioCodec = const_cast<AVCodec*>(codec);
+				decoderInfo.audioCodecParameters = codecParameters;
+			}
+			else
+			{
+				decoderInfo.vecAtomAudioCodec.push_back(const_cast<AVCodec*>(codec));
+				decoderInfo.vecAtomAudioCodecParameters.push_back(std::make_pair(codecParameters, (int32_t)i));
+			}
 		}
 	}
 	decoderInfo.outAudioInfo = info.outAudioInfo;
 	decoderInfo.outVideoInfo = info.outVideoInfo;
-	decoderInfo.formatContext = formatContext;
 	decoderInfo.iVideoIndex = videoStreamIndex;
 	decoderInfo.iAudioIndex = audioStreamIndex;
 	decoderInfo.m_bAtom = info.m_bAtom;
 	decoderInfo.m_eDeviceType = info.m_eDeviceType;
-	decoderInfo.ptrPacketQueue = info.ptrPacketQueue;
+	if (!info.m_bAtom)
+	{
+		decoderInfo.formatContext = formatContext;
+		decoderInfo.ptrPacketQueue = info.ptrPacketQueue;
+	}
+	else
+	{
+		if (videoStreamIndex != -1)
+		{
+			decoderInfo.atomVideoFormatContext = formatContext;
+			decoderInfo.ptrAtomVideoPacketQueue = info.ptrPacketQueue;
+		}
+		else
+		{
+			decoderInfo.vecAudioFormatContext.push_back(formatContext);
+			decoderInfo.vecAtomAudioPacketQueue.push_back(info.ptrPacketQueue);
+		}
+	}
 
 	m_bRunningState = true;
 	m_ReadThread = std::thread(std::bind(&VideoReader::readFrameFromFile, this));

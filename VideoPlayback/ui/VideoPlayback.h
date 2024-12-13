@@ -3,7 +3,7 @@
 #include <QtWidgets/QWidget>
 #include "ui_VideoPlayback.h"
 #include "module/AudioPlay/AudioPlay.h"
-#include "module/AtomDecoder/AtomDecoder.h"
+#include "module/VideoDecoder/AtomDecoder.h"
 #include "module/VideoDecoder/VideoDecoder.h"
 #include "module/VideoReader/VideoReader.h"
 #include "module/VideoDecoder/VideoDecoderBase.h"
@@ -73,8 +73,6 @@ private:
 	std::shared_ptr<VideoDecoderBase> m_ptrVideoDecoder{ nullptr };
 	std::shared_ptr<PreviewAndPlay> m_ptrPreviewAndPlay{ nullptr };
 
-    //std::shared_ptr<VideoDecoder> m_ptrVideoDecoder{ nullptr };
-    AtomDecoder* m_ptrAtomDecoder{ nullptr };
     AudioPlay* m_ptrAudioPlay{ nullptr };
     QString m_strChooseFileName{ "" };
     MediaInfo m_stuMediaInfo;
