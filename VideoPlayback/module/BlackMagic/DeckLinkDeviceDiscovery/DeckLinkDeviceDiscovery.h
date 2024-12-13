@@ -39,12 +39,12 @@
 */
 
 #pragma once
+#include "CommonDef.h"
+#if defined(BlackMagicEnabled)
 
 #include <QString>
 #include <atomic>
 #include <functional>
-
-#include "CommonDef.h"
 
 #if defined(WIN32)
 #include <stdint.h>
@@ -152,3 +152,4 @@ private:
 	com_ptr<IDeckLink> m_deckLink;
 };
 #endif
+#endif(BlackMagicEnabled)
