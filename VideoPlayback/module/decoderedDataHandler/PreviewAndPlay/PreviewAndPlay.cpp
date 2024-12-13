@@ -183,10 +183,10 @@ void PreviewAndPlay::handler()
 				if (m_ptrPcmBuffer->getBuffer(audioInfo->m_pPCMData, length))
 				{
 					audioInfo->m_ulPCMLength = length;
-					std::fstream fs("audio.pcm", std::ios::app | std::ios::binary);
-					//把重采样之后的数据保存本地
-					fs.write((const char*)audioInfo->m_pPCMData, audioInfo->m_ulPCMLength);
-					fs.close();
+					//std::fstream fs("audio.pcm", std::ios::app | std::ios::binary);
+					////把重采样之后的数据保存本地
+					//fs.write((const char*)audioInfo->m_pPCMData, audioInfo->m_ulPCMLength);
+					//fs.close();
 					m_AudioCallback(audioInfo);
 				}
 			}

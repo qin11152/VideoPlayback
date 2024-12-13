@@ -337,6 +337,95 @@ void HardDecoder::decode()
 		{
 			if (!m_bDecoderedFinished)
 			{
+				AVFrame* frame = av_frame_alloc();
+				AVFrame* swFrame = nullptr;
+				avcodec_send_packet(videoCodecContext, NULL);
+
+				// 继续读取所有缓冲区中的帧
+				while (avcodec_receive_frame(videoCodecContext, frame) >= 0) 
+				{
+					double pts = frame->pts * m_dFrameDuration;
+					std::shared_ptr<VideoCallbackInfo> videoInfo = std::make_shared<VideoCallbackInfo>();
+					videoInfo->width = videoCodecContext->width;
+					videoInfo->height = videoCodecContext->height;
+					videoInfo->videoFormat = videoCodecContext->pix_fmt;
+					videoInfo->m_dPts = pts;
+					// 如果是硬件帧，需要转换到系统内存
+					if (frame->hw_frames_ctx)
+					{
+						swFrame = av_frame_alloc();
+						auto transfer_start = std::chrono::steady_clock::now();
+						// 将硬件帧转换为软件帧
+						if (av_hwframe_transfer_data(swFrame, frame, 0) < 0)
+						{
+							av_frame_free(&frame);
+							av_frame_free(&swFrame);
+							return;
+						}
+						auto transfer_end = std::chrono::steady_clock::now();
+						std::shared_ptr<VideoCallbackInfo> videoInfo = nullptr;
+						// 转换为目标格式
+						if (!swsContext)
+						{
+							swsContext = sws_getContext(
+								videoCodecContext->width, videoCodecContext->height, (AVPixelFormat)swFrame->format,
+								m_stuVideoInfo.width, m_stuVideoInfo.height, m_stuVideoInfo.videoFormat,
+								SWS_BILINEAR, nullptr, nullptr, nullptr);
+						}
+						{
+							auto convert_start = std::chrono::steady_clock::now();
+							AVFrame* yuvFrame = av_frame_alloc();
+							av_image_alloc(yuvFrame->data, yuvFrame->linesize, m_stuVideoInfo.width, m_stuVideoInfo.height, m_stuVideoInfo.videoFormat, 1);
+
+							sws_scale(swsContext, swFrame->data, swFrame->linesize, 0, videoCodecContext->height, yuvFrame->data, yuvFrame->linesize);
+							auto convert_end = std::chrono::steady_clock::now();
+							//printf("decoder time:%lld,transfer time: %lld, convert time: %lld\n", std::chrono::duration_cast<std::chrono::milliseconds>(decode_end-decode_start).count(), std::chrono::duration_cast<std::chrono::milliseconds>(transfer_end - transfer_start).count(), std::chrono::duration_cast<std::chrono::milliseconds>(convert_end - convert_start).count());
+							LOG_INFO("Video Decoder Convert");
+							videoInfo->videoFormat = m_stuVideoInfo.videoFormat;
+							videoInfo->width = m_stuVideoInfo.width;
+							videoInfo->height = m_stuVideoInfo.height;
+							videoInfo->dataSize = m_stuVideoInfo.width * m_stuVideoInfo.height * 2;
+							videoInfo->yuvData = new uint8_t[m_stuVideoInfo.width * m_stuVideoInfo.height * 2];
+							memcpy(videoInfo->yuvData, yuvFrame->data[0], m_stuVideoInfo.width * m_stuVideoInfo.height * 2);
+							av_freep(yuvFrame->data);
+							av_frame_free(&yuvFrame);
+						}
+
+						// 释放
+						av_frame_free(&swFrame);
+					}
+					else
+					{
+						if (!swsContext)
+						{
+							swsContext = sws_getContext(
+								videoCodecContext->width, videoCodecContext->height, (AVPixelFormat)frame->format,
+								m_stuVideoInfo.width, m_stuVideoInfo.height, m_stuVideoInfo.videoFormat,
+								SWS_BILINEAR, nullptr, nullptr, nullptr);
+						}
+						auto convert_start = std::chrono::steady_clock::now();
+						AVFrame* yuvFrame = av_frame_alloc();
+						av_image_alloc(yuvFrame->data, yuvFrame->linesize, m_stuVideoInfo.width, m_stuVideoInfo.height, m_stuVideoInfo.videoFormat, 1);
+
+						sws_scale(swsContext, frame->data, frame->linesize, 0, videoCodecContext->height, yuvFrame->data, yuvFrame->linesize);
+						auto convert_end = std::chrono::steady_clock::now();
+						//printf("decoder time:%lld, convert time: %lld\n", std::chrono::duration_cast<std::chrono::milliseconds>(decode_end - decode_start).count(), std::chrono::duration_cast<std::chrono::milliseconds>(convert_end - convert_start).count());
+						LOG_INFO("Video Decoder Convert");
+						videoInfo->videoFormat = m_stuVideoInfo.videoFormat;
+						videoInfo->width = m_stuVideoInfo.width;
+						videoInfo->height = m_stuVideoInfo.height;
+						videoInfo->dataSize = m_stuVideoInfo.width * m_stuVideoInfo.height * 2;
+						videoInfo->yuvData = new uint8_t[m_stuVideoInfo.width * m_stuVideoInfo.height * 2];
+						memcpy(videoInfo->yuvData, yuvFrame->data[0], m_stuVideoInfo.width * m_stuVideoInfo.height * 2);
+						av_freep(yuvFrame->data);
+						av_frame_free(&yuvFrame);
+					}
+					for (auto& it : m_vecQueNeedDecodedPacketPtr)
+					{
+						it->addPacket(videoInfo);
+					}
+					// 处理frame
+				}
 				m_bDecoderedFinished = true;
 				if (m_finishedCallback)
 				{
