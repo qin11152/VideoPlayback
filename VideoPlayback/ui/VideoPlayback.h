@@ -60,6 +60,9 @@ private:
 	void updateTimeSliderPosition(int64_t currentTime);
     void setTimeSliderRange(int64_t totalTime);
 
+    void onDecoderFinshed();
+    void onConsumeFinished();
+
 private:
     Ui::VideoPlaybackClass ui;
 

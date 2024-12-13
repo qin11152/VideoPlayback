@@ -6,6 +6,13 @@
 
 class VideoDecoderBase
 {
+
+protected:
+	using DecoderFinishedCallback = std::function<void()>;
+
+	std::thread m_DecoderThread;
+	DecoderFinishedCallback m_finishedCallback;
+
 public:
 	VideoDecoderBase() = default;
 	virtual ~VideoDecoderBase() = default;
@@ -24,7 +31,8 @@ public:
 
 	virtual int32_t addPacketQueue(std::shared_ptr<MyPacketQueue<std::shared_ptr<VideoCallbackInfo>>> ptrPacketQueue) = 0;
 
-protected:
-	std::thread m_DecoderThread;
+	virtual int32_t seekTo(double_t seekTime) = 0;
+
+	virtual void registerFinishedCallback(DecoderFinishedCallback callback) = 0;
 };
 

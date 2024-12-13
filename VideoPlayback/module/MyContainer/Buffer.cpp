@@ -80,3 +80,11 @@ bool Buffer::getBuffer(uint8_t* buffer, uint32_t size)
 	m_uiStartPos += size;
 	return true;
 }
+
+bool Buffer::clearBuffer()
+{
+	std::unique_lock<std::mutex> lck(m_mutex);
+	m_uiStartPos = 0;
+	m_uiEndPos = 0;
+	return true;
+}

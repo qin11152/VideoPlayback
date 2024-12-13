@@ -17,12 +17,15 @@ public:
 
 	void setCallback(YuvCallBack callback) override;
 	void setCallback(AudioPlayCallback callback) override;
+	void setFinishedCallback(YuvFinishedCallback callback) override;
 
 	void pause() override;
 	void resume() override;
 
 	int32_t setVideoQueue(std::shared_ptr <MyPacketQueue<std::shared_ptr<VideoCallbackInfo>>> ptrQueueDecodedVideo);
 	int32_t setAudioQueue(std::shared_ptr<Buffer> ptrPcmBuffer);
+
+	void setDecoderFinshedState(bool state);
 
 	std::shared_ptr<YuvDataHandler> getYuvDataHandler();
 	std::shared_ptr<PcmDatahandler> getPcmDataHandler();
@@ -33,6 +36,8 @@ private:
 private:
 	bool m_bInitState{ false };
 	bool m_bRunningState{ false };
+
+	std::atomic<bool> m_bDecoderFinished{ false };
 
 	bool m_bPauseState{ false };
 	std::mutex m_PauseMutex;

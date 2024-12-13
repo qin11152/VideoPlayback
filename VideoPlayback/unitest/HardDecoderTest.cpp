@@ -11,7 +11,8 @@ public:
 	~HardDecoderTest() = default;
 	void SetUp() override
 	{
-		m_ptrHardDecoder = new HardDecoder();
+		std::shared_ptr<VideoReader> ptrVideoReader = std::make_shared<VideoReader>();
+		m_ptrHardDecoder = new HardDecoder(ptrVideoReader);
 		// Code here will be called immediately after the constructor (right before each test).
 	}
 	void TearDown() override

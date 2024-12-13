@@ -1,7 +1,7 @@
 #include "HardDecoder.h"
 
-HardDecoder::HardDecoder()
-	: videoCodecContext(nullptr), audioCodecContext(nullptr),
+HardDecoder::HardDecoder(std::shared_ptr<VideoReader> ptrVideoReader)
+	: m_ptrVideoReader(ptrVideoReader), videoCodecContext(nullptr), audioCodecContext(nullptr),
 	m_iVideoStreamIndex(-1), m_iAudioStreamIndex(-1)
 {
 
@@ -27,6 +27,7 @@ int32_t HardDecoder::initModule(const DecoderInitedInfo& info, DataHandlerInited
 	m_stuVideoInfo = info.outVideoInfo;
 	m_iVideoStreamIndex = info.iVideoIndex;
 	m_iAudioStreamIndex = info.iAudioIndex;
+	fileFormat = info.formatContext;
 
 	if(0 != initVideoDecoder(info))
 	{
@@ -133,6 +134,33 @@ int32_t HardDecoder::addPacketQueue(std::shared_ptr<MyPacketQueue<std::shared_pt
 	return 0;
 }
 
+int32_t HardDecoder::seekTo(double_t seekTime)
+{
+	//正在快进或者快退，不处理
+	if (m_bSeekState)
+	{
+		return -1;
+	}
+	//未初始化的时候不处理
+	if (!m_bInitState)
+	{
+		return -2;
+	}
+	if (seekTime < 0 || seekTime > fileFormat->duration)
+	{
+		return -3;
+	}
+	m_dSeekTime = seekTime;
+	m_bSeekState = true;
+	ThreadPool::get_mutable_instance().submit(std::bind(&HardDecoder::seekOperate, this));
+	return 0;
+}
+
+void HardDecoder::registerFinishedCallback(DecoderFinishedCallback callback)
+{
+	m_finishedCallback = callback;
+}
+
 int32_t HardDecoder::initVideoDecoder(const DecoderInitedInfo& info)
 {
 	if (nullptr == info.videoCodecParameters)
@@ -153,8 +181,10 @@ int32_t HardDecoder::initVideoDecoder(const DecoderInitedInfo& info)
 	videoCodecContext->hw_device_ctx = av_buffer_ref(hwDeviceCtx);
 	av_buffer_unref(&hwDeviceCtx);
 
-	videoCodecContext->thread_count = 8; // 根据实际 CPU 核心数调整
+	videoCodecContext->thread_count = 16; // 根据实际 CPU 核心数调整
 	videoCodecContext->thread_type = FF_THREAD_FRAME; // 按帧并行解码
+
+	videoCodecContext->flags |= AVFMT_FLAG_GENPTS;
 
 	if (avcodec_parameters_to_context(videoCodecContext, info.videoCodecParameters) < 0)
 	{
@@ -217,6 +247,73 @@ int32_t HardDecoder::initAudioDecoder(const DecoderInitedInfo& info)
 	return 0;
 }
 
+void HardDecoder::seekOperate()
+{
+	m_ptrVideoReader->pause();
+	m_bPauseState = true;
+
+	m_ptrQueNeedDecodedPacket->clearQueue();
+	for (auto iter : m_vecQueNeedDecodedPacketPtr)
+	{
+		iter->clearQueue();
+	}
+	for (auto iter : m_vecPCMBufferPtr)
+	{
+		iter->clearBuffer();
+	}
+
+	//准备移动操作，计算要移动的位置
+	auto midva = av_q2d(fileFormat->streams[m_iVideoStreamIndex]->time_base);
+	long long videoPos = m_dSeekTime / midva;
+
+	int ret = av_seek_frame(fileFormat, m_iVideoStreamIndex, videoPos, AVSEEK_FLAG_BACKWARD);
+	if (0 != ret)
+	{
+		LOG_ERROR("seek video error:{}", ret);
+	}
+	avcodec_flush_buffers(videoCodecContext);
+	avcodec_flush_buffers(audioCodecContext);
+
+	//移动之后看一下实际上移动到了那个位置，然后再seek一下
+	AVPacket* packet = av_packet_alloc(); // 分配一个数据包
+
+	while (true)
+	{
+		if (av_read_frame(fileFormat, packet) >= 0)
+		{
+			if (packet->stream_index == m_iAudioStreamIndex)
+			{
+				continue;
+			}
+			else if (packet->stream_index == m_iVideoStreamIndex)
+			{													 // 视频包需要解码
+				//获取这一帧的时间戳，
+				double pts = packet->pts * av_q2d(fileFormat->streams[m_iVideoStreamIndex]->time_base);
+				m_dSeekTime = pts;
+				//根据此时间戳，seek到这个时间戳
+				auto midva = av_q2d(fileFormat->streams[m_iVideoStreamIndex]->time_base);
+				auto videoPos = pts / midva;
+				//根据实际的位置再seek一下
+				av_seek_frame(fileFormat, m_iVideoStreamIndex, videoPos, AVSEEK_FLAG_BACKWARD);
+				LOG_INFO("Try Seek Time:{},Really Seek Time Is:{}", m_dSeekTime.load(), videoPos);
+				avcodec_flush_buffers(videoCodecContext);
+				avcodec_flush_buffers(audioCodecContext);
+				break;
+			}
+		}
+	}
+	
+	m_ptrVideoReader->resume();
+	m_ptrQueNeedDecodedPacket->resume();
+	for (auto iter : m_vecQueNeedDecodedPacketPtr)
+	{
+		iter->resume();
+	}
+	m_bSeekState = false;
+	m_bPauseState = false;
+	m_PauseCV.notify_one();
+}
+
 void HardDecoder::decode()
 {
 	if (!m_bInitState)
@@ -225,14 +322,34 @@ void HardDecoder::decode()
 	}
 	while (true)
 	{
+		if (!m_bRunningState)
+		{
+			break;
+		}
+		{
+			std::unique_lock<std::mutex> lck(m_PauseMutex);
+			if (m_bPauseState)
+			{
+				m_PauseCV.wait(lck, [this]() {return !m_bRunningState || !m_bPauseState; });
+			}
+		}
+		if (m_ptrVideoReader->getFinishedState() && 0 == m_ptrQueNeedDecodedPacket->getSize())
+		{
+			if (!m_bDecoderedFinished)
+			{
+				m_bDecoderedFinished = true;
+				if (m_finishedCallback)
+				{
+					m_finishedCallback();
+				}
+			}
+			std::this_thread::sleep_for(std::chrono::milliseconds(100));
+			continue;
+		}
 		std::shared_ptr<PacketWaitDecoded> packet = nullptr;
 		if (m_ptrQueNeedDecodedPacket)
 		{
 			m_ptrQueNeedDecodedPacket->getPacket(packet);
-		}
-		if (!m_bRunningState)
-		{
-			break;
 		}
 		if (packet)
 		{
@@ -259,7 +376,7 @@ void HardDecoder::decode()
 		LOG_INFO("Decoder End");
 	}
 }
-static int cnt = 0;
+
 void HardDecoder::decodeVideo(std::shared_ptr<PacketWaitDecoded> packet)
 {
 	AVFrame* frame = av_frame_alloc();
@@ -271,11 +388,12 @@ void HardDecoder::decodeVideo(std::shared_ptr<PacketWaitDecoded> packet)
 	}
 	if (avcodec_send_packet(videoCodecContext, packet->packet) == 0)
 	{
-		auto decode_start = std::chrono::steady_clock::now();
 		int ret = avcodec_receive_frame(videoCodecContext, frame);
-		auto decode_end = std::chrono::steady_clock::now();
-
-		while (ret == 0)
+		if (ret < 0)
+		{
+			LOG_ERROR("avcodec_receive_frame error");
+		}
+		while (ret >= 0)
 		{
 			double pts = frame->pts * m_dFrameDuration;
 			std::shared_ptr<VideoCallbackInfo> videoInfo = std::make_shared<VideoCallbackInfo>();
@@ -356,15 +474,15 @@ void HardDecoder::decodeVideo(std::shared_ptr<PacketWaitDecoded> packet)
 			for (auto& it : m_vecQueNeedDecodedPacketPtr)
 			{
 				it->addPacket(videoInfo);
-				cnt++;
-				LOG_INFO("Total Decode Video Frame Cnt:{}", cnt);
 			}
-			decode_start = std::chrono::steady_clock::now();
 			ret = avcodec_receive_frame(videoCodecContext, frame);
-			decode_end = std::chrono::steady_clock::now();
 		}
-		av_frame_free(&frame);
 	}
+	else
+	{
+		LOG_ERROR("video avcodec_send_packet error");
+	}
+	av_frame_free(&frame);
 }
 
 void HardDecoder::decodeAudio(std::shared_ptr<PacketWaitDecoded> packet)

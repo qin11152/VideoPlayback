@@ -351,7 +351,7 @@ void VideoPlayback::onSignalSliderValueChanged(double vlaue)
 	disconnect(ui.videoTImeSlider, &MySlider::signalSliderValueChanged, this, &VideoPlayback::onSignalSliderValueChanged);
 	m_bSliderEnableConnect = false;
 	double time = vlaue * ((ui.videoTImeSlider->maximum() - ui.videoTImeSlider->minimum()) + ui.videoTImeSlider->minimum()) / 100.0;
-	//m_ptrVideoDecoder->seekTo(time);
+	m_ptrVideoDecoder->seekTo(time);
 	QTimer::singleShot(100, this, [=]()
 		{
 			m_bSliderEnableConnect = true;
@@ -490,14 +490,14 @@ bool VideoPlayback::initAllModule()
 		videoAfterDecodedQueue->initModule();
 		ptrPcmBuffer->initBuffer(1024 * 10);
 
+		m_ptrVideoReader = std::make_shared<VideoReader>();
 		if (AV_HWDEVICE_TYPE_NONE == m_eDeviceType)
 		{
 		}
 		else
 		{
-			m_ptrVideoDecoder = std::make_shared< HardDecoder>();
+			m_ptrVideoDecoder = std::make_shared< HardDecoder>(m_ptrVideoReader);
 		}
-		m_ptrVideoReader = std::make_shared<VideoReader>();
 		m_ptrPreviewAndPlay = std::make_shared<PreviewAndPlay>();
 
 		VideoReaderInitedInfo videoInitedInfo;
@@ -516,11 +516,13 @@ bool VideoPlayback::initAllModule()
 		m_ptrVideoDecoder->addPacketQueue(videoAfterDecodedQueue);
 		m_ptrVideoDecoder->addPCMBuffer(ptrPcmBuffer);
 		m_ptrVideoDecoder->initModule(decoderInitedInfo, dataHandlerInfo);
+		m_ptrVideoDecoder->registerFinishedCallback(std::bind(&VideoPlayback::onDecoderFinshed, this));
 
 		m_ptrPreviewAndPlay->setVideoQueue(videoAfterDecodedQueue);
 		m_ptrPreviewAndPlay->setAudioQueue(ptrPcmBuffer);
 		m_ptrPreviewAndPlay->setCallback(std::bind(&VideoPlayback::previewCallback, this, std::placeholders::_1));
 		m_ptrPreviewAndPlay->setCallback(std::bind(&VideoPlayback::audioPlayCallBack, this, std::placeholders::_1));
+		m_ptrPreviewAndPlay->setFinishedCallback(std::bind(&VideoPlayback::onConsumeFinished, this));
 		m_ptrPreviewAndPlay->initModule(dataHandlerInfo);
 	}
 	return true;
@@ -530,17 +532,17 @@ bool VideoPlayback::uninitAllModule()
 {
 	if (m_ptrVideoReader)
 	{
-		m_ptrVideoReader->uninitModule();
+		//m_ptrVideoReader->uninitModule();
 		m_ptrVideoReader = nullptr;
 	}
 	if (m_ptrVideoDecoder)
 	{
-		m_ptrVideoDecoder->uninitModule();
+		//m_ptrVideoDecoder->uninitModule();
 		m_ptrVideoDecoder = nullptr;
 	}
 	if (m_ptrPreviewAndPlay)
 	{
-		m_ptrPreviewAndPlay->uninitModule();
+		//m_ptrPreviewAndPlay->uninitModule();
 		m_ptrPreviewAndPlay = nullptr;
 	}
 	return 0;
@@ -584,6 +586,21 @@ void VideoPlayback::setTimeSliderRange(int64_t totalTime)
 {
 	ui.videoTImeSlider->setRange(0, totalTime);
 }
+
+void VideoPlayback::onDecoderFinshed()
+{
+	m_ptrPreviewAndPlay->setDecoderFinshedState(true);
+}
+
+void VideoPlayback::onConsumeFinished()
+{
+	std::thread t1([this]() {
+		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+		uninitAllModule();
+		});
+	t1.detach();
+}
+
 #if defined(BlackMagicEnabled)
 void VideoPlayback::initSDIOutput()
 {

@@ -7,7 +7,7 @@ VideoReader::VideoReader()
 
 VideoReader::~VideoReader()
 {
-
+	uninitModule();
 }
 
 int32_t VideoReader::initModule(const VideoReaderInitedInfo& info, DecoderInitedInfo& decoderInfo)
@@ -75,6 +75,9 @@ int32_t VideoReader::uninitModule()
 	}
 	m_bInitState = false;
 	m_bRunningState = false;
+	m_bPauseState = false;
+	m_PauseCV.notify_all();
+	m_ReadFinishedCV.notify_all();
 	if (m_ptrQueNeedDecodedPacket)
 	{
 		m_ptrQueNeedDecodedPacket->uninitModule();
@@ -85,6 +88,21 @@ int32_t VideoReader::uninitModule()
 	}
 	m_ptrQueNeedDecodedPacket = nullptr;
 	return (int32_t)ErrorCode::NoError;
+}
+
+int32_t VideoReader::pause()
+{
+	std::unique_lock<std::mutex> lck(m_PauseMutex);
+	m_bPauseState = true;
+	return 0;
+}
+
+int32_t VideoReader::resume()
+{
+	std::unique_lock<std::mutex> lck(m_PauseMutex);
+	m_bPauseState = false;
+	m_PauseCV.notify_one();
+	return 0;
 }
 
 void VideoReader::readFrameFromFile()
@@ -100,6 +118,13 @@ void VideoReader::readFrameFromFile()
 		if (!m_bRunningState)
 		{
 			break;
+		}
+		{
+			std::unique_lock<std::mutex> lck(m_PauseMutex);
+			if (m_bPauseState)
+			{
+				m_PauseCV.wait(lck, [this]() {return !m_bPauseState || !m_bRunningState; });
+			}
 		}
 		if (av_read_frame(formatContext, packet) >= 0)
 		{
@@ -125,8 +150,10 @@ void VideoReader::readFrameFromFile()
 		{
 			// 现在读取到文件末尾就退出
 			av_packet_unref(packet);
-			break;
-			// todo，如果需要循环播放，可以在这里seek到文件开头
+			m_bReadFinished = true;
+			std::unique_lock <std::mutex> lck(m_ReadFinishedMutex);
+			int ret = av_seek_frame(formatContext, videoStreamIndex, 0, AVSEEK_FLAG_BACKWARD);
+			m_ReadFinishedCV.wait(lck, [this] {return !m_bReadFinished || !m_bRunningState; });
 		}
 		LOG_INFO("Read End");
 	}

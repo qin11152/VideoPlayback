@@ -23,6 +23,8 @@ public:
 
 	bool getBuffer(uint8_t* buffer, uint32_t size);
 
+	bool clearBuffer();
+
 private:
 	bool m_bInited{ false };
 	std::mutex m_mutex;

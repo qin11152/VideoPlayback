@@ -2,12 +2,13 @@
 
 #include "CommonDef.h"
 #include "module/MyContainer/Buffer.h"
+#include "module/VideoReader/VideoReader.h"
 #include "module/VideoDecoder/VideoDecoderBase.h"
 
 class HardDecoder : public VideoDecoderBase
 {
 public:
-	HardDecoder();
+	HardDecoder(std::shared_ptr<VideoReader> ptrVideoReader);
 	~HardDecoder();
 
 	//************************************
@@ -55,6 +56,10 @@ public:
 	//************************************
 	int32_t addPacketQueue(std::shared_ptr<MyPacketQueue<std::shared_ptr<VideoCallbackInfo>>> ptrPacketQueue);
 
+	int32_t seekTo(double_t seekTime)override;
+
+	void registerFinishedCallback(DecoderFinishedCallback callback)override;
+
 private:
 	//************************************
 	// Method:    decode
@@ -97,6 +102,11 @@ private:
 	int32_t initVideoDecoder(const DecoderInitedInfo& info);
 	int32_t initAudioDecoder(const DecoderInitedInfo& info);
 
+	void seekOperate();
+
+	std::shared_ptr<VideoReader> m_ptrVideoReader{ nullptr };
+	AVFormatContext* fileFormat{ nullptr };
+
 	AVBufferRef* m_ptrHWDeviceCtx;
 	enum AVPixelFormat m_hwPixFormat;
 	AVCodecContext* videoCodecContext{ nullptr };
@@ -109,6 +119,15 @@ private:
 
 	bool m_bInitState{ false };
 	bool m_bRunningState{ false };
+
+	bool m_bPauseState = false;
+	std::mutex m_PauseMutex;
+	std::condition_variable m_PauseCV;
+
+	bool m_bDecoderedFinished{ false };
+
+	std::atomic<bool> m_bSeekState{ false };
+	std::atomic<double_t> m_dSeekTime{ 0 };
 
 	AudioInfo m_stuAudioInfo;
 	VideoInfo m_stuVideoInfo;

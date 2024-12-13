@@ -51,6 +51,10 @@ public:
 
 	uint32_t getSize();
 
+	int32_t clearQueue();
+
+	int32_t resume();
+
 private:
 	bool m_bRunningState{ false }; // 运行状态
 	uint32_t m_uiMaxQueueSize{ 0 };       // 队列最大长度
@@ -59,6 +63,25 @@ private:
 	std::condition_variable m_packetCV;     // 条件变量
 	std::queue<T> m_packetQueue;            // 队列，存储模板类型的数据
 };
+
+template <typename T>
+int32_t MyPacketQueue<T>::resume()
+{
+	std::unique_lock<std::mutex> lock(m_mutex);
+	m_packetCV.notify_one();
+	return 0;
+}
+
+template <typename T>
+int32_t MyPacketQueue<T>::clearQueue()
+{
+	std::unique_lock<std::mutex> lock(m_mutex);
+	while (!m_packetQueue.empty())
+	{
+		m_packetQueue.pop();
+	}
+	return 0;
+}
 
 template <typename T>
 uint32_t MyPacketQueue<T>::getSize()

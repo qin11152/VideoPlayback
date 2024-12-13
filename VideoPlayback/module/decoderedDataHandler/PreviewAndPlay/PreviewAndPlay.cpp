@@ -72,6 +72,11 @@ void PreviewAndPlay::resume()
 	m_PauseCV.notify_one();
 }
 
+void PreviewAndPlay::setFinishedCallback(YuvFinishedCallback callback)
+{
+	m_FinishedCallback = callback;
+}
+
 int32_t PreviewAndPlay::setVideoQueue(std::shared_ptr <MyPacketQueue<std::shared_ptr<VideoCallbackInfo>>> ptrQueueDecodedVideo)
 {
 	m_ptrQueueDecodedVideo = ptrQueueDecodedVideo;
@@ -82,6 +87,11 @@ int32_t PreviewAndPlay::setAudioQueue(std::shared_ptr<Buffer> ptrPcmBuffer)
 {
 	m_ptrPcmBuffer = ptrPcmBuffer;
 	return 0;
+}
+
+void PreviewAndPlay::setDecoderFinshedState(bool state)
+{
+	m_bDecoderFinished = state;
 }
 
 std::shared_ptr<YuvDataHandler> PreviewAndPlay::getYuvDataHandler()
@@ -124,6 +134,15 @@ void PreviewAndPlay::handler()
 		{
 			break;
 		}
+
+		if (m_bDecoderFinished)
+		{
+			if (m_FinishedCallback)
+			{
+				m_FinishedCallback();
+			}
+		}
+
 		std::shared_ptr<VideoCallbackInfo> videoInfo = nullptr;
 		std::shared_ptr<AudioCallbackInfo> audioInfo = std::make_shared<AudioCallbackInfo>();
 
