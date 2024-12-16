@@ -51,6 +51,7 @@ int32_t VideoReader::initModule(const VideoReaderInitedInfo& info, DecoderInited
 				decoderInfo.atomVideoCodec = const_cast<AVCodec*>(codec);
 				decoderInfo.atomVideoCodecParameters = codecParameters;
 			}
+			decoderInfo.iVideoIndex = videoStreamIndex;
 		}
 		else if (codecParameters->codec_type == AVMEDIA_TYPE_AUDIO && audioStreamIndex == -1)
 		{
@@ -69,7 +70,6 @@ int32_t VideoReader::initModule(const VideoReaderInitedInfo& info, DecoderInited
 	}
 	decoderInfo.outAudioInfo = info.outAudioInfo;
 	decoderInfo.outVideoInfo = info.outVideoInfo;
-	decoderInfo.iVideoIndex = videoStreamIndex;
 	decoderInfo.iAudioIndex = audioStreamIndex;
 	decoderInfo.m_bAtom = info.m_bAtom;
 	decoderInfo.m_eDeviceType = info.m_eDeviceType;

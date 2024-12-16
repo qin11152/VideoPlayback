@@ -9,10 +9,11 @@
 #include "module/VideoDecoder/VideoDecoderBase.h"
 #include "module/decoderedDataHandler/PcmDatahandler.h"
 #include "module/decoderedDataHandler/YuvDataHandler.h"
+#include "module/decoderedDataHandler/PreviewAndPlay/AtomPreviewAndPlay.h"
 
 #if defined(BlackMagicEnabled)
     #include "module/BlackMagic/DeckLinkDeviceDiscovery/DeckLinkDeviceDiscovery.h"
-#endif(BlackMagicEnabled)
+#endif (BlackMagicEnabled)
 
 #include <map>
 #include <mutex>
@@ -29,13 +30,31 @@ public:
 
     bool initModule();
 
+    //************************************
+    // Method:    previewCallback
+    // FullName:  VideoPlayback::previewCallback
+    // Access:    public 
+    // Returns:   void
+    // Qualifier:
+	// brief: 视频的回调，进行视频播放
+    // Parameter: std::shared_ptr<VideoCallbackInfo> videoInfo
+    //************************************
     void previewCallback(std::shared_ptr<VideoCallbackInfo> videoInfo);
 
-    void audioCallback(std::vector<Buffer*> audioBuffer);
+    //************************************
+    // Method:    audioPlayCallBack
+    // FullName:  VideoPlayback::audioPlayCallBack
+    // Access:    public 
+    // Returns:   void
+    // Qualifier:
+    // brief: 音频的回调，进行音频播放
+    // Parameter: std::shared_ptr<AudioCallbackInfo> audioInfo
+    //************************************
+    void audioPlayCallBack(std::shared_ptr<AudioCallbackInfo> audioInfo);
 
     void SDIOutputCallback(const VideoCallbackInfo& videoInfo);
 
-    void audioPlayCallBack(std::shared_ptr<AudioCallbackInfo> audioInfo);
+    void atomAudioCallback(std::shared_ptr<AudioCallbackInfo> audioInfo);
 
 signals:
     void signalYUVData(QByteArray data, const VideoInfo& videoInfo);
@@ -53,8 +72,8 @@ protected:
 private:
     bool initConnect();
     bool initAudioOutput();
-    bool initAllModule();
-    bool uninitAllModule();
+    bool initAllSubModule();
+    bool uninitAllSubModule();
 
     void updateTimeLabel(const int currentTime, const int totalTime);
 	void updateTimeSliderPosition(int64_t currentTime);
@@ -70,8 +89,10 @@ private:
     AudioInfo m_stuAudioInfo;
 
     std::shared_ptr<VideoReader> m_ptrVideoReader{ nullptr };
+    std::vector<std::shared_ptr<VideoReader>> m_vecVideoReader;
 	std::shared_ptr<VideoDecoderBase> m_ptrVideoDecoder{ nullptr };
 	std::shared_ptr<PreviewAndPlay> m_ptrPreviewAndPlay{ nullptr };
+	std::shared_ptr<AtomPreviewAndPlay> m_ptrAtomPreviewAndPlay{ nullptr };
 
     AudioPlay* m_ptrAudioPlay{ nullptr };
     QString m_strChooseFileName{ "" };
@@ -101,7 +122,7 @@ private:
 	    CComQIPtr<IDeckLinkOutput> m_ptrSelectedDeckLinkOutput{ nullptr };
     #elif defined(__linux__)
 	    IDeckLinkOutput* m_ptrSelectedDeckLinkOutput{ nullptr };
-    #endif(WIN32)
+    #endif (WIN32)
 
-#endif(BlackMagicEnabled)
+#endif BlackMagicEnabled
 };

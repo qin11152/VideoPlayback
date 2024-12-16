@@ -33,17 +33,25 @@ int32_t AtomDecoder::initModule(const DecoderInitedInfo& info, DataHandlerInited
 	{
 		return - 1;
 	}
+	if (-1 != info.iVideoIndex)
+	{
+		AVRational frameRate = info.atomVideoFormatContext->streams[m_iVideoStreamIndex]->avg_frame_rate;
+		auto fps = av_q2d(frameRate);
+		m_uiReadThreadSleepTime = (kmilliSecondsPerSecond / fps);
+		m_uiPerFrameSampleCnt = m_stuAudioInfo.audioSampleRate / fps;
+		m_dFrameDuration = av_q2d(info.atomVideoFormatContext->streams[m_iVideoStreamIndex]->time_base);
 
-	AVRational frameRate = info.atomVideoFormatContext->streams[m_iVideoStreamIndex]->avg_frame_rate;
-	auto fps = av_q2d(frameRate);
-	m_uiReadThreadSleepTime = (kmilliSecondsPerSecond / fps);
-	m_uiPerFrameSampleCnt = m_stuAudioInfo.audioSampleRate / fps;
-	m_dFrameDuration = av_q2d(info.atomVideoFormatContext->streams[m_iVideoStreamIndex]->time_base);
-
-	dataHandlerInfo.uiNeedSleepTime = m_uiReadThreadSleepTime;
-	dataHandlerInfo.uiPerFrameSampleCnt = m_uiPerFrameSampleCnt;
+		dataHandlerInfo.uiNeedSleepTime = m_uiReadThreadSleepTime;
+		dataHandlerInfo.uiPerFrameSampleCnt = m_uiPerFrameSampleCnt;
+	}
 
 	m_ptrQueNeedDecodedVideoPacket = info.ptrAtomVideoPacketQueue;
+
+	m_bInitState = true;
+	m_bRunningState = true;
+
+	m_VideoDecodeThread = std::thread(&AtomDecoder::readVideoPacket, this);
+	m_AudioDecodeThread = std::thread(&AtomDecoder::readAudioPacket, this);
 
 	return (int32_t)ErrorCode::NoError;
 }

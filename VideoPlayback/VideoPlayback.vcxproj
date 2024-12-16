@@ -122,6 +122,7 @@
     <ClCompile Include="module\AudioPlay\AudioPlay.cpp" />
     <ClCompile Include="module\BlackMagic\DeckLinkDeviceDiscovery\DeckLinkDeviceDiscovery.cpp" />
     <ClCompile Include="module\decoderedDataHandler\PcmDatahandler.cpp" />
+    <ClCompile Include="module\decoderedDataHandler\PreviewAndPlay\AtomPreviewAndPlay.cpp" />
     <ClCompile Include="module\decoderedDataHandler\PreviewAndPlay\PreviewAndPlay.cpp" />
     <ClCompile Include="module\decoderedDataHandler\YuvDataHandler.cpp" />
     <ClCompile Include="module\LogModule\Log.cpp" />
@@ -142,6 +143,7 @@
     <ClCompile Include="ui\OpenGLPreviewWidget\OpenGLPreviewWidget.cpp" />
     <ClCompile Include="ui\VideoPlayback.cpp" />
     <ClCompile Include="unitest\AtomDeocderTest.cpp" />
+    <ClCompile Include="unitest\AtomPreviewAndPlayTest.cpp" />
     <ClCompile Include="unitest\AudioPlayTest.cpp" />
     <ClCompile Include="unitest\HardDecoderTest.cpp" />
     <ClCompile Include="unitest\PreviewAndPlayTest.cpp" />
@@ -161,6 +163,7 @@
   <ItemGroup>
     <ClInclude Include="CommonDef.h" />
     <ClInclude Include="module\decoderedDataHandler\PcmDatahandler.h" />
+    <ClInclude Include="module\decoderedDataHandler\PreviewAndPlay\AtomPreviewAndPlay.h" />
     <ClInclude Include="module\decoderedDataHandler\PreviewAndPlay\PreviewAndPlay.h" />
     <ClInclude Include="module\decoderedDataHandler\YuvDataHandler.h" />
     <ClInclude Include="module\MXF++\avid_mxf_info.h" />

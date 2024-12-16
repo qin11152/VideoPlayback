@@ -173,12 +173,21 @@ struct AudioCallbackInfo
 {
 	uint32_t m_ulPCMLength{ 0 };
 	uint8_t* m_pPCMData{ nullptr };
+	std::vector<uint8_t*> m_vecPcmData;
+	bool m_bAtom{ false };
 	~AudioCallbackInfo()
 	{
 		if (m_pPCMData)
 		{
 			delete[]m_pPCMData;
 			m_pPCMData = nullptr;
+		}
+		for (auto& item : m_vecPcmData)
+		{
+			if (item)
+			{
+				delete[]item;
+			}
 		}
 	}
 };

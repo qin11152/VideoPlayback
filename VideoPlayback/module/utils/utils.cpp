@@ -9,8 +9,10 @@ namespace utils
 		std::set<AVHWDeviceType> setSupportType;
 		std::vector<AVHWDeviceType> vecWanted
 		{ 
-			AV_HWDEVICE_TYPE_CUDA,
-			AV_HWDEVICE_TYPE_QSV,
+			AV_HWDEVICE_TYPE_CUDA,	//cuda
+			AV_HWDEVICE_TYPE_QSV,	//intel
+			AV_HWDEVICE_TYPE_VIDEOTOOLBOX,	//mac
+			AV_HWDEVICE_TYPE_VAAPI,	//intel or amd 
 			AV_HWDEVICE_TYPE_D3D11VA
 		};
 		enum AVHWDeviceType type = AV_HWDEVICE_TYPE_NONE;

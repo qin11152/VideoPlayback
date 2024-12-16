@@ -196,4 +196,4 @@ ULONG DeckLinkDeviceDiscovery::Release(void)
 	return newRefValue;
 }
 
-#endif(BlackMagicEnabled)
+#endif BlackMagicEnabled

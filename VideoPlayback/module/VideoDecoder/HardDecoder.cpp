@@ -455,7 +455,7 @@ void HardDecoder::decode()
 				auto start = std::chrono::steady_clock::now();
 				decodeVideo(packet);
 				auto end = std::chrono::steady_clock::now();
-				//printf("decoder time:%lld\n", std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
+				printf("decoder time:%lld\n", std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
 				break;
 			}
 			case PacketType::Audio:
