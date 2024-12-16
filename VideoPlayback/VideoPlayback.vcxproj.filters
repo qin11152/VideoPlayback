@@ -42,9 +42,6 @@
     <Filter Include="module\BlackMagic\DeckLinkDeviceDiscovery">
       <UniqueIdentifier>{bced9f6c-bafa-42bc-8058-4827c5309a8b}</UniqueIdentifier>
     </Filter>
-    <Filter Include="module\AtomDecoder">
-      <UniqueIdentifier>{dcc1010f-7eb8-4f5e-be4c-cf82aeed186c}</UniqueIdentifier>
-    </Filter>
     <Filter Include="ui\MyTipDialog">
       <UniqueIdentifier>{380ae465-c2a6-4a1b-be1d-8f23c6154b0e}</UniqueIdentifier>
     </Filter>
@@ -65,6 +62,9 @@
     </Filter>
     <Filter Include="module\decoderedDataHandler\PreviewAndPlay">
       <UniqueIdentifier>{4aa0adf4-4a5b-42c5-a2d9-7180199a47d4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="module\MXF++">
+      <UniqueIdentifier>{dcc1010f-7eb8-4f5e-be4c-cf82aeed186c}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -118,12 +118,6 @@
     <ClCompile Include="stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="module\AtomDecoder\AtomDecoder.cpp">
-      <Filter>module\AtomDecoder</Filter>
-    </ClCompile>
-    <ClCompile Include="module\AtomDecoder\avid_mxf_info.c">
-      <Filter>module\AtomDecoder</Filter>
-    </ClCompile>
     <ClCompile Include="ui\MyTipDialog\MyTipDialog.cpp">
       <Filter>ui\MyTipDialog</Filter>
     </ClCompile>
@@ -165,6 +159,21 @@
     </ClCompile>
     <ClCompile Include="unitest\PreviewAndPlayTest.cpp">
       <Filter>unitest</Filter>
+    </ClCompile>
+    <ClCompile Include="unitest\AtomDeocderTest.cpp">
+      <Filter>unitest</Filter>
+    </ClCompile>
+    <ClCompile Include="unitest\AtomPreviewAndPlayTest.cpp">
+      <Filter>unitest</Filter>
+    </ClCompile>
+    <ClCompile Include="module\MXF++\avid_mxf_info.c">
+      <Filter>module\MXF++</Filter>
+    </ClCompile>
+    <ClCompile Include="module\VideoDecoder\AtomDecoder.cpp">
+      <Filter>module\VideoDecoder</Filter>
+    </ClCompile>
+    <ClCompile Include="module\decoderedDataHandler\PreviewAndPlay\AtomPreviewAndPlay.cpp">
+      <Filter>module\decoderedDataHandler\PreviewAndPlay</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -208,12 +217,6 @@
     <ClInclude Include="stdafx.h">
       <Filter>Source Files</Filter>
     </ClInclude>
-    <ClInclude Include="module\AtomDecoder\AtomDecoder.h">
-      <Filter>module\AtomDecoder</Filter>
-    </ClInclude>
-    <ClInclude Include="module\AtomDecoder\avid_mxf_info.h">
-      <Filter>module\AtomDecoder</Filter>
-    </ClInclude>
     <ClInclude Include="module\ThreadPool\ThreadPool.h">
       <Filter>module\ThreadPool</Filter>
     </ClInclude>
@@ -242,6 +245,15 @@
       <Filter>module\decoderedDataHandler</Filter>
     </ClInclude>
     <ClInclude Include="module\decoderedDataHandler\PreviewAndPlay\PreviewAndPlay.h">
+      <Filter>module\decoderedDataHandler\PreviewAndPlay</Filter>
+    </ClInclude>
+    <ClInclude Include="module\MXF++\avid_mxf_info.h">
+      <Filter>module\MXF++</Filter>
+    </ClInclude>
+    <ClInclude Include="module\VideoDecoder\AtomDecoder.h">
+      <Filter>module\VideoDecoder</Filter>
+    </ClInclude>
+    <ClInclude Include="module\decoderedDataHandler\PreviewAndPlay\AtomPreviewAndPlay.h">
       <Filter>module\decoderedDataHandler\PreviewAndPlay</Filter>
     </ClInclude>
   </ItemGroup>
