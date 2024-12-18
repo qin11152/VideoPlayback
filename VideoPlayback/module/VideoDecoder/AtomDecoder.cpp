@@ -250,6 +250,11 @@ int32_t AtomDecoder::initAudioDecoder(const DecoderInitedInfo& info)
 
 }
 
+void AtomDecoder::seekOperate()
+{
+
+}
+
 void AtomDecoder::readVideoPacket()
 {
 	if (!m_bInitState)
