@@ -623,7 +623,6 @@ bool VideoPlayback::uninitAllSubModule()
 		//m_ptrAtomPreviewAndPlay->uninitModule();
 		m_ptrAtomPreviewAndPlay = nullptr;
 	}
-	clearAudioDevice();
 	return 0;
 }
 

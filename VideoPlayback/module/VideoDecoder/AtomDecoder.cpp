@@ -153,6 +153,22 @@ int32_t AtomDecoder::addAtomAudioPacketQueue(std::shared_ptr<std::vector<std::sh
 
 int32_t AtomDecoder::seekTo(double_t seekTime)
 {
+	if (m_bSeekState)
+	{
+		return -1;
+	}
+	//未初始化的时候不处理
+	if (!m_bInitState)
+	{
+		return -2;
+	}
+	if (seekTime < 0 || seekTime > formatContext->duration)
+	{
+		return -3;
+	}
+	m_dSeekTime = seekTime;
+	m_bSeekState = true;
+	ThreadPool::get_mutable_instance().submit(std::bind(&AtomDecoder::seekOperate, this));
 	return 0;
 }
 
@@ -252,6 +268,94 @@ int32_t AtomDecoder::initAudioDecoder(const DecoderInitedInfo& info)
 
 void AtomDecoder::seekOperate()
 {
+	for (auto& iter : m_vecVideoReader)
+	{
+		iter->pause();
+	}
+
+	m_bPauseState = true;
+
+	m_ptrQueNeedDecodedVideoPacket->clearQueue();
+	for (auto iter : m_vecQueueNeedDecodedAudioPacket)
+	{
+		iter->clearQueue();
+	}
+
+	for (auto iter : m_vecQueDecodedVideoPacket)
+	{
+		iter->clearQueue();
+	}
+	for (auto vec : m_vecPCMBuffer)
+	{
+		for (auto iter : *vec)
+		{
+			iter->clearBuffer();
+		}
+	}
+
+	//准备移动操作，计算要移动的位置
+	auto midva = av_q2d(formatContext->streams[m_iVideoStreamIndex]->time_base);
+	long long videoPos = m_dSeekTime / midva;
+
+	int ret = av_seek_frame(formatContext, m_iVideoStreamIndex, videoPos, AVSEEK_FLAG_BACKWARD);
+	if (0 != ret)
+	{
+		LOG_ERROR("seek video error:{}", ret);
+	}
+	avcodec_flush_buffers(videoCodecContext);
+	for (auto iter : m_vecAudioCodecContext)
+	{
+		avcodec_flush_buffers(iter.first);
+	}
+
+	//移动之后看一下实际上移动到了那个位置，然后再seek一下
+	AVPacket* packet = av_packet_alloc(); // 分配一个数据包
+
+	while (true)
+	{
+		if (av_read_frame(formatContext, packet) >= 0)
+		{
+			if (packet->stream_index == m_iVideoStreamIndex)
+			{													 // 视频包需要解码
+				//获取这一帧的时间戳，
+				double pts = packet->pts * av_q2d(formatContext->streams[m_iVideoStreamIndex]->time_base);
+				m_dSeekTime = pts;
+				//根据此时间戳，seek到这个时间戳
+				auto midva = av_q2d(formatContext->streams[m_iVideoStreamIndex]->time_base);
+				auto videoPos = pts / midva;
+				//根据实际的位置再seek一下
+				av_seek_frame(formatContext, m_iVideoStreamIndex, videoPos, AVSEEK_FLAG_BACKWARD);
+				LOG_INFO("Try Seek Time:{},Really Seek Time Is:{}", m_dSeekTime.load(), videoPos);
+				for (int i=0;i<m_vecAudioCodecContext.size();++i)
+				{
+					av_seek_frame(m_vecAudioFormatContext[i], m_vecAudioCodecContext[i].second, videoPos, AVSEEK_FLAG_BACKWARD);
+				}
+				avcodec_flush_buffers(videoCodecContext);
+				for (auto iter : m_vecAudioCodecContext)
+				{
+					avcodec_flush_buffers(iter.first);
+				}
+				break;
+			}
+		}
+	}
+
+	for (auto& iter : m_vecVideoReader)
+	{
+		iter->resume();
+	}
+	m_ptrQueNeedDecodedVideoPacket->resume();
+	for (auto iter : m_vecQueDecodedVideoPacket)
+	{
+		iter->resume();
+	}
+	for (auto iter : m_vecQueueNeedDecodedAudioPacket)
+	{
+		iter->resume();
+	}
+	m_bSeekState = false;
+	m_bPauseState = false;
+	m_PauseCV.notify_all();
 
 }
 
