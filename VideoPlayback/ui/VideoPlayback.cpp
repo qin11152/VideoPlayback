@@ -6,7 +6,7 @@
 #include "module/utils/utils.h"
 
 #if defined(WIN32)
-	#include "module/MXF++/avid_mxf_info.h"
+#include "module/MXF++/avid_mxf_info.h"
 #endif
 
 #include <QTimer>
@@ -18,7 +18,7 @@
 #include <iomanip>
 
 #if defined(WIN32)
-std::string umidToString(const mxfUMID* umid) 
+std::string umidToString(const mxfUMID* umid)
 {
 	std::stringstream ss;
 	ss << std::hex << std::setfill('0');
@@ -32,7 +32,7 @@ std::string umidToString(const mxfUMID* umid)
 #endif
 
 #if defined(BlackMagicEnabled)
-	IDeckLinkMutableVideoFrame* kDecklinkOutputFrame = nullptr;
+IDeckLinkMutableVideoFrame* kDecklinkOutputFrame = nullptr;
 #endif (BlackMagicEnabled)
 
 //std::fstream fs("audio.pcm1", std::ios::out | std::ios::binary);
@@ -100,7 +100,7 @@ VideoPlayback::VideoPlayback(QWidget* parent)
 			}
 		});
 
-	connect(ui.atomRadioButton, &QRadioButton::clicked, this, [=]() 
+	connect(ui.atomRadioButton, &QRadioButton::clicked, this, [=]()
 		{
 			if (ui.atomRadioButton->isChecked())
 			{
@@ -464,6 +464,7 @@ bool VideoPlayback::initAllSubModule()
 	setTimeSliderRange(m_stuMediaInfo.duration);
 	updateTimeLabel(0, m_stuMediaInfo.duration);
 	initAudioOutput();
+	m_uiConsumeCallbackCnt = 0;
 	if (ui.atomRadioButton->isChecked())
 	{
 		auto videoWaitDecodedQueue = std::make_shared<MyPacketQueue<std::shared_ptr<PacketWaitDecoded>>>();
@@ -474,7 +475,7 @@ bool VideoPlayback::initAllSubModule()
 
 		videoWaitDecodedQueue->initModule();
 		videoAfterDecodedQueue->initModule();
-		
+
 		for (int i = 0; i < m_vecChooseNameAtom.size(); ++i)
 		{
 			auto tmpPcmBuffer = std::make_shared<Buffer>();
@@ -486,25 +487,22 @@ bool VideoPlayback::initAllSubModule()
 			vecAudioWaitedDecodedQueue.push_back(tmpAudioQueue);
 		}
 
-		std::vector<VideoReaderInitedInfo> vecVideoInitedInfo;
+		//std::vector<VideoReaderInitedInfo> vecVideoInitedInfo;
 		DecoderInitedInfo decoderInitedInfo;
 		DataHandlerInitedInfo dataHandlerInfo;
 
 		m_ptrAtomPreviewAndPlay = std::make_shared<AtomPreviewAndPlay>();
 
-		{
-			VideoReaderInitedInfo info;
-			info.m_bAtom = true;
-			info.m_eDeviceType = m_eDeviceType;
-			info.m_strFileName = m_strChooseFileName.toStdString();
-			info.outAudioInfo = m_stuAudioInfo;
-			info.outVideoInfo = m_stuVideoInfo;
-			info.ptrPacketQueue = videoWaitDecodedQueue;
-			auto tmp = std::make_shared<VideoReader>();
-			tmp->initModule(info, decoderInitedInfo);
-			m_vecVideoReader.push_back(tmp);
-			vecVideoInitedInfo.push_back(info);
-		}
+		VideoReaderInitedInfo info;
+		info.m_bAtom = true;
+		info.m_eDeviceType = m_eDeviceType;
+		info.m_strFileName = m_strChooseFileName.toStdString();
+		info.outAudioInfo = m_stuAudioInfo;
+		info.outVideoInfo = m_stuVideoInfo;
+		info.ptrPacketQueue = videoWaitDecodedQueue;
+		m_ptrVideoReader = std::make_shared<VideoReader>();
+		m_ptrVideoReader->initModule(info, decoderInitedInfo);
+		//vecVideoInitedInfo.push_back(info);
 
 		for (int i = 0; i < m_vecChooseNameAtom.size(); ++i)
 		{
@@ -518,7 +516,7 @@ bool VideoPlayback::initAllSubModule()
 			auto tmp = std::make_shared<VideoReader>();
 			tmp->initModule(info, decoderInitedInfo);
 			m_vecVideoReader.push_back(tmp);
-			vecVideoInitedInfo.push_back(info);
+			//vecVideoInitedInfo.push_back(info);
 		}
 
 		decoderInitedInfo.outAudioInfo = m_stuAudioInfo;
@@ -528,11 +526,12 @@ bool VideoPlayback::initAllSubModule()
 		decoderInitedInfo.m_eDeviceType = m_eDeviceType;
 		decoderInitedInfo.m_bAtom = true;
 
-		m_ptrVideoDecoder = std::make_shared<AtomDecoder>(m_vecVideoReader);
+		m_ptrVideoDecoder = std::make_shared<AtomDecoder>(m_ptrVideoReader, m_vecVideoReader);
 
 		m_ptrVideoDecoder->addAtomVideoPacketQueue(videoAfterDecodedQueue);
 		m_ptrVideoDecoder->addAtomAudioPacketQueue(vecPCMBuffer);
 		m_ptrVideoDecoder->initModule(decoderInitedInfo, dataHandlerInfo);
+		m_ptrVideoDecoder->registerFinishedCallback(std::bind(&VideoPlayback::onDecoderFinshed, this));
 
 		m_ptrAtomPreviewAndPlay->setVideoQueue(videoAfterDecodedQueue);
 		m_ptrAtomPreviewAndPlay->setAudioQueue(vecPCMBuffer);
@@ -540,13 +539,14 @@ bool VideoPlayback::initAllSubModule()
 		m_ptrAtomPreviewAndPlay->setCallback(std::bind(&VideoPlayback::atomAudioCallback, this, std::placeholders::_1));
 		m_ptrAtomPreviewAndPlay->setFinishedCallback(std::bind(&VideoPlayback::onConsumeFinished, this));
 		m_ptrAtomPreviewAndPlay->initModule(dataHandlerInfo);
+
+		m_uiConsumeCnt = 1;
 	}
 	else
 	{
 		auto videoWaitDecodedQueue = std::make_shared<MyPacketQueue<std::shared_ptr<PacketWaitDecoded>>>();
 		auto videoAfterDecodedQueue = std::make_shared<MyPacketQueue<std::shared_ptr<VideoCallbackInfo>>>();
 		auto ptrPcmBuffer = std::make_shared<Buffer>();
-
 
 		videoWaitDecodedQueue->initModule();
 		videoAfterDecodedQueue->initModule();
@@ -587,6 +587,8 @@ bool VideoPlayback::initAllSubModule()
 		m_ptrPreviewAndPlay->setCallback(std::bind(&VideoPlayback::audioPlayCallBack, this, std::placeholders::_1));
 		m_ptrPreviewAndPlay->setFinishedCallback(std::bind(&VideoPlayback::onConsumeFinished, this));
 		m_ptrPreviewAndPlay->initModule(dataHandlerInfo);
+
+		m_uiConsumeCnt = 1;
 	}
 	return true;
 }
@@ -667,16 +669,26 @@ void VideoPlayback::setTimeSliderRange(int64_t totalTime)
 
 void VideoPlayback::onDecoderFinshed()
 {
-	m_ptrPreviewAndPlay->setDecoderFinshedState(true);
+	if (m_ptrPreviewAndPlay)
+	{
+		m_ptrPreviewAndPlay->setDecoderFinshedState(true);
+	}
+	if (m_ptrAtomPreviewAndPlay)
+	{
+		m_ptrAtomPreviewAndPlay->setDecoderFinshedState(true);
+	}
 }
 
 void VideoPlayback::onConsumeFinished()
 {
-	std::thread t1([this]() {
-		std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-		uninitAllSubModule();
-		});
-	t1.detach();
+	if (++m_uiConsumeCallbackCnt == m_uiConsumeCnt)
+	{
+		std::thread t1([this]() {
+			std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+			uninitAllSubModule();
+			});
+		t1.detach();
+	}
 }
 
 void VideoPlayback::clearAudioDevice()
@@ -752,31 +764,31 @@ void VideoPlayback::initSDIOutput()
 }
 
 #if defined(WIN32)
-	void VideoPlayback::deviceDiscovered(CComPtr<IDeckLink>& deckLink)
+void VideoPlayback::deviceDiscovered(CComPtr<IDeckLink>& deckLink)
+{
+	CComBSTR deviceNameBSTR = nullptr;
+	HRESULT hr;
+
+	hr = deckLink->GetDisplayName(&deviceNameBSTR);
+	if (FAILED(hr))
 	{
-		CComBSTR deviceNameBSTR = nullptr;
-		HRESULT hr;
-
-		hr = deckLink->GetDisplayName(&deviceNameBSTR);
-		if (FAILED(hr))
-		{
-			// 处理错误
-			return;
-		}
-
-		std::wstring deviceNameWStr = utils::BSTRToWString(deviceNameBSTR.m_str);
-		std::string deviceNameStr = utils::WStringToString(deviceNameWStr);
-		QString deviceName = QString::fromStdString(deviceNameStr);
-
-		// bool bActive = isDeviceActive(deckLink);
-		MyDeckLinkDevice device;
-		device.deckLink = deckLink;
-		device.m_strDisplayName = deviceName;
-		device.m_bActive = true;
-		m_mapDeviceNameIndex[device.m_strDisplayName] = device;
-
-		ui.deckLinkComboBox->addItem(device.m_strDisplayName);
+		// 处理错误
+		return;
 	}
+
+	std::wstring deviceNameWStr = utils::BSTRToWString(deviceNameBSTR.m_str);
+	std::string deviceNameStr = utils::WStringToString(deviceNameWStr);
+	QString deviceName = QString::fromStdString(deviceNameStr);
+
+	// bool bActive = isDeviceActive(deckLink);
+	MyDeckLinkDevice device;
+	device.deckLink = deckLink;
+	device.m_strDisplayName = deviceName;
+	device.m_bActive = true;
+	m_mapDeviceNameIndex[device.m_strDisplayName] = device;
+
+	ui.deckLinkComboBox->addItem(device.m_strDisplayName);
+}
 #endif (WIN32)
 
 #endif (BlackMagicEnabled)

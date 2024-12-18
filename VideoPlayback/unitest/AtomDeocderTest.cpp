@@ -15,7 +15,7 @@ public:
 	}
 	virtual void SetUp()
 	{
-		m_ptrAtomDecoder = new AtomDecoder({});
+		m_ptrAtomDecoder = new AtomDecoder(nullptr, {});
 	}
 	virtual void TearDown()
 	{

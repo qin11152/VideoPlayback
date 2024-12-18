@@ -120,6 +120,9 @@ private:
 	QAudioOutput* m_ptrAudioOutput{ nullptr };
 	QIODevice* m_ptr_AudioDevice{ nullptr };
 
+    uint32_t m_uiConsumeCnt{ 0 };
+    uint32_t m_uiConsumeCallbackCnt{ 0 };
+
 //////// °å¿¨Ïà¹ØÄÚÈÝ
 private:
 #if defined(BlackMagicEnabled)

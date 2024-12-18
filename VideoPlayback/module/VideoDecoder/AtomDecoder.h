@@ -8,7 +8,7 @@ class MY_EXPORT AtomDecoder : public VideoDecoderBase
 {
 public:
 
-	AtomDecoder(std::vector<std::shared_ptr<VideoReader>> vecVideoReader);
+	AtomDecoder(std::shared_ptr<VideoReader>ptrVideoReader, std::vector<std::shared_ptr<VideoReader>> vecVideoReader);
 	~AtomDecoder();
 
 	//************************************
@@ -87,7 +87,8 @@ private:
 	std::thread m_VideoDecodeThread;
 	std::thread m_AudioDecodeThread;
 
-	std::vector< std::shared_ptr<VideoReader>> m_vecVideoReader;
+	std::shared_ptr<VideoReader> m_ptrVideoReader{ nullptr };	// ”∆µ
+	std::vector< std::shared_ptr<VideoReader>> m_vecVideoReader;		//“Ù∆µ
     AVFormatContext *formatContext{nullptr};
     AVCodecContext *videoCodecContext{nullptr};
 
@@ -106,6 +107,7 @@ private:
 	std::condition_variable m_PauseCV;
 
 	bool m_bDecoderedFinished{ false };
+	std::vector<bool> m_vecAudioFinishedState;
 
 	std::atomic<bool> m_bSeekState{ false };
 	std::atomic<double_t> m_dSeekTime{ 0 };
