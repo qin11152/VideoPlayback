@@ -4,8 +4,8 @@ name: CMake on multiple platforms
 
 on:
   schedule:
-    - cron: '0 0 */3 * *'  # 每两天的 UTC 时间凌晨 0 点运行
-
+    - cron: '0 0 */7 * *'  # 每两天的 UTC 时间凌晨 0 点运行
+  workflow_dispatch:       # 增加手动触发功能
 
 jobs:
   build:
