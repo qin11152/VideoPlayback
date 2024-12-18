@@ -765,8 +765,8 @@ void VideoPlayback::initSDIOutput()
 			return;
 		}
 
-		std::wstring deviceNameWStr = BSTRToWString(deviceNameBSTR.m_str);
-		std::string deviceNameStr = WStringToString(deviceNameWStr);
+		std::wstring deviceNameWStr = utils::BSTRToWString(deviceNameBSTR.m_str);
+		std::string deviceNameStr = utils::WStringToString(deviceNameWStr);
 		QString deviceName = QString::fromStdString(deviceNameStr);
 
 		// bool bActive = isDeviceActive(deckLink);

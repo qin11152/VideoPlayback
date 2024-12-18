@@ -12,15 +12,6 @@
 #include "targetver.h"
 #include <atlbase.h>
 
-#include <windows.h>
-#include <string>
-
-// 将BSTR转换为std::wstring
-std::wstring BSTRToWString(const BSTR bstr);
-
-// 将std::wstring转换为std::string
-std::string WStringToString(const std::wstring& wstr);
-
 #define _ATL_CSTRING_EXPLICIT_CONSTRUCTORS      // some CString constructors will be explicit
 
 #ifdef _UNICODE

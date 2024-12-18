@@ -10,4 +10,9 @@ namespace utils
 
 	MY_EXPORT void preciseSleep(std::chrono::microseconds duration);
 
+#if defined(WIN32)
+	MY_EXPORT std::wstring BSTRToWString(const BSTR bstr);
+	
+	MY_EXPORT std::string WStringToString(const std::wstring& wstr);
+#endif
 }

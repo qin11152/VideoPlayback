@@ -1,7 +1,5 @@
 #include "module/VideoDecoder/VideoDecoder.h"
 
-#include <QFileInfo>
-
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 

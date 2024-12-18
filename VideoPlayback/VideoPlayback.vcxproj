@@ -138,7 +138,10 @@
     <ClCompile Include="module\VideoDecoder\VideoDecoderBase.cpp" />
     <ClCompile Include="module\VideoInfo\VideoInfoAcqure.cpp" />
     <ClCompile Include="module\VideoReader\VideoReader.cpp" />
-    <ClCompile Include="stdafx.cpp" />
+    <ClCompile Include="stdafx.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="ui\MySlider\MySlider.cpp" />
     <ClCompile Include="ui\MyTipDialog\MyTipDialog.cpp" />
     <ClCompile Include="ui\OpenGLPreviewWidget\OpenGLPreviewWidget.cpp" />

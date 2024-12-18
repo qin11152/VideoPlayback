@@ -1,5 +1,8 @@
 #pragma once
 
+
+#pragma once
+
 #if defined(_WIN32) || defined(__CYGWIN__)
 	#ifdef MY_DLL_EXPORT
 		#define MY_EXPORT __declspec(dllexport)
