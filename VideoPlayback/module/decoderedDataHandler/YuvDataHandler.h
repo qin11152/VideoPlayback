@@ -2,7 +2,7 @@
 
 #include "CommonDef.h"
 
-class YuvDataHandler
+class MY_EXPORT YuvDataHandler
 {
 protected:
 	using YuvCallBack = std::function<void(std::shared_ptr<VideoCallbackInfo> videoInfo)>;

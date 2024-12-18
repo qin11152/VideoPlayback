@@ -6,29 +6,6 @@
 #include <thread>
 #include <condition_variable>
 
-//class VideoPacketQueue
-//{
-//public:
-//	VideoPacketQueue() = default;
-//	virtual ~VideoPacketQueue();
-//
-//	int32_t initModule();
-//
-//	int32_t uninitModule();
-//
-//	int32_t addPacket(std::pair<AVPacket*, PacketType> packet);
-//
-//	int32_t getPacket(std::pair<AVPacket*, PacketType>& packet);
-//
-//private:
-//	bool m_bRunningState{ false };
-//
-//	std::mutex m_mutex;
-//	std::condition_variable m_VideoPakcetCV;
-//	std::queue<std::pair<AVPacket*, PacketType>> m_packetQueue;
-//};
-
-
 template <typename T>
 class MyPacketQueue {
 public:

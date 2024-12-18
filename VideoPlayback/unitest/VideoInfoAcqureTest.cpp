@@ -40,15 +40,5 @@ TEST_F(VideoInfoAcqureTest, DISABLED_VideoInfoValid)
 
 TEST_F(VideoInfoAcqureTest, DISABLED_GetUiChooseFileInfo)
 {
-	MediaInfo mediaInfo;
-	VideoPlayback videoPlayback;
-	QString name = videoPlayback.onSignalChooseFileClicked();
-	EXPECT_EQ(VideoInfoAcqure::getInstance()->getVideoInfo(name.toStdString().c_str(), mediaInfo), (int32_t)ErrorCode::NoError);
-	EXPECT_EQ(mediaInfo.width, 1920);
-	EXPECT_EQ(mediaInfo.height, 1080);
-	EXPECT_EQ(mediaInfo.fps, 25.0);
-	EXPECT_EQ(mediaInfo.audioChannels, 8);
-	EXPECT_EQ(mediaInfo.audioSampleRate, 48000);
-	EXPECT_EQ(mediaInfo.bitDepth, 16);
 }
 

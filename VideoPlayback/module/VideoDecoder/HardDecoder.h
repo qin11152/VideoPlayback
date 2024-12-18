@@ -5,7 +5,7 @@
 #include "module/VideoReader/VideoReader.h"
 #include "module/VideoDecoder/VideoDecoderBase.h"
 
-class HardDecoder : public VideoDecoderBase
+class MY_EXPORT HardDecoder : public VideoDecoderBase
 {
 public:
 	HardDecoder(std::shared_ptr<VideoReader> ptrVideoReader);

@@ -6,7 +6,7 @@
 #include "module/decoderedDataHandler/PcmDatahandler.h"
 #include "module/decoderedDataHandler/YuvDataHandler.h"
 
-class PreviewAndPlay : public PcmDatahandler, public YuvDataHandler, public std::enable_shared_from_this<PreviewAndPlay>
+class MY_EXPORT PreviewAndPlay : public PcmDatahandler, public YuvDataHandler, public std::enable_shared_from_this<PreviewAndPlay>
 {
 public:
 	PreviewAndPlay();

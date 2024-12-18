@@ -27,9 +27,6 @@
     <Filter Include="ui\OpenGLPreviewWidget">
       <UniqueIdentifier>{cc614ea9-ddf1-4b41-949b-f4b3973b5bd6}</UniqueIdentifier>
     </Filter>
-    <Filter Include="module\AudioPlay">
-      <UniqueIdentifier>{5c0be97d-fb03-4452-b41b-e302a60db5ff}</UniqueIdentifier>
-    </Filter>
     <Filter Include="ui\MySlider">
       <UniqueIdentifier>{a29cd20c-80b4-42d0-8ee5-d12622651d88}</UniqueIdentifier>
     </Filter>
@@ -96,12 +93,6 @@
     </ClCompile>
     <ClCompile Include="ui\OpenGLPreviewWidget\OpenGLPreviewWidget.cpp">
       <Filter>ui\OpenGLPreviewWidget</Filter>
-    </ClCompile>
-    <ClCompile Include="module\AudioPlay\AudioPlay.cpp">
-      <Filter>module\AudioPlay</Filter>
-    </ClCompile>
-    <ClCompile Include="unitest\AudioPlayTest.cpp">
-      <Filter>unitest</Filter>
     </ClCompile>
     <ClCompile Include="ui\MySlider\MySlider.cpp">
       <Filter>ui\MySlider</Filter>
@@ -182,9 +173,6 @@
     </QtMoc>
     <QtMoc Include="ui\OpenGLPreviewWidget\OpenGLPreviewWidget.h">
       <Filter>ui\OpenGLPreviewWidget</Filter>
-    </QtMoc>
-    <QtMoc Include="module\AudioPlay\AudioPlay.h">
-      <Filter>module\AudioPlay</Filter>
     </QtMoc>
     <QtMoc Include="ui\MySlider\MySlider.h">
       <Filter>ui\MySlider</Filter>

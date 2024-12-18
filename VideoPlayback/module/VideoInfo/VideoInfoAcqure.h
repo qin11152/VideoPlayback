@@ -10,7 +10,7 @@ extern "C" {
 #include <mutex>
 #include <memory>
 
-class VideoInfoAcqure
+class MY_EXPORT VideoInfoAcqure
 {
 public:
 	~VideoInfoAcqure() = default;

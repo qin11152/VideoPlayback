@@ -4,10 +4,10 @@
 
 namespace utils
 {
-	AVHWDeviceType getSupportedHWDeviceType();
+	MY_EXPORT AVHWDeviceType getSupportedHWDeviceType();
 
-	std::string getTime(const std::chrono::system_clock::time_point currentTime);
+	MY_EXPORT std::string getTime(const std::chrono::system_clock::time_point currentTime);
 
-	void preciseSleep(std::chrono::microseconds duration);
+	MY_EXPORT void preciseSleep(std::chrono::microseconds duration);
 
 }

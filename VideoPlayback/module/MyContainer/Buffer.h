@@ -4,7 +4,7 @@
 
 #include <mutex>
 
-class Buffer
+class MY_EXPORT Buffer
 {
 public:
 	Buffer();

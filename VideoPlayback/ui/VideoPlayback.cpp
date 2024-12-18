@@ -120,12 +120,6 @@ VideoPlayback::~VideoPlayback()
 	//fs.close();
 	//fs1.close();
 	uninitAllSubModule();
-
-	if (m_ptrAudioPlay)
-	{
-		delete m_ptrAudioPlay;
-		m_ptrAudioPlay = nullptr;
-	}
 }
 
 bool VideoPlayback::initModule()
@@ -136,8 +130,6 @@ bool VideoPlayback::initModule()
 		LOG_ERROR("No supported hardware device found");
 		return false;
 	}
-	//m_ptrAtomDecoder = new AtomDecoder();
-	m_ptrAudioPlay = new AudioPlay(nullptr);
 
 #if defined(BlackMagicEnabled)
 #if defined(WIN32)
@@ -182,7 +174,7 @@ void VideoPlayback::audioPlayCallBack(std::shared_ptr<AudioCallbackInfo> audioIn
 {
 	//int cvafd = kOutputAudioChannels * channelSampleNumber * av_get_bytes_per_sample((AVSampleFormat)kOutputAudioFormat);
 	QByteArray data((char*)audioInfo->m_pPCMData, audioInfo->m_ulPCMLength);
-	m_ptrAudioPlay->inputPcmData(data);
+	inputPcmData(data);
 
 	//TODO单独摘出来
 #if defined(BlackMagicEnabled)
@@ -239,7 +231,7 @@ void VideoPlayback::atomAudioCallback(std::shared_ptr<AudioCallbackInfo> audioIn
 		if (0 == i)
 		{
 			QByteArray data((char*)audioInfo->m_vecPcmData[i], audioInfo->m_ulPCMLength);
-			m_ptrAudioPlay->inputPcmData(data);
+			inputPcmData(data);
 		}
 		vecAudioBuffer.push_back(pSrc);
 	}
@@ -454,12 +446,12 @@ bool VideoPlayback::initConnect()
 
 bool VideoPlayback::initAudioOutput()
 {
-	m_ptrAudioPlay->clearAudioDevice();
+	clearAudioDevice();
 	AudioInfo audioInfo;
 	audioInfo.audioChannels = 2;
 	audioInfo.audioSampleRate = kOutputAudioSampleRate;
 	audioInfo.audioFormat = (AVSampleFormat)kOutputAudioFormat;
-	return m_ptrAudioPlay->initOutputParameter(audioInfo) && m_ptrAudioPlay->startPlay();
+	return initOutputParameter(audioInfo) && startPlay();
 }
 
 bool VideoPlayback::initAllSubModule()
@@ -471,7 +463,7 @@ bool VideoPlayback::initAllSubModule()
 	VideoInfoAcqure::getInstance()->getVideoInfo(m_strChooseFileName.toStdString().c_str(), m_stuMediaInfo);
 	setTimeSliderRange(m_stuMediaInfo.duration);
 	updateTimeLabel(0, m_stuMediaInfo.duration);
-
+	initAudioOutput();
 	if (ui.atomRadioButton->isChecked())
 	{
 		auto videoWaitDecodedQueue = std::make_shared<MyPacketQueue<std::shared_ptr<PacketWaitDecoded>>>();
@@ -631,7 +623,7 @@ bool VideoPlayback::uninitAllSubModule()
 		//m_ptrAtomPreviewAndPlay->uninitModule();
 		m_ptrAtomPreviewAndPlay = nullptr;
 	}
-
+	clearAudioDevice();
 	return 0;
 }
 
@@ -686,6 +678,52 @@ void VideoPlayback::onConsumeFinished()
 		uninitAllSubModule();
 		});
 	t1.detach();
+}
+
+void VideoPlayback::clearAudioDevice()
+{
+	if (m_ptrAudioOutput)
+	{
+		m_ptrAudioOutput->stop();
+		delete m_ptrAudioOutput;
+		m_ptrAudioOutput = nullptr;
+	}
+}
+
+bool VideoPlayback::initOutputParameter(const AudioInfo& audioInfo)
+{
+	QAudioFormat format;
+	format.setSampleRate(audioInfo.audioSampleRate);           // 采样率
+	format.setChannelCount(audioInfo.audioChannels);             // 通道数（立体声）
+	format.setSampleSize(av_get_bytes_per_sample(audioInfo.audioFormat) * 8);              // 每个样本的位数
+	format.setCodec("audio/pcm");          // 编解码器
+	format.setByteOrder(QAudioFormat::LittleEndian); // 字节序
+	format.setSampleType(QAudioFormat::SignedInt);   // 样本类型
+
+	QAudioDeviceInfo info(QAudioDeviceInfo::defaultOutputDevice());
+	if (!info.isFormatSupported(format))
+	{
+		return false;
+	}
+	m_ptrAudioOutput = new QAudioOutput(info, format);
+	return true;
+}
+
+bool VideoPlayback::startPlay()
+{
+	if (m_ptrAudioOutput)
+	{
+		m_ptr_AudioDevice = m_ptrAudioOutput->start();
+	}
+	return nullptr == m_ptr_AudioDevice ? false : true;
+}
+
+void VideoPlayback::inputPcmData(const QByteArray& pcmData)
+{
+	if (m_ptr_AudioDevice)
+	{
+		m_ptr_AudioDevice->write(pcmData);
+	}
 }
 
 #if defined(BlackMagicEnabled)

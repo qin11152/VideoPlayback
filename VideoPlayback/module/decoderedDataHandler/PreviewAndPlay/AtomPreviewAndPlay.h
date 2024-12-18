@@ -7,7 +7,7 @@
 #include "module/decoderedDataHandler/YuvDataHandler.h"
 
 
-class AtomPreviewAndPlay : public PcmDatahandler, public YuvDataHandler, public std::enable_shared_from_this<AtomPreviewAndPlay>
+class MY_EXPORT AtomPreviewAndPlay : public PcmDatahandler, public YuvDataHandler, public std::enable_shared_from_this<AtomPreviewAndPlay>
 {
 public:
 	AtomPreviewAndPlay();

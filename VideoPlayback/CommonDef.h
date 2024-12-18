@@ -1,5 +1,15 @@
 #pragma once
 
+#if defined(_WIN32) || defined(__CYGWIN__)
+	#ifdef MY_DLL_EXPORT
+		#define MY_EXPORT __declspec(dllexport)
+	#else
+		#define MY_EXPORT
+	#endif
+#else
+	#define MY_EXPORT __attribute__((visibility("default")))
+#endif
+
 #if defined(WIN32)
 #include "stdafx.h"
 #include "com_ptr.h"
@@ -20,13 +30,14 @@ extern "C"
 #include <libswresample/swresample.h>
 }
 
-#include <QDebug>
+#ifndef MY_DLL_EXPORT 
+	#include <QDebug>
+	#include "ui/MyTipDialog/MyTipDialog.h"
+#endif
 
 #include "module/LogModule/Log.h"
 #include "module/ThreadPool/ThreadPool.h"
 #include "module/MyContainer/MyQueue.h"
-
-#include "ui/MyTipDialog/MyTipDialog.h"
 
 #include <atomic>
 #include <mutex>
@@ -113,8 +124,9 @@ struct VideoInfo
 	int frameCount{ 0 };
 	AVPixelFormat videoFormat{ AV_PIX_FMT_NONE };
 };
-
-Q_DECLARE_METATYPE(VideoInfo);
+#ifndef MY_DLL_EXPORT 
+	Q_DECLARE_METATYPE(VideoInfo);
+#endif
 /*!
  * \class AudioInfo
  *
@@ -191,9 +203,9 @@ struct AudioCallbackInfo
 		}
 	}
 };
-
-Q_DECLARE_METATYPE(VideoCallbackInfo);
-
+#ifndef MY_DLL_EXPORT 
+	Q_DECLARE_METATYPE(VideoCallbackInfo);
+#endif
 struct PacketWaitDecoded
 {
 	AVPacket* packet{ nullptr };

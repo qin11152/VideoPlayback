@@ -18,7 +18,7 @@
 #include "module/VideoDecoder/VideoDecoderBase.h"
 #include "module/decoderedDataHandler/PreviewAndPlay/PreviewAndPlay.h"
 
-class VideoReader
+class MY_EXPORT VideoReader
 {
 public:
 	VideoReader();

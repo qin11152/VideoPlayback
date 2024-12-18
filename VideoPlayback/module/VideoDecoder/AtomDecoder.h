@@ -4,7 +4,7 @@
 #include "module/VideoReader/VideoReader.h"
 #include "module/VideoDecoder/VideoDecoderBase.h"
 
-class AtomDecoder : public VideoDecoderBase
+class MY_EXPORT AtomDecoder : public VideoDecoderBase
 {
 public:
 

@@ -2,7 +2,7 @@
 
 #include "CommonDef.h"
 
-class PcmDatahandler
+class MY_EXPORT PcmDatahandler
 {
 protected:
 	using AudioPlayCallback = std::function< void(std::shared_ptr<AudioCallbackInfo> audioInfo)>;

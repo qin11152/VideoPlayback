@@ -70,6 +70,7 @@
       <AdditionalIncludeDirectories>$(ProjectDir)/ui;$(ProjectDir)/../include;$(ProjectDir)/../include/ffmpeg;$(ProjectDir)/../include/blackmagic_win;$(ProjectDir)/../include/libMXF++;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>true</TreatWarningAsError>
       <LanguageStandard>stdcpp17</LanguageStandard>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>$(ProjectDir)/../lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -83,6 +84,7 @@
       <TreatWarningAsError>true</TreatWarningAsError>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>$(ProjectDir)/../lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -119,7 +121,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\include\blackmagic_win\DeckLinkAPI_i.c" />
-    <ClCompile Include="module\AudioPlay\AudioPlay.cpp" />
     <ClCompile Include="module\BlackMagic\DeckLinkDeviceDiscovery\DeckLinkDeviceDiscovery.cpp" />
     <ClCompile Include="module\decoderedDataHandler\PcmDatahandler.cpp" />
     <ClCompile Include="module\decoderedDataHandler\PreviewAndPlay\AtomPreviewAndPlay.cpp" />
@@ -144,7 +145,6 @@
     <ClCompile Include="ui\VideoPlayback.cpp" />
     <ClCompile Include="unitest\AtomDeocderTest.cpp" />
     <ClCompile Include="unitest\AtomPreviewAndPlayTest.cpp" />
-    <ClCompile Include="unitest\AudioPlayTest.cpp" />
     <ClCompile Include="unitest\HardDecoderTest.cpp" />
     <ClCompile Include="unitest\PreviewAndPlayTest.cpp" />
     <ClCompile Include="unitest\VideoDecoderTest.cpp" />
@@ -178,7 +178,6 @@
     <ClInclude Include="stdafx.h" />
     <QtMoc Include="ui\MyTipDialog\MyTipDialog.h" />
     <QtMoc Include="ui\MySlider\MySlider.h" />
-    <QtMoc Include="module\AudioPlay\AudioPlay.h" />
     <ClInclude Include="module\BlackMagic\DeckLinkDeviceDiscovery\DeckLinkDeviceDiscovery.h" />
     <ClInclude Include="module\LogModule\Log.h" />
     <ClInclude Include="module\VideoDecoder\VideoDecoder.h" />

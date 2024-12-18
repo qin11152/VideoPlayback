@@ -4,7 +4,7 @@
 #include "module/MyContainer/Buffer.h"
 #include "module/MyContainer/MyQueue.h"
 
-class VideoDecoderBase
+class MY_EXPORT VideoDecoderBase
 {
 
 protected:

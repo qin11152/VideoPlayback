@@ -2,7 +2,6 @@
 
 #include <QtWidgets/QWidget>
 #include "ui_VideoPlayback.h"
-#include "module/AudioPlay/AudioPlay.h"
 #include "module/VideoDecoder/AtomDecoder.h"
 #include "module/VideoDecoder/VideoDecoder.h"
 #include "module/VideoReader/VideoReader.h"
@@ -14,6 +13,9 @@
 #if defined(BlackMagicEnabled)
     #include "module/BlackMagic/DeckLinkDeviceDiscovery/DeckLinkDeviceDiscovery.h"
 #endif (BlackMagicEnabled)
+
+#include <QIODevice>
+#include <QAudioOutput>
 
 #include <map>
 #include <mutex>
@@ -82,6 +84,11 @@ private:
     void onDecoderFinshed();
     void onConsumeFinished();
 
+    void clearAudioDevice();
+	bool initOutputParameter(const AudioInfo& audioInfo);
+    bool startPlay();
+	void inputPcmData(const QByteArray& pcmData);
+
 private:
     Ui::VideoPlaybackClass ui;
 
@@ -94,7 +101,7 @@ private:
 	std::shared_ptr<PreviewAndPlay> m_ptrPreviewAndPlay{ nullptr };
 	std::shared_ptr<AtomPreviewAndPlay> m_ptrAtomPreviewAndPlay{ nullptr };
 
-    AudioPlay* m_ptrAudioPlay{ nullptr };
+    //AudioPlay* m_ptrAudioPlay{ nullptr };
     QString m_strChooseFileName{ "" };
     MediaInfo m_stuMediaInfo;
 
@@ -109,6 +116,9 @@ private:
 
 	bool m_bSliderEnableConnect{ true };       //是否允许连接信号槽
 	bool m_bAtomFileValid{ false };
+
+	QAudioOutput* m_ptrAudioOutput{ nullptr };
+	QIODevice* m_ptr_AudioDevice{ nullptr };
 
 //////// 板卡相关内容
 private:

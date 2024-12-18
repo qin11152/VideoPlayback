@@ -10,7 +10,7 @@ using avframe_ptr = std::unique_ptr<AVFrame, decltype(avframedel)>;
 
 class VideoPlayback;
 
-class VideoDecoder : public VideoDecoderBase
+class MY_EXPORT VideoDecoder : public VideoDecoderBase
 {
 public:
 	VideoDecoder(std::shared_ptr<VideoReader> ptrVideoReader);
