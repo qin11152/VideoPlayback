@@ -55,7 +55,7 @@ extern "C"
 #include <sstream>
 #include <iomanip>
 
-#define BlackMagicEnabled 0;
+#define BlackMagicEnabled
 
 constexpr int kOutputVideoWidth = 1920;
 constexpr int kOutputVideoHeight = 1080;

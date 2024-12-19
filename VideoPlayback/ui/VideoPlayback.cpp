@@ -33,7 +33,7 @@ std::string umidToString(const mxfUMID* umid)
 
 #if defined(BlackMagicEnabled)
 IDeckLinkMutableVideoFrame* kDecklinkOutputFrame = nullptr;
-#endif (BlackMagicEnabled)
+#endif //BlackMagicEnabled
 
 //std::fstream fs("audio.pcm1", std::ios::out | std::ios::binary);
 //std::fstream fs1("audio.pcm2", std::ios::out | std::ios::binary);
@@ -137,9 +137,9 @@ bool VideoPlayback::initModule()
 	m_ptrDeckLinkDeviceDiscovery->OnDeviceArrival(std::bind(&VideoPlayback::deviceDiscovered, this, std::placeholders::_1));
 #elif defined(__linux__)
 	m_ptrDeckLinkDeviceDiscovery = new DeckLinkDeviceDiscovery(this);
-#endif
+#endif //(WIN32)
 	m_ptrDeckLinkDeviceDiscovery->Enable();
-#endif (BlackMagicEnabled)
+#endif //BlackMagicEnabled
 
 	m_stuVideoInfo.width = kOutputVideoWidth;
 	m_stuVideoInfo.height = kOutputVideoHeight;
@@ -194,11 +194,12 @@ void VideoPlayback::audioPlayCallBack(std::shared_ptr<AudioCallbackInfo> audioIn
 			LOG_ERROR("WriteAudioSamplesSync error,iWritten={},dest cnt={}", iWritten, audioInfo->m_ulPCMLength);
 		}
 	}
-#endif (BlackMagicEnabled)
+#endif
 }
 
 void VideoPlayback::SDIOutputCallback(const VideoCallbackInfo& videoInfo)
 {
+#if defined(BlackMagicEnabled)
 	if (nullptr == videoInfo.yuvData || nullptr == m_ptrSelectedDeckLinkOutput)
 	{
 		return;
@@ -213,6 +214,7 @@ void VideoPlayback::SDIOutputCallback(const VideoCallbackInfo& videoInfo)
 	{
 		LOG_ERROR("DisplayVideoFrameSync error");
 	}
+#endif
 }
 
 void VideoPlayback::atomAudioCallback(std::shared_ptr<AudioCallbackInfo> audioInfo)
@@ -366,6 +368,7 @@ void VideoPlayback::onSignalSliderValueChanged(double vlaue)
 
 void VideoPlayback::onSignalSelectedDeviceChanged(int index)
 {
+#if defined(BlackMagicEnabled)
 	if (index < 0)
 	{
 		return;
@@ -390,11 +393,13 @@ void VideoPlayback::onSignalSelectedDeviceChanged(int index)
 	{
 		m_ptrSelectedDeckLinkOutput = nullptr;
 	}
+#endif
 }
 
 void VideoPlayback::customEvent(QEvent* event)
 {
 #if defined(__linux__)
+	#if defined(BlackMagicEnabled)
 	switch (event->type())
 	{
 	case kAddDeviceEvent:
@@ -431,6 +436,7 @@ void VideoPlayback::customEvent(QEvent* event)
 	}
 	break;
 	}
+	#endif
 #endif
 }
 
@@ -789,6 +795,6 @@ void VideoPlayback::deviceDiscovered(CComPtr<IDeckLink>& deckLink)
 
 	ui.deckLinkComboBox->addItem(device.m_strDisplayName);
 }
-#endif (WIN32)
+#endif //(WIN32)
 
-#endif (BlackMagicEnabled)
+#endif //BlackMagicEnabled

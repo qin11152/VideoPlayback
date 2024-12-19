@@ -38,16 +38,16 @@
 ** -LICENSE-END-
 */
 #if defined(WIN32)
-#include "stdafx.h"
-#include "DeckLinkDeviceDiscovery.h"
+	#include "stdafx.h"
+	#include "DeckLinkDeviceDiscovery.h"
 #elif defined(__linux__)
-#include "DeckLinkDeviceDiscovery.h"
-#include <QCoreApplication>
+	#include "DeckLinkDeviceDiscovery.h"
+	#include <QCoreApplication>
 #endif
-#if defined(WIN32)
 
 #if defined(BlackMagicEnabled)
 
+#if defined(WIN32)
 DeckLinkDeviceDiscovery::DeckLinkDeviceDiscovery()
 	: m_deckLinkDiscovery(nullptr),
 	m_refCount(1)
@@ -196,4 +196,4 @@ ULONG DeckLinkDeviceDiscovery::Release(void)
 	return newRefValue;
 }
 
-#endif BlackMagicEnabled
+#endif //BlackMagicEnabled

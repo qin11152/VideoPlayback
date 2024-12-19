@@ -12,7 +12,7 @@
 
 #if defined(BlackMagicEnabled)
     #include "module/BlackMagic/DeckLinkDeviceDiscovery/DeckLinkDeviceDiscovery.h"
-#endif (BlackMagicEnabled)
+#endif //BlackMagicEnabled
 
 #include <QIODevice>
 #include <QAudioOutput>
@@ -135,7 +135,7 @@ private:
 	    CComQIPtr<IDeckLinkOutput> m_ptrSelectedDeckLinkOutput{ nullptr };
     #elif defined(__linux__)
 	    IDeckLinkOutput* m_ptrSelectedDeckLinkOutput{ nullptr };
-    #endif (WIN32)
+    #endif //(WIN32)
 
-#endif BlackMagicEnabled
+#endif //BlackMagicEnabled
 };

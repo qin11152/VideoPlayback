@@ -152,4 +152,4 @@ private:
 	com_ptr<IDeckLink> m_deckLink;
 };
 #endif
-#endif (BlackMagicEnabled)
+#endif //BlackMagicEnabled
