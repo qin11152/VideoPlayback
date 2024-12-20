@@ -12,8 +12,6 @@ public:
 	MyPacketQueue() = default;
 	~MyPacketQueue();
 
-	MyPacketQueue& operator=(const MyPacketQueue& l);
-
 	// ³õÊ¼»¯Ä£¿é
 	int32_t initModule(uint32_t uiMaxQueueSize = 30);
 

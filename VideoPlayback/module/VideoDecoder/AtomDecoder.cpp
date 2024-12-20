@@ -45,6 +45,7 @@ int32_t AtomDecoder::initModule(const DecoderInitedInfo& info, DataHandlerInited
 		dataHandlerInfo.uiPerFrameSampleCnt = m_uiPerFrameSampleCnt;
 	}
 	m_ptrQueNeedDecodedVideoPacket = info.ptrAtomVideoPacketQueue;
+	m_vecQueueNeedDecodedAudioPacket = info.vecAtomAudioPacketQueue;
 
 	m_bInitState = true;
 	m_bRunningState = true;
@@ -243,7 +244,7 @@ int32_t AtomDecoder::initAudioDecoder(const DecoderInitedInfo& info)
 		AVChannelLayout in_channel_layout;
 		av_channel_layout_default(&in_channel_layout, audioCodecContextTmp->channels);
 		AVChannelLayout out_channel_layout;
-		av_channel_layout_default(&out_channel_layout, m_stuAudioInfo.audioChannels); // Stereo output
+		av_channel_layout_default(&out_channel_layout, kAtomOutputAudioChannel); // Stereo output
 		int out_sample_rate = m_stuAudioInfo.audioSampleRate;
 		// int out_sample_rate = audioCodecContext->sample_rate;
 		AVSampleFormat out_sample_fmt = m_stuAudioInfo.audioFormat;
@@ -687,9 +688,9 @@ void AtomDecoder::decodeAudio(std::shared_ptr<PacketWaitDecoded> packet, int ind
 			int converted_samples = swr_convert(m_vecSwrContext[index], resampled_data, resampled_samples,
 				(const uint8_t**)frame->data, frame->nb_samples);
 
-			int pcmNumber = converted_samples * kOutputAudioChannels * av_get_bytes_per_sample(m_stuAudioInfo.audioFormat);
+			int pcmNumber = converted_samples * kAtomOutputAudioChannel * av_get_bytes_per_sample(m_stuAudioInfo.audioFormat);
 
-			//std::fstream fs("audio0.pcm", std::ios::app | std::ios::binary);
+			//std::fstream fs("audio0.pcm"+std::to_string(index), std::ios::app | std::ios::binary);
 			////把重采样之后的数据保存本地
 			//fs.write((const char*)resampled_data[0], pcmNumber);
 			//fs.close();

@@ -49,7 +49,6 @@ VideoPlayback::VideoPlayback(QWidget* parent)
 			if (ui.atomRadioButton->isChecked())
 			{
 				uninitAllSubModule();
-				initAudioOutput();
 				if (!initAllSubModule())
 				{
 				}
@@ -57,7 +56,6 @@ VideoPlayback::VideoPlayback(QWidget* parent)
 			else
 			{
 				uninitAllSubModule();
-				initAudioOutput();
 				if (!initAllSubModule())
 				{
 				}
@@ -224,18 +222,17 @@ void VideoPlayback::atomAudioCallback(std::shared_ptr<AudioCallbackInfo> audioIn
 		return;
 	}
 	//从buffer中按顺序取出pcm数据，然后按照交错的方式将数据组合起来
-	uint8_t* pcmData = new uint8_t[audioInfo->m_ulPCMLength]{ 0 };
+	uint8_t* pcmData = new uint8_t[audioInfo->m_ulPCMLength * audioInfo->m_vecPcmData.size()]{ 0 };
 
 	std::vector<uint8_t*> vecAudioBuffer;
-	for (int i = 0; i < kOutputAudioChannels; ++i)
+	for (int i = 0; i < audioInfo->m_vecPcmData.size(); ++i)
 	{
-		uint8_t* pSrc = new uint8_t[audioInfo->m_ulPCMLength]{ 0 };
+		vecAudioBuffer.push_back(audioInfo->m_vecPcmData[i]);
 		if (0 == i)
 		{
 			QByteArray data((char*)audioInfo->m_vecPcmData[i], audioInfo->m_ulPCMLength);
 			inputPcmData(data);
 		}
-		vecAudioBuffer.push_back(pSrc);
 	}
 
 	//for (int i = 0; i < 1920; ++i)
@@ -246,16 +243,13 @@ void VideoPlayback::atomAudioCallback(std::shared_ptr<AudioCallbackInfo> audioIn
 	//		pcmData[(i * channelNum + j) * 2] = vecAudioBuffer[j][i * 2];
 	//	}
 	//}
-	memcpy(pcmData, vecAudioBuffer[0], m_uiAtomAudioSampleCntPerFrame * 2);
-	memcpy(pcmData + m_uiAtomAudioSampleCntPerFrame * 2, vecAudioBuffer[1], m_uiAtomAudioSampleCntPerFrame * 2);
-	//fs.write((char*)vecAudioBuffer[0], 1920 * 2);
-	//fs1.write((char*)pcmData, 1920 * 4);
-	for (auto& item : vecAudioBuffer)
+	for (int i = 0; i < vecAudioBuffer.size(); ++i)
 	{
-		delete[]item;
+		memcpy(pcmData + i * m_uiAtomAudioSampleCntPerFrame * 2, vecAudioBuffer[i], m_uiAtomAudioSampleCntPerFrame * 2);
 	}
-	//保存到本地
-	delete pcmData;
+	//QByteArray data((char*)pcmData, audioInfo->m_ulPCMLength * audioInfo->m_vecPcmData.size());
+	//inputPcmData(data);
+	delete []pcmData;
 }
 
 QString VideoPlayback::onSignalChooseFileClicked()
@@ -454,7 +448,14 @@ bool VideoPlayback::initAudioOutput()
 {
 	clearAudioDevice();
 	AudioInfo audioInfo;
-	audioInfo.audioChannels = 2;
+	if (ui.atomRadioButton->isChecked())
+	{
+		audioInfo.audioChannels = kAtomOutputAudioChannel;
+	}
+	else
+	{
+		audioInfo.audioChannels = kOutputAudioChannels;
+	}
 	audioInfo.audioSampleRate = kOutputAudioSampleRate;
 	audioInfo.audioFormat = (AVSampleFormat)kOutputAudioFormat;
 	return initOutputParameter(audioInfo) && startPlay();
@@ -654,7 +655,6 @@ void VideoPlayback::updateTimeLabel(const int currentTime, const int totalTime)
 		.arg(totalHour, 2, 10, QChar('0'))
 		.arg(totalMinute, 2, 10, QChar('0'))
 		.arg(totalSecond, 2, 10, QChar('0'));
-
 	ui.timeCodeLabel->setText(strCurrentTime + "/" + strTotalTime);
 }
 
@@ -689,6 +689,8 @@ void VideoPlayback::onConsumeFinished()
 {
 	if (++m_uiConsumeCallbackCnt == m_uiConsumeCnt)
 	{
+		updateTimeLabel(m_stuMediaInfo.duration, m_stuMediaInfo.duration);
+		updateTimeSliderPosition(m_stuMediaInfo.duration);
 		std::thread t1([this]() {
 			std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 			uninitAllSubModule();

@@ -140,12 +140,14 @@ void AtomPreviewAndPlay::handler()
 			break;
 		}
 
-		if (m_bDecoderFinished)
+		if (m_bDecoderFinished && 0 == m_ptrQueueDecodedVideo->getSize())
 		{
 			if (m_FinishedCallback)
 			{
 				m_FinishedCallback();
 			}
+			std::this_thread::sleep_for(std::chrono::milliseconds(100));
+			continue;
 		}
 
 		std::shared_ptr<VideoCallbackInfo> videoInfo = nullptr;
@@ -185,17 +187,18 @@ void AtomPreviewAndPlay::handler()
 			{
 				if (m_vecPcmBuffer->size() > 0)
 				{
-					int length = m_uiPerFrameSampleCnt * kOutputAudioChannels * av_get_bytes_per_sample((AVSampleFormat)kOutputAudioFormat);
-					audioInfo->m_pPCMData = new uint8_t[length]{ 0 };
-					if ((*m_vecPcmBuffer)[0]->getBuffer(audioInfo->m_pPCMData, length))
+					int length = m_uiPerFrameSampleCnt * kAtomOutputAudioChannel * av_get_bytes_per_sample((AVSampleFormat)kOutputAudioFormat);
+					audioInfo->m_bAtom = true;
+					audioInfo->m_ulPCMLength = length;
+					int iii = 0;
+					for (auto& it : *m_vecPcmBuffer)
 					{
-						audioInfo->m_ulPCMLength = length;
-						//std::fstream fs("audio.pcm", std::ios::app | std::ios::binary);
-						////把重采样之后的数据保存本地
-						//fs.write((const char*)audioInfo->m_pPCMData, audioInfo->m_ulPCMLength);
-						//fs.close();
-						m_AudioCallback(audioInfo);
+						iii++;
+						uint8_t* tmp = new uint8_t[length]{ 0 };
+						it->getBuffer(tmp, length);
+						audioInfo->m_vecPcmData.push_back(tmp);
 					}
+					m_AudioCallback(audioInfo);
 				}
 			}
 			//delete[]pcmData;

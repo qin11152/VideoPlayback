@@ -134,6 +134,8 @@ int32_t VideoReader::resume()
 	std::unique_lock<std::mutex> lck(m_PauseMutex);
 	m_bPauseState = false;
 	m_PauseCV.notify_one();
+	m_bReadFinished = false;
+	m_ReadFinishedCV.notify_one();
 	return 0;
 }
 
@@ -184,7 +186,7 @@ void VideoReader::readFrameFromFile()
 			av_packet_unref(packet);
 			m_bReadFinished = true;
 			std::unique_lock <std::mutex> lck(m_ReadFinishedMutex);
-			int ret = av_seek_frame(formatContext, videoStreamIndex, 0, AVSEEK_FLAG_BACKWARD);
+			//int ret = av_seek_frame(formatContext, videoStreamIndex, 0, AVSEEK_FLAG_BACKWARD);
 			m_ReadFinishedCV.wait(lck, [this] {return !m_bReadFinished || !m_bRunningState; });
 		}
 		LOG_INFO("Read End");
