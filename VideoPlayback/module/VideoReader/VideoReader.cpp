@@ -189,6 +189,6 @@ void VideoReader::readFrameFromFile()
 			//int ret = av_seek_frame(formatContext, videoStreamIndex, 0, AVSEEK_FLAG_BACKWARD);
 			m_ReadFinishedCV.wait(lck, [this] {return !m_bReadFinished || !m_bRunningState; });
 		}
-		LOG_INFO("Read End");
+		//LOG_INFO("Read End");
 	}
 }

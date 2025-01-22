@@ -111,7 +111,7 @@ void PreviewAndPlay::handler()
 		return;
 	}
 	auto needPaintTime = std::chrono::system_clock::now();
-	while (m_ptrQueueDecodedVideo->getSize() < 10)
+	while (m_bRunningState && m_ptrQueueDecodedVideo->getSize() < 10)
 	{
 		continue;
 	}

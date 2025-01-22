@@ -85,6 +85,7 @@ void OpenGLPreviewWidget::onSignalYUVData(QByteArray data, const VideoInfo &vide
 			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_uiWidth / 2, m_uiHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
 		}
 		doneCurrent();
+		updateVertices();
 	}
 	m_videoData = data;
 	update();
@@ -102,42 +103,48 @@ void OpenGLPreviewWidget::initializeGL()
 	currentProgram = (m_format == AV_PIX_FMT_YUV420P) ? &yuv420Program : &uyvyProgram;
 
 	// 设置顶点数据（两种格式共用）
-	static const GLfloat ver[] = {
-		-1.0f, -1.0f,
-		1.0f, -1.0f,
-		-1.0f, 1.0f,
-		1.0f, 1.0f
-	};
-	static const GLfloat tex[] = {
-		0.0f, 1.0f,
-		1.0f, 1.0f,
-		0.0f, 0.0f,
-		1.0f, 0.0f
-	};
-
 	currentProgram->bind();
 	GLuint verLocation = currentProgram->attributeLocation("vertexIn");
 	GLuint texLocation = currentProgram->attributeLocation("textureIn");
 
-	glVertexAttribPointer(verLocation, 2, GL_FLOAT, 0, 0, ver);
+	glVertexAttribPointer(verLocation, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), vertices);
 	glEnableVertexAttribArray(verLocation);
-	glVertexAttribPointer(texLocation, 2, GL_FLOAT, 0, 0, tex);
+	glVertexAttribPointer(texLocation, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), vertices + 3);
 	glEnableVertexAttribArray(texLocation);
+
 }
 
 void OpenGLPreviewWidget::resizeGL(int w, int h)
 {
 	glViewport(0, 0, w, h);
+	updateVertices();
 }
 
 void OpenGLPreviewWidget::paintGL()
 {
+	//if (m_videoData.isEmpty() || !currentProgram)
+	//	return;
+
+	//currentProgram->bind();
+	//updateTextures();
+	//glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
 	if (m_videoData.isEmpty() || !currentProgram)
+	{
 		return;
+	}
 
 	currentProgram->bind();
-	updateTextures();
-	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+	if (m_format == AV_PIX_FMT_YUV420P)
+	{
+		updateYUV420Textures();
+	}
+	else
+	{
+		updateUYVYTextures();
+	}
+
+	glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 }
 
 void OpenGLPreviewWidget::initYUV420Program()
@@ -229,6 +236,88 @@ void OpenGLPreviewWidget::updateTextures()
 		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_uiWidth / 2, m_uiHeight,
 			GL_RGBA, GL_UNSIGNED_BYTE, m_videoData.data());
 	}
+}
+
+void OpenGLPreviewWidget::updateVertices()
+{
+	float widgetAspect = static_cast<float>(width()) / height();
+	float videoAspect = static_cast<float>(m_uiWidth) / m_uiHeight;
+
+	float scaleX = 1.0f;
+	float scaleY = 1.0f;
+
+	if (videoAspect > widgetAspect) {
+		scaleY = widgetAspect / videoAspect;
+	}
+	else {
+		scaleX = videoAspect / widgetAspect;
+	}
+
+	float newVertices[] = {
+		-scaleX, -scaleY, 0.0f,  0.0f, 1.0f,  // 左下角
+		-scaleX,  scaleY, 0.0f,  0.0f, 0.0f,  // 左上角
+		 scaleX,  scaleY, 0.0f,  1.0f, 0.0f,  // 右上角
+		 scaleX, -scaleY, 0.0f,  1.0f, 1.0f   // 右下角
+	};
+
+	std::memcpy(vertices, newVertices, sizeof(newVertices));
+
+	if (m_format == AV_PIX_FMT_YUV420P) {
+		yuv420Program.bind();
+		GLuint verLocation = yuv420Program.attributeLocation("vertexIn");
+		GLuint texLocation = yuv420Program.attributeLocation("textureIn");
+
+		glVertexAttribPointer(verLocation, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), vertices);
+		glEnableVertexAttribArray(verLocation);
+		glVertexAttribPointer(texLocation, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), vertices + 3);
+		glEnableVertexAttribArray(texLocation);
+	}
+	else if (m_format == AV_PIX_FMT_UYVY422) {
+		uyvyProgram.bind();
+		GLuint verLocation = uyvyProgram.attributeLocation("vertexIn");
+		GLuint texLocation = uyvyProgram.attributeLocation("textureIn");
+
+		glVertexAttribPointer(verLocation, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), vertices);
+		glEnableVertexAttribArray(verLocation);
+		glVertexAttribPointer(texLocation, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), vertices + 3);
+		glEnableVertexAttribArray(texLocation);
+	}
+
+}
+
+void OpenGLPreviewWidget::updateYUV420Textures()
+{
+	// 更新Y纹理
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, yuv420Textures[0]);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_uiWidth, m_uiHeight, GL_RED, GL_UNSIGNED_BYTE,
+		m_videoData.left(m_uiWidth * m_uiHeight).data());
+	glUniform1i(yuv420Uniforms[0], 0);
+
+	// 更新U纹理
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, yuv420Textures[1]);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_uiWidth / 2, m_uiHeight / 2, GL_RED, GL_UNSIGNED_BYTE,
+		m_videoData.mid(m_uiWidth * m_uiHeight, m_uiWidth * m_uiHeight / 4).data());
+	glUniform1i(yuv420Uniforms[1], 1);
+
+	// 更新V纹理
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, yuv420Textures[2]);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_uiWidth / 2, m_uiHeight / 2, GL_RED, GL_UNSIGNED_BYTE,
+		m_videoData.right(m_uiWidth * m_uiHeight / 4).data());
+	glUniform1i(yuv420Uniforms[2], 2);
+}
+
+void OpenGLPreviewWidget::updateUYVYTextures()
+{
+	uyvyProgram.bind();
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, uyvyTexture);
+	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_uiWidth / 2, m_uiHeight, GL_RGBA, GL_UNSIGNED_BYTE,
+		m_videoData.data());
+	glUniform1i(uyvyWidthUniform, 0);
 }
 
 void OpenGLPreviewWidget::setVideoFormat(AVPixelFormat format)

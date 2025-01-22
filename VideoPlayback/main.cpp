@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
     qRegisterMetaType<VideoInfo>("VideoInfo");
     ThreadPool::get_mutable_instance().startPool(10);
     LOG_INFO("VideoPlayback start");
-    
+
     VideoPlayback w;
     w.show();
     return a.exec();

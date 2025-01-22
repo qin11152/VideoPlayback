@@ -31,6 +31,10 @@ private:
 	void initYUV420Program();  // 初始化YUV420相关资源
 	void initUYVYProgram();    // 初始化UYVY相关资源
 	void updateTextures();     // 更新纹理数据
+	void updateVertices();
+
+	void updateYUV420Textures();
+	void updateUYVYTextures();
 
 	void setVideoFormat(AVPixelFormat format);
 
@@ -38,6 +42,8 @@ private:
 	QGLShaderProgram yuv420Program;  // YUV420着色器程序
 	QGLShaderProgram uyvyProgram;    // UYVY着色器程序
 	QGLShaderProgram* currentProgram{ nullptr }; // 当前使用的程序
+
+	float vertices[20]; // 顶点和纹理坐标
 
 	// YUV420相关
 	GLuint yuv420Uniforms[3] = { 0 };  // shader中的yuv变量地址

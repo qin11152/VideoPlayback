@@ -34,7 +34,7 @@ int32_t HardDecoder::initModule(const DecoderInitedInfo& info, DataHandlerInited
 		return -1;
 	}
 
-	if (0 != initAudioDecoder(info))
+	if (0 != initAudioDecoder(info) && -1 != info.iAudioIndex)
 	{
 		return -1;
 	}
@@ -198,7 +198,7 @@ int32_t HardDecoder::initVideoDecoder(const DecoderInitedInfo& info)
 		avcodec_free_context(&videoCodecContext);
 		return (int32_t)ErrorCode::AllocateContextError;
 	}
-
+	printf("Using decoder: %s\n", videoCodecContext->codec->name);
 	swsContext = sws_getContext(
 		videoCodecContext->width, videoCodecContext->height, videoCodecContext->pix_fmt,
 		m_stuVideoInfo.width, m_stuVideoInfo.height, m_stuVideoInfo.videoFormat,
@@ -275,7 +275,6 @@ void HardDecoder::flushDecoder()
 				return;
 			}
 			auto transfer_end = std::chrono::steady_clock::now();
-			std::shared_ptr<VideoCallbackInfo> videoInfo = nullptr;
 			// 转换为目标格式
 			if (!swsContext)
 			{
@@ -447,7 +446,7 @@ void HardDecoder::decode()
 		}
 		if (packet)
 		{
-			LOG_INFO("Get One Packet");
+			//LOG_INFO("Get One Packet");
 			switch (packet->type)
 			{
 			case PacketType::Video:
@@ -456,6 +455,7 @@ void HardDecoder::decode()
 				decodeVideo(packet);
 				auto end = std::chrono::steady_clock::now();
 				//printf("decoder time:%lld\n", std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
+				LOG_INFO("Decoder Video Time:{}", std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
 				break;
 			}
 			case PacketType::Audio:
@@ -485,7 +485,7 @@ void HardDecoder::decodeVideo(std::shared_ptr<PacketWaitDecoded> packet)
 		int ret = avcodec_receive_frame(videoCodecContext, frame);
 		if (ret < 0)
 		{
-			LOG_ERROR("avcodec_receive_frame error");
+			LOG_ERROR("Avcodec_receive_frame Error,Ret:{}", ret);
 		}
 		while (ret >= 0)
 		{
@@ -508,7 +508,6 @@ void HardDecoder::decodeVideo(std::shared_ptr<PacketWaitDecoded> packet)
 					return;
 				}
 				auto transfer_end = std::chrono::steady_clock::now();
-				std::shared_ptr<VideoCallbackInfo> videoInfo = nullptr;
 				// 转换为目标格式
 				if (!swsContext)
 				{

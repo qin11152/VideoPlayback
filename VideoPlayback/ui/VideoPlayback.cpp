@@ -128,6 +128,10 @@ bool VideoPlayback::initModule()
 		LOG_ERROR("No supported hardware device found");
 		return false;
 	}
+	else
+	{
+		LOG_INFO("Choose Device Type:{}", av_hwdevice_get_type_name(m_eDeviceType));
+	}
 
 #if defined(BlackMagicEnabled)
 #if defined(WIN32)
@@ -334,7 +338,7 @@ QString VideoPlayback::onSignalChooseFileClicked()
 	else
 	{
 		// 打开一个文件选择框，返回选择的文件，只选择mxf，mp4，mov格式的文件
-		QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"), "", tr("Video Files (*.mxf *.mp4 *.mov)"));
+		QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"), "", tr("Video Files (*.mxf *.mp4 *.mov *.venc)"));
 		if (!fileName.isEmpty())
 		{
 			ui.fileNameLabel->setText(fileName);
@@ -566,6 +570,7 @@ bool VideoPlayback::initAllSubModule()
 		}
 		else
 		{
+			LOG_INFO("Use Hardware Decoder");
 			m_ptrVideoDecoder = std::make_shared< HardDecoder>(m_ptrVideoReader);
 		}
 		m_ptrPreviewAndPlay = std::make_shared<PreviewAndPlay>();
