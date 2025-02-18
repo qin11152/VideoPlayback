@@ -1,28 +1,13 @@
 #pragma once
-/*!
- * \file VideoReader.h
- * \date 2024/12/09 17:07
- *
- * \author DELL
- * Contact: user@company.com
- *
- * \brief 用于从视频文件中解析出视频帧和音频帧
- *
- * TODO: long description
- *
- * \note
-*/
 
 #include "CommonDef.h"
 #include "module/MyContainer/MyQueue.h"
-#include "module/VideoDecoder/VideoDecoderBase.h"
-#include "module/decoderedDataHandler/PreviewAndPlay/PreviewAndPlay.h"
 
-class MY_EXPORT VideoReader
+class demuxer
 {
 public:
-	VideoReader();
-	~VideoReader();
+	demuxer();
+	~demuxer();
 
 	int32_t initModule(const VideoReaderInitedInfo& info, DecoderInitedInfo& decoderInfo);
 
@@ -34,9 +19,7 @@ public:
 
 	bool getFinishedState()const { return m_bReadFinished; };
 
-private:
-	void readFrameFromFile();
-
+	void demux();
 private:
 	bool m_bInitState{ false };
 	bool m_bRunningState{ false };
@@ -47,10 +30,10 @@ private:
 	std::mutex m_ReadFinishedMutex;
 	std::condition_variable m_ReadFinishedCV;
 
-	int videoStreamIndex{ -1 };
-	int audioStreamIndex{ -1 };
+	int m_iVideoStreamIndex{ -1 };
+	int m_iAudioStreamIndex{ -1 };
 
-	std::thread m_ReadThread;
+	std::thread m_demuxerThread;
 
 	bool m_bPauseState{ false };
 	std::mutex m_PauseMutex;

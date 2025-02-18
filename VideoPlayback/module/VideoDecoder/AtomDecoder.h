@@ -1,14 +1,14 @@
 #pragma once
 
 #include "CommonDef.h"
-#include "module/VideoReader/VideoReader.h"
+#include "module/demux/demuxer.h"
 #include "module/VideoDecoder/VideoDecoderBase.h"
 
 class MY_EXPORT AtomDecoder : public VideoDecoderBase
 {
 public:
 
-	AtomDecoder(std::shared_ptr<VideoReader>ptrVideoReader, std::vector<std::shared_ptr<VideoReader>> vecVideoReader);
+	AtomDecoder(std::shared_ptr<demuxer>ptrDemuxer, std::vector<std::shared_ptr<demuxer>> vecDemuxer);
 	~AtomDecoder();
 
 	//************************************
@@ -87,8 +87,8 @@ private:
 	std::thread m_VideoDecodeThread;
 	std::thread m_AudioDecodeThread;
 
-	std::shared_ptr<VideoReader> m_ptrVideoReader{ nullptr };	// ”∆µ
-	std::vector< std::shared_ptr<VideoReader>> m_vecVideoReader;		//“Ù∆µ
+	std::shared_ptr<demuxer> m_ptrDemuxer{ nullptr };	// ”∆µ
+	std::vector< std::shared_ptr<demuxer>> m_vecDemuxer;		//“Ù∆µ
     AVFormatContext *formatContext{nullptr};
     AVCodecContext *videoCodecContext{nullptr};
 

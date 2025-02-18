@@ -126,6 +126,7 @@
     <ClCompile Include="module\decoderedDataHandler\PreviewAndPlay\AtomPreviewAndPlay.cpp" />
     <ClCompile Include="module\decoderedDataHandler\PreviewAndPlay\PreviewAndPlay.cpp" />
     <ClCompile Include="module\decoderedDataHandler\YuvDataHandler.cpp" />
+    <ClCompile Include="module\demux\demuxer.cpp" />
     <ClCompile Include="module\LogModule\Log.cpp" />
     <ClCompile Include="module\MXF++\avid_mxf_info.c" />
     <ClCompile Include="module\MyContainer\Buffer.cpp" />
@@ -169,6 +170,7 @@
     <ClInclude Include="module\decoderedDataHandler\PreviewAndPlay\AtomPreviewAndPlay.h" />
     <ClInclude Include="module\decoderedDataHandler\PreviewAndPlay\PreviewAndPlay.h" />
     <ClInclude Include="module\decoderedDataHandler\YuvDataHandler.h" />
+    <ClInclude Include="module\demux\demuxer.h" />
     <ClInclude Include="module\MXF++\avid_mxf_info.h" />
     <ClInclude Include="module\MyContainer\Buffer.h" />
     <ClInclude Include="module\MyContainer\MyQueue.h" />

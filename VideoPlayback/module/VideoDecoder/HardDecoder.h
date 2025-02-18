@@ -2,13 +2,14 @@
 
 #include "CommonDef.h"
 #include "module/MyContainer/Buffer.h"
+#include "module/demux/demuxer.h"
 #include "module/VideoReader/VideoReader.h"
 #include "module/VideoDecoder/VideoDecoderBase.h"
 
 class MY_EXPORT HardDecoder : public VideoDecoderBase
 {
 public:
-	HardDecoder(std::shared_ptr<VideoReader> ptrVideoReader);
+	HardDecoder(std::shared_ptr<demuxer> ptrDemuxer);
 	~HardDecoder();
 
 	//************************************
@@ -107,7 +108,7 @@ private:
 	void seekOperate();
 
 private:
-	std::shared_ptr<VideoReader> m_ptrVideoReader{ nullptr };
+	std::shared_ptr<demuxer> m_ptrDemuxer{ nullptr };
 	AVFormatContext* fileFormat{ nullptr };
 
 	AVBufferRef* m_ptrHWDeviceCtx;

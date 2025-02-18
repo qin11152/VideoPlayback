@@ -2,7 +2,7 @@
 #include <gmock/gmock.h>
 
 #include "module/VideoDecoder/HardDecoder.h"
-#include "module/VideoReader/VideoReader.h"
+#include "module/demux/demuxer.h"
 
 class HardDecoderTest : public testing::Test
 {
@@ -11,8 +11,8 @@ public:
 	~HardDecoderTest() = default;
 	void SetUp() override
 	{
-		std::shared_ptr<VideoReader> ptrVideoReader = std::make_shared<VideoReader>();
-		m_ptrHardDecoder = new HardDecoder(ptrVideoReader);
+		std::shared_ptr<demuxer> ptrDemuxer = std::make_shared<demuxer>();
+		m_ptrHardDecoder = new HardDecoder(ptrDemuxer);
 		// Code here will be called immediately after the constructor (right before each test).
 	}
 	void TearDown() override

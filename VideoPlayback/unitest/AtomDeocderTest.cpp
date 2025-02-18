@@ -40,7 +40,7 @@ TEST_F(AtomDecoderTest, AtomDecoderInited)
 	DecoderInitedInfo decoderInfo;
 	DataHandlerInitedInfo dataHandlerInfo;
 
-	std::vector<std::shared_ptr<VideoReader>> vecVideoReader;
+	std::vector<std::shared_ptr<demuxer>> vecDemuxer;
 
 	std::vector<std::string> vecFile = { "D:/testmaterial/aa.mxf" ,"D:/testmaterial/01.mxf" ,"D:/testmaterial/02.mxf" };
 	for (int i = 0; i < vecFile.size(); ++i)
@@ -51,9 +51,9 @@ TEST_F(AtomDecoderTest, AtomDecoderInited)
 		info.m_strFileName = vecFile[i];
 		info.outAudioInfo = audioInfo;
 		info.outVideoInfo = videoInfo;
-		auto tmp = std::make_shared<VideoReader>();
+		auto tmp = std::make_shared<demuxer>();
 		tmp->initModule(info, decoderInfo);
-		vecVideoReader.push_back(tmp);
+		vecDemuxer.push_back(tmp);
 		vecInfo.push_back(info);
 	}
 

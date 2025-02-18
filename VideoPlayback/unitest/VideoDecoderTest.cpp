@@ -11,8 +11,8 @@ public:
 protected:
 	void SetUp() override
 	{
-		std::shared_ptr<VideoReader> ptrVideoReader = std::make_shared<VideoReader>();
-		videoDecoder = std::make_shared<VideoDecoder>(ptrVideoReader);
+		std::shared_ptr<demuxer> ptrDemuxer = std::make_shared<demuxer>();
+		videoDecoder = std::make_shared<VideoDecoder>(ptrDemuxer);
 		// Initialization code here
 	}
 
@@ -24,7 +24,7 @@ protected:
 
 TEST_F(VideoDecoderTest, videoDecoderInit)
 {
-	VideoReader tmp;
+	demuxer tmp;
 	VideoInfo videoInfo;
 	videoInfo.width = 1920;
 	videoInfo.height = 1080;

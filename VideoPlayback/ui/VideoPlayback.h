@@ -4,10 +4,12 @@
 #include "ui_VideoPlayback.h"
 #include "module/VideoDecoder/AtomDecoder.h"
 #include "module/VideoDecoder/VideoDecoder.h"
-#include "module/VideoReader/VideoReader.h"
+//#include "module/VideoReader/VideoReader.h"
+#include "module/demux/demuxer.h"
 #include "module/VideoDecoder/VideoDecoderBase.h"
 #include "module/decoderedDataHandler/PcmDatahandler.h"
 #include "module/decoderedDataHandler/YuvDataHandler.h"
+#include "module/decoderedDataHandler/PreviewAndPlay/PreviewAndPlay.h"
 #include "module/decoderedDataHandler/PreviewAndPlay/AtomPreviewAndPlay.h"
 
 #if defined(BlackMagicEnabled)
@@ -95,8 +97,8 @@ private:
     VideoInfo m_stuVideoInfo;
     AudioInfo m_stuAudioInfo;
 
-    std::shared_ptr<VideoReader> m_ptrVideoReader{ nullptr };
-    std::vector<std::shared_ptr<VideoReader>> m_vecVideoReader;
+    std::shared_ptr<demuxer> m_ptrDemuxer{ nullptr };
+    std::vector<std::shared_ptr<demuxer>> m_vecDemuxer;
 	std::shared_ptr<VideoDecoderBase> m_ptrVideoDecoder{ nullptr };
 	std::shared_ptr<PreviewAndPlay> m_ptrPreviewAndPlay{ nullptr };
 	std::shared_ptr<AtomPreviewAndPlay> m_ptrAtomPreviewAndPlay{ nullptr };

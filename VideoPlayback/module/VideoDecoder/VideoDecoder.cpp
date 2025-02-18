@@ -6,8 +6,8 @@
 
 #define MAX_AUDIO_FRAME_SIZE 80960
 
-VideoDecoder::VideoDecoder(std::shared_ptr<VideoReader> ptrVideoReader)
-	:m_ptrVideoReader(ptrVideoReader), videoCodecContext(nullptr), audioCodecContext(nullptr),
+VideoDecoder::VideoDecoder(std::shared_ptr<demuxer> ptrDemuxer)
+	:m_ptrDemuxer(ptrDemuxer), videoCodecContext(nullptr), audioCodecContext(nullptr),
 	m_iVideoStreamIndex(-1), m_iAudioStreamIndex(-1)
 {
 
@@ -158,7 +158,7 @@ void VideoDecoder::decode()
 				m_PauseCV.wait(lck, [this]() {return !m_bRunningState || !m_bPauseState; });
 			}
 		}
-		if (m_ptrVideoReader->getFinishedState() && 0 == m_ptrQueNeedDecodedPacket->getSize())
+		if (m_ptrDemuxer->getFinishedState() && 0 == m_ptrQueNeedDecodedPacket->getSize())
 		{
 			if (!m_bDecoderedFinished)
 			{
@@ -603,7 +603,7 @@ void VideoDecoder::decodeVideo(std::shared_ptr<PacketWaitDecoded> packet)
 
 void VideoDecoder::seekOperate()
 {
-	m_ptrVideoReader->pause();
+	m_ptrDemuxer->pause();
 	m_bPauseState = true;
 
 	m_ptrQueNeedDecodedPacket->clearQueue();
@@ -657,7 +657,7 @@ void VideoDecoder::seekOperate()
 		}
 	}
 
-	m_ptrVideoReader->resume();
+	m_ptrDemuxer->resume();
 	m_ptrQueNeedDecodedPacket->resume();
 	for (auto iter : m_vecQueDecodedPacket)
 	{

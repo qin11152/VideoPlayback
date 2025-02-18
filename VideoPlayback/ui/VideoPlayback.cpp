@@ -511,8 +511,8 @@ bool VideoPlayback::initAllSubModule()
 		info.outAudioInfo = m_stuAudioInfo;
 		info.outVideoInfo = m_stuVideoInfo;
 		info.ptrPacketQueue = videoWaitDecodedQueue;
-		m_ptrVideoReader = std::make_shared<VideoReader>();
-		m_ptrVideoReader->initModule(info, decoderInitedInfo);
+		m_ptrDemuxer = std::make_shared<demuxer>();
+		m_ptrDemuxer->initModule(info, decoderInitedInfo);
 		//vecVideoInitedInfo.push_back(info);
 
 		for (int i = 0; i < m_vecChooseNameAtom.size(); ++i)
@@ -524,9 +524,9 @@ bool VideoPlayback::initAllSubModule()
 			info.outAudioInfo = m_stuAudioInfo;
 			info.outVideoInfo = m_stuVideoInfo;
 			info.ptrPacketQueue = vecAudioWaitedDecodedQueue[i];
-			auto tmp = std::make_shared<VideoReader>();
+			auto tmp = std::make_shared<demuxer>();
 			tmp->initModule(info, decoderInitedInfo);
-			m_vecVideoReader.push_back(tmp);
+			m_vecDemuxer.push_back(tmp);
 			//vecVideoInitedInfo.push_back(info);
 		}
 
@@ -537,7 +537,7 @@ bool VideoPlayback::initAllSubModule()
 		decoderInitedInfo.m_eDeviceType = m_eDeviceType;
 		decoderInitedInfo.m_bAtom = true;
 
-		m_ptrVideoDecoder = std::make_shared<AtomDecoder>(m_ptrVideoReader, m_vecVideoReader);
+		m_ptrVideoDecoder = std::make_shared<AtomDecoder>(m_ptrDemuxer, m_vecDemuxer);
 
 		m_ptrVideoDecoder->addAtomVideoPacketQueue(videoAfterDecodedQueue);
 		m_ptrVideoDecoder->addAtomAudioPacketQueue(vecPCMBuffer);
@@ -563,15 +563,15 @@ bool VideoPlayback::initAllSubModule()
 		videoAfterDecodedQueue->initModule();
 		ptrPcmBuffer->initBuffer(1024 * 10);
 
-		m_ptrVideoReader = std::make_shared<VideoReader>();
+		m_ptrDemuxer = std::make_shared<demuxer>();
 		if (AV_HWDEVICE_TYPE_NONE == m_eDeviceType)
 		{
-			m_ptrVideoDecoder = std::make_shared<VideoDecoder>(m_ptrVideoReader);
+			m_ptrVideoDecoder = std::make_shared<VideoDecoder>(m_ptrDemuxer);
 		}
 		else
 		{
 			LOG_INFO("Use Hardware Decoder");
-			m_ptrVideoDecoder = std::make_shared< HardDecoder>(m_ptrVideoReader);
+			m_ptrVideoDecoder = std::make_shared< HardDecoder>(m_ptrDemuxer);
 		}
 		m_ptrPreviewAndPlay = std::make_shared<PreviewAndPlay>();
 
@@ -586,7 +586,7 @@ bool VideoPlayback::initAllSubModule()
 		videoInitedInfo.ptrPacketQueue = videoWaitDecodedQueue;
 		videoInitedInfo.m_bAtom = false;
 
-		m_ptrVideoReader->initModule(videoInitedInfo, decoderInitedInfo);
+		m_ptrDemuxer->initModule(videoInitedInfo, decoderInitedInfo);
 
 		m_ptrVideoDecoder->addPacketQueue(videoAfterDecodedQueue);
 		m_ptrVideoDecoder->addPCMBuffer(ptrPcmBuffer);
@@ -607,10 +607,10 @@ bool VideoPlayback::initAllSubModule()
 
 bool VideoPlayback::uninitAllSubModule()
 {
-	if (m_ptrVideoReader)
+	if (m_ptrDemuxer)
 	{
 		//m_ptrVideoReader->uninitModule();
-		m_ptrVideoReader = nullptr;
+		m_ptrDemuxer = nullptr;
 	}
 	if (m_ptrVideoDecoder)
 	{
@@ -623,13 +623,13 @@ bool VideoPlayback::uninitAllSubModule()
 		m_ptrPreviewAndPlay = nullptr;
 	}
 
-	if (m_vecVideoReader.size() > 0)
+	if (m_vecDemuxer.size() > 0)
 	{
-		for (auto& item : m_vecVideoReader)
+		for (auto& item : m_vecDemuxer)
 		{
 			//item->uninitModule();
 		}
-		m_vecVideoReader.clear();
+		m_vecDemuxer.clear();
 	}
 
 	if (m_ptrAtomPreviewAndPlay)

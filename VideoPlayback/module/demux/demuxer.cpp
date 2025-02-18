@@ -1,6 +1,6 @@
-#include "VideoReader.h"
+#include "demuxer.h"
 
-int custom_read(void* opaque, uint8_t* buf, int buf_size) 
+int customRead(void* opaque, uint8_t* buf, int buf_size)
 {
 	//qDebug() << "call read:" << buf_size;
 	FILE* file = (FILE*)opaque;
@@ -13,7 +13,7 @@ int custom_read(void* opaque, uint8_t* buf, int buf_size)
 }
 
 // 自定义seek函数
-int64_t custom_seek(void* opaque, int64_t offset, int whence)
+int64_t customSeek(void* opaque, int64_t offset, int whence)
 {
 	qDebug() << "call seek,type:" << whence << ",byte:" << offset;
 	FILE* file = (FILE*)opaque;  // 将 opaque 转换回文件指针
@@ -44,17 +44,17 @@ int64_t custom_seek(void* opaque, int64_t offset, int whence)
 	return ftell(file); // 返回当前文件位置
 }
 
-VideoReader::VideoReader()
+demuxer::demuxer()
 {
 
 }
 
-VideoReader::~VideoReader()
+demuxer::~demuxer()
 {
 	uninitModule();
 }
 
-int32_t VideoReader::initModule(const VideoReaderInitedInfo& info, DecoderInitedInfo& decoderInfo)
+int32_t demuxer::initModule(const VideoReaderInitedInfo& info, DecoderInitedInfo& decoderInfo)
 {
 	if (m_bInitState)
 	{
@@ -62,7 +62,7 @@ int32_t VideoReader::initModule(const VideoReaderInitedInfo& info, DecoderInited
 	}
 
 	FILE* file = fopen(info.m_strFileName.c_str(), "rb");
-	if (!file) 
+	if (!file)
 	{
 		fprintf(stderr, "Failed to open file\n");
 		return -1;
@@ -77,8 +77,8 @@ int32_t VideoReader::initModule(const VideoReaderInitedInfo& info, DecoderInited
 	}
 
 	m_ptrIOContext = avio_alloc_context(
-		buffer, 4096, 0, file, custom_read, nullptr, custom_seek);
-	if (!m_ptrIOContext) 
+		buffer, 4096, 0, file, customRead, nullptr, customSeek);
+	if (!m_ptrIOContext)
 	{
 		fprintf(stderr, "Failed to create AVIOContext\n");
 		return -1;
@@ -88,7 +88,7 @@ int32_t VideoReader::initModule(const VideoReaderInitedInfo& info, DecoderInited
 	formatContext->pb = m_ptrIOContext;
 
 	int ret = avformat_open_input(&formatContext, nullptr, nullptr, nullptr);
-	if ( ret!= 0)
+	if (ret != 0)
 	{
 		//获取错误码
 		char errbuf[1024];
@@ -102,8 +102,8 @@ int32_t VideoReader::initModule(const VideoReaderInitedInfo& info, DecoderInited
 		avformat_close_input(&formatContext);
 		return (int32_t)ErrorCode::FindStreamInfoError;
 	}
-	videoStreamIndex = -1;
-	audioStreamIndex = -1;
+	m_iVideoStreamIndex = -1;
+	m_iAudioStreamIndex = -1;
 	for (unsigned int i = 0; i < formatContext->nb_streams; ++i)
 	{
 		AVCodecParameters* codecParameters = formatContext->streams[i]->codecpar;
@@ -113,9 +113,9 @@ int32_t VideoReader::initModule(const VideoReaderInitedInfo& info, DecoderInited
 			continue;
 		}
 
-		if (codecParameters->codec_type == AVMEDIA_TYPE_VIDEO && videoStreamIndex == -1)
+		if (codecParameters->codec_type == AVMEDIA_TYPE_VIDEO && m_iVideoStreamIndex == -1)
 		{
-			videoStreamIndex = i;
+			m_iVideoStreamIndex = i;
 			if (!info.m_bAtom)
 			{
 				decoderInfo.videoCodec = const_cast<AVCodec*>(codec);
@@ -126,11 +126,11 @@ int32_t VideoReader::initModule(const VideoReaderInitedInfo& info, DecoderInited
 				decoderInfo.atomVideoCodec = const_cast<AVCodec*>(codec);
 				decoderInfo.atomVideoCodecParameters = codecParameters;
 			}
-			decoderInfo.iVideoIndex = videoStreamIndex;
+			decoderInfo.iVideoIndex = m_iVideoStreamIndex;
 		}
-		else if (codecParameters->codec_type == AVMEDIA_TYPE_AUDIO && audioStreamIndex == -1)
+		else if (codecParameters->codec_type == AVMEDIA_TYPE_AUDIO && m_iAudioStreamIndex == -1)
 		{
-			audioStreamIndex = i;
+			m_iAudioStreamIndex = i;
 			if (!info.m_bAtom)
 			{
 				decoderInfo.audioCodec = const_cast<AVCodec*>(codec);
@@ -145,7 +145,7 @@ int32_t VideoReader::initModule(const VideoReaderInitedInfo& info, DecoderInited
 	}
 	decoderInfo.outAudioInfo = info.outAudioInfo;
 	decoderInfo.outVideoInfo = info.outVideoInfo;
-	decoderInfo.iAudioIndex = audioStreamIndex;
+	decoderInfo.iAudioIndex = m_iAudioStreamIndex;
 	decoderInfo.m_bAtom = info.m_bAtom;
 	decoderInfo.m_eDeviceType = info.m_eDeviceType;
 	if (!info.m_bAtom)
@@ -155,7 +155,7 @@ int32_t VideoReader::initModule(const VideoReaderInitedInfo& info, DecoderInited
 	}
 	else
 	{
-		if (videoStreamIndex != -1)
+		if (m_iVideoStreamIndex != -1)
 		{
 			decoderInfo.atomVideoFormatContext = formatContext;
 			decoderInfo.ptrAtomVideoPacketQueue = info.ptrPacketQueue;
@@ -168,13 +168,13 @@ int32_t VideoReader::initModule(const VideoReaderInitedInfo& info, DecoderInited
 	}
 
 	m_bRunningState = true;
-	m_ReadThread = std::thread(std::bind(&VideoReader::readFrameFromFile, this));
+	m_demuxerThread = std::thread(std::bind(&demuxer::demux, this));
 	m_ptrQueNeedDecodedPacket = info.ptrPacketQueue;
 	m_bInitState = true;
 	return (int32_t)ErrorCode::NoError;
 }
 
-int32_t VideoReader::uninitModule()
+int32_t demuxer::uninitModule()
 {
 	if (!m_bInitState)
 	{
@@ -189,22 +189,22 @@ int32_t VideoReader::uninitModule()
 	{
 		m_ptrQueNeedDecodedPacket->uninitModule();
 	}
-	if (m_ReadThread.joinable())
+	if (m_demuxerThread.joinable())
 	{
-		m_ReadThread.join();
+		m_demuxerThread.join();
 	}
 	m_ptrQueNeedDecodedPacket = nullptr;
 	return (int32_t)ErrorCode::NoError;
 }
 
-int32_t VideoReader::pause()
+int32_t demuxer::pause()
 {
 	std::unique_lock<std::mutex> lck(m_PauseMutex);
 	m_bPauseState = true;
 	return 0;
 }
 
-int32_t VideoReader::resume()
+int32_t demuxer::resume()
 {
 	std::unique_lock<std::mutex> lck(m_PauseMutex);
 	m_bPauseState = false;
@@ -214,7 +214,7 @@ int32_t VideoReader::resume()
 	return 0;
 }
 
-void VideoReader::readFrameFromFile()
+void demuxer::demux()
 {
 	if (!m_bInitState)
 	{
@@ -228,16 +228,16 @@ void VideoReader::readFrameFromFile()
 		{
 			break;
 		}
-		{
-			std::unique_lock<std::mutex> lck(m_PauseMutex);
-			if (m_bPauseState)
-			{
-				m_PauseCV.wait(lck, [this]() {return !m_bPauseState || !m_bRunningState; });
-			}
-		}
+		//{
+		//	std::unique_lock<std::mutex> lck(m_PauseMutex);
+		//	if (m_bPauseState)
+		//	{
+		//		m_PauseCV.wait(lck, [this]() {return !m_bPauseState || !m_bRunningState; });
+		//	}
+		//}
 		if (av_read_frame(formatContext, packet) >= 0)
 		{
-			if (packet->stream_index == audioStreamIndex)
+			if (packet->stream_index == m_iAudioStreamIndex)
 			{
 				// 音频包需要解码
 				if (m_ptrQueNeedDecodedPacket)
@@ -245,7 +245,7 @@ void VideoReader::readFrameFromFile()
 					m_ptrQueNeedDecodedPacket->addPacket(std::make_shared<PacketWaitDecoded>(packet, PacketType::Audio)); // 把音频包加入队列
 				}
 			}
-			else if (packet->stream_index == videoStreamIndex)
+			else if (packet->stream_index == m_iVideoStreamIndex)
 			{
 				// 视频包需要解码
 				if (m_ptrQueNeedDecodedPacket)

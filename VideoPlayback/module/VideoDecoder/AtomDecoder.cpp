@@ -1,8 +1,8 @@
 #include "AtomDecoder.h"
 
 
-AtomDecoder::AtomDecoder(std::shared_ptr<VideoReader>ptrVideoReader, std::vector<std::shared_ptr<VideoReader>> vecVideoReader)
-	:m_ptrVideoReader(ptrVideoReader), m_vecVideoReader(vecVideoReader), formatContext(nullptr), videoCodecContext(nullptr)
+AtomDecoder::AtomDecoder(std::shared_ptr<demuxer>ptrDemuxer, std::vector<std::shared_ptr<demuxer>> vecDemuxer)
+	:m_ptrDemuxer(ptrDemuxer), m_vecDemuxer(vecDemuxer), formatContext(nullptr), videoCodecContext(nullptr)
 {
 
 }
@@ -361,8 +361,8 @@ void AtomDecoder::flushDecoder()
 
 void AtomDecoder::seekOperate()
 {
-	m_ptrVideoReader->pause();
-	for (auto& iter : m_vecVideoReader)
+	m_ptrDemuxer->pause();
+	for (auto& iter : m_vecDemuxer)
 	{
 		iter->pause();
 	}
@@ -434,8 +434,8 @@ void AtomDecoder::seekOperate()
 		}
 	}
 
-	m_ptrVideoReader->resume();
-	for (auto& iter : m_vecVideoReader)
+	m_ptrDemuxer->resume();
+	for (auto& iter : m_vecDemuxer)
 	{
 		iter->resume();
 	}
@@ -473,7 +473,7 @@ void AtomDecoder::readVideoPacket()
 				m_PauseCV.wait(lck, [this]() {return !m_bRunningState || !m_bPauseState; });
 			}
 		}
-		if (m_ptrVideoReader->getFinishedState() && 0 == m_ptrQueNeedDecodedVideoPacket->getSize())
+		if (m_ptrDemuxer->getFinishedState() && 0 == m_ptrQueNeedDecodedVideoPacket->getSize())
 		{
 			if (!m_bDecoderedFinished)
 			{

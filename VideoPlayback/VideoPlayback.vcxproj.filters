@@ -63,6 +63,9 @@
     <Filter Include="module\MXF++">
       <UniqueIdentifier>{dcc1010f-7eb8-4f5e-be4c-cf82aeed186c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="module\demux">
+      <UniqueIdentifier>{30fed77b-bf4f-4107-835a-0878c6be8162}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <QtRcc Include="VideoPlayback.qrc">
@@ -166,6 +169,9 @@
     <ClCompile Include="stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="module\demux\demuxer.cpp">
+      <Filter>module\demux</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="ui\VideoPlayback.h">
@@ -243,6 +249,9 @@
     </ClInclude>
     <ClInclude Include="stdafx.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="module\demux\demuxer.h">
+      <Filter>module\demux</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

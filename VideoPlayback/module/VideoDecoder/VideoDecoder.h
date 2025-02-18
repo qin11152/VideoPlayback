@@ -2,7 +2,7 @@
 
 #include "CommonDef.h"
 #include "module/MyContainer/Buffer.h"
-#include "module/VideoReader/VideoReader.h"
+#include "module/demux/demuxer.h"
 #include "module/VideoDecoder/VideoDecoderBase.h"
 
 extern std::function<void(AVFrame *)> avframedel;
@@ -13,7 +13,7 @@ class VideoPlayback;
 class MY_EXPORT VideoDecoder : public VideoDecoderBase
 {
 public:
-	VideoDecoder(std::shared_ptr<VideoReader> ptrVideoReader);
+	VideoDecoder(std::shared_ptr<demuxer> ptrVideoReader);
 	~VideoDecoder();
 
 	//************************************
@@ -112,7 +112,7 @@ private:
 	void seekOperate();
 
 private:
-	std::shared_ptr<VideoReader> m_ptrVideoReader{ nullptr };
+	std::shared_ptr<demuxer> m_ptrDemuxer{ nullptr };
 	AVFormatContext* fileFormat{ nullptr };
 
 	AVCodecContext* videoCodecContext{ nullptr };
