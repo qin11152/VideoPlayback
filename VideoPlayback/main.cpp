@@ -16,7 +16,7 @@ int main(int argc, char *argv[])
     testing::InitGoogleMock(&argc, argv);
     return RUN_ALL_TESTS();
 #endif
-    qRegisterMetaType<VideoCallbackInfo>("VideoCallbackInfo");
+    qRegisterMetaType<DecodedImageInfo>("DecodedImageInfo");
     qRegisterMetaType<VideoInfo>("VideoInfo");
     ThreadPool::get_mutable_instance().startPool(10);
     LOG_INFO("VideoPlayback start");

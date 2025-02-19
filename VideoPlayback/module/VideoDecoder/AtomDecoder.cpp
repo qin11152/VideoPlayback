@@ -125,7 +125,7 @@ int32_t AtomDecoder::uninitModule()
 	return 0;
 }
 
-int32_t AtomDecoder::addAtomVideoPacketQueue(std::shared_ptr<MyPacketQueue<std::shared_ptr<VideoCallbackInfo>>> ptrPacketQueue)
+int32_t AtomDecoder::addAtomVideoPacketQueue(std::shared_ptr<MyPacketQueue<std::shared_ptr<DecodedImageInfo>>> ptrPacketQueue)
 {
 	for (auto& item : m_vecQueDecodedVideoPacket)
 	{
@@ -276,7 +276,7 @@ void AtomDecoder::flushDecoder()
 	while (avcodec_receive_frame(videoCodecContext, frame) >= 0)
 	{
 		double pts = frame->pts * m_dFrameDuration;
-		std::shared_ptr<VideoCallbackInfo> videoInfo = std::make_shared<VideoCallbackInfo>();
+		std::shared_ptr<DecodedImageInfo> videoInfo = std::make_shared<DecodedImageInfo>();
 		videoInfo->width = videoCodecContext->width;
 		videoInfo->height = videoCodecContext->height;
 		videoInfo->videoFormat = videoCodecContext->pix_fmt;
@@ -294,7 +294,7 @@ void AtomDecoder::flushDecoder()
 				return;
 			}
 			auto transfer_end = std::chrono::steady_clock::now();
-			std::shared_ptr<VideoCallbackInfo> videoInfo = nullptr;
+			std::shared_ptr<DecodedImageInfo> videoInfo = nullptr;
 			// 转换为目标格式
 			if (!swsContext)
 			{
@@ -559,7 +559,7 @@ void AtomDecoder::decodeVideo(std::shared_ptr<PacketWaitDecoded> packet)
 		while (ret >= 0)
 		{
 			double pts = frame->pts * m_dFrameDuration;
-			std::shared_ptr<VideoCallbackInfo> videoInfo = std::make_shared<VideoCallbackInfo>();
+			std::shared_ptr<DecodedImageInfo> videoInfo = std::make_shared<DecodedImageInfo>();
 			videoInfo->width = videoCodecContext->width;
 			videoInfo->height = videoCodecContext->height;
 			videoInfo->videoFormat = videoCodecContext->pix_fmt;
@@ -577,7 +577,7 @@ void AtomDecoder::decodeVideo(std::shared_ptr<PacketWaitDecoded> packet)
 					return;
 				}
 				auto transfer_end = std::chrono::steady_clock::now();
-				std::shared_ptr<VideoCallbackInfo> videoInfo = nullptr;
+				std::shared_ptr<DecodedImageInfo> videoInfo = nullptr;
 				// 转换为目标格式
 				if (!swsContext)
 				{

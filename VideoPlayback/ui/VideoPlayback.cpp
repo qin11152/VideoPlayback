@@ -155,7 +155,7 @@ bool VideoPlayback::initModule()
 	return initConnect();
 }
 
-void VideoPlayback::previewCallback(std::shared_ptr<VideoCallbackInfo> videoInfo)
+void VideoPlayback::previewCallback(std::shared_ptr<DecodedImageInfo> videoInfo)
 {
 	// 将YUV数据发送出去
 	if (nullptr == videoInfo->yuvData)
@@ -168,8 +168,9 @@ void VideoPlayback::previewCallback(std::shared_ptr<VideoCallbackInfo> videoInfo
 	video.videoFormat = videoInfo->videoFormat;
 	QByteArray data((char*)videoInfo->yuvData, videoInfo->dataSize);
 	emit signalYUVData(data, video);
+	//qDebug() << "video pts" << videoInfo->m_dPts;
 	updateTimeLabel(videoInfo->m_dPts, m_stuMediaInfo.duration);
-	updateTimeSliderPosition(videoInfo->m_dPts);
+	updateTimeSliderPosition(videoInfo->m_dPts * m_stuMediaInfo.fps);
 }
 
 void VideoPlayback::audioPlayCallBack(std::shared_ptr<AudioCallbackInfo> audioInfo)
@@ -199,7 +200,7 @@ void VideoPlayback::audioPlayCallBack(std::shared_ptr<AudioCallbackInfo> audioIn
 #endif
 }
 
-void VideoPlayback::SDIOutputCallback(const VideoCallbackInfo& videoInfo)
+void VideoPlayback::SDIOutputCallback(const DecodedImageInfo& videoInfo)
 {
 #if defined(BlackMagicEnabled)
 	if (nullptr == videoInfo.yuvData || nullptr == m_ptrSelectedDeckLinkOutput)
@@ -353,7 +354,9 @@ void VideoPlayback::onSignalSliderValueChanged(double vlaue)
 	// 触发时间小于200ms的不处理
 	disconnect(ui.videoTImeSlider, &MySlider::signalSliderValueChanged, this, &VideoPlayback::onSignalSliderValueChanged);
 	m_bSliderEnableConnect = false;
-	double time = vlaue * ((ui.videoTImeSlider->maximum() - ui.videoTImeSlider->minimum()) + ui.videoTImeSlider->minimum()) / 100.0;
+	//double time = vlaue * ((ui.videoTImeSlider->maximum() - ui.videoTImeSlider->minimum()) + ui.videoTImeSlider->minimum()) / 100.0;
+	double time = vlaue / m_stuMediaInfo.fps;
+	qDebug() << "value:"<< vlaue <<"seek to time : " << time;
 	if (m_ptrVideoDecoder)
 	{
 		m_ptrVideoDecoder->seekTo(time);
@@ -472,7 +475,8 @@ bool VideoPlayback::initAllSubModule()
 		return false;
 	}
 	VideoInfoAcqure::getInstance()->getVideoInfo(m_strChooseFileName.toStdString().c_str(), m_stuMediaInfo);
-	setTimeSliderRange(m_stuMediaInfo.duration);
+	qDebug() << "set range" << m_stuMediaInfo.duration * m_stuMediaInfo.fps;
+	setTimeSliderRange(m_stuMediaInfo.duration * m_stuMediaInfo.fps);
 	updateTimeLabel(0, m_stuMediaInfo.duration);
 	initAudioOutput();
 	m_uiConsumeCallbackCnt = 0;
@@ -482,7 +486,7 @@ bool VideoPlayback::initAllSubModule()
 		std::vector<std::shared_ptr<MyPacketQueue<std::shared_ptr<PacketWaitDecoded>>>> vecAudioWaitedDecodedQueue;
 
 		auto vecPCMBuffer = std::make_shared<std::vector<std::shared_ptr<Buffer>>>();
-		auto videoAfterDecodedQueue = std::make_shared<MyPacketQueue<std::shared_ptr<VideoCallbackInfo>>>();
+		auto videoAfterDecodedQueue = std::make_shared<MyPacketQueue<std::shared_ptr<DecodedImageInfo>>>();
 
 		videoWaitDecodedQueue->initModule();
 		videoAfterDecodedQueue->initModule();
@@ -556,7 +560,7 @@ bool VideoPlayback::initAllSubModule()
 	else
 	{
 		auto videoWaitDecodedQueue = std::make_shared<MyPacketQueue<std::shared_ptr<PacketWaitDecoded>>>();
-		auto videoAfterDecodedQueue = std::make_shared<MyPacketQueue<std::shared_ptr<VideoCallbackInfo>>>();
+		auto videoAfterDecodedQueue = std::make_shared<MyPacketQueue<std::shared_ptr<DecodedImageInfo>>>();
 		auto ptrPcmBuffer = std::make_shared<Buffer>();
 
 		videoWaitDecodedQueue->initModule();
@@ -663,13 +667,14 @@ void VideoPlayback::updateTimeLabel(const int currentTime, const int totalTime)
 	ui.timeCodeLabel->setText(strCurrentTime + "/" + strTotalTime);
 }
 
-void VideoPlayback::updateTimeSliderPosition(int64_t currentTime)
+void VideoPlayback::updateTimeSliderPosition(double currentTime)
 {
 	if (ui.videoTImeSlider->getPressed())
 	{
 		return;
 	}
 	// QSlider修改值
+	//qDebug() << "slider value:" << currentTime;
 	ui.videoTImeSlider->setValue(currentTime);
 }
 
@@ -695,7 +700,7 @@ void VideoPlayback::onConsumeFinished()
 	if (++m_uiConsumeCallbackCnt == m_uiConsumeCnt)
 	{
 		updateTimeLabel(m_stuMediaInfo.duration, m_stuMediaInfo.duration);
-		updateTimeSliderPosition(m_stuMediaInfo.duration);
+		//updateTimeSliderPosition(m_stuMediaInfo.duration * m_stuMediaInfo.fps);
 		std::thread t1([this]() {
 			std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 			uninitAllSubModule();

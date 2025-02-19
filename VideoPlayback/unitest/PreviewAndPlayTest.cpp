@@ -31,7 +31,7 @@ TEST_F(PreviewAndPlayTest, previewAndPlayInit)
 
 TEST_F(PreviewAndPlayTest, previewAndPlaySetVideoQueue)
 {
-	std::shared_ptr<MyPacketQueue<std::shared_ptr<VideoCallbackInfo>>> ptr = std::make_shared<MyPacketQueue<std::shared_ptr<VideoCallbackInfo>>>();
+	std::shared_ptr<MyPacketQueue<std::shared_ptr<DecodedImageInfo>>> ptr = std::make_shared<MyPacketQueue<std::shared_ptr<DecodedImageInfo>>>();
 	EXPECT_EQ(m_ptrPreviewAndPlay->setVideoQueue(ptr), 0);
 }
 

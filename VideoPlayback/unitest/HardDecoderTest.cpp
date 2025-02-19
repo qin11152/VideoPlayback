@@ -58,7 +58,7 @@ TEST_F(HardDecoderTest, harderDecoderInited)
 
 TEST_F(HardDecoderTest, harderDecoderAddVideoQueue)
 {
-	std::shared_ptr < MyPacketQueue<std::shared_ptr<VideoCallbackInfo>>> tmp = std::make_shared<MyPacketQueue<std::shared_ptr<VideoCallbackInfo>>>();
+	std::shared_ptr < MyPacketQueue<std::shared_ptr<DecodedImageInfo>>> tmp = std::make_shared<MyPacketQueue<std::shared_ptr<DecodedImageInfo>>>();
 	EXPECT_EQ(m_ptrHardDecoder->addPacketQueue(tmp), 0);
 	EXPECT_EQ(m_ptrHardDecoder->addPacketQueue(tmp), -1);
 }

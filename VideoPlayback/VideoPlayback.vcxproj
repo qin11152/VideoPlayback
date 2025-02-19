@@ -121,6 +121,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\include\blackmagic_win\DeckLinkAPI_i.c" />
+    <ClCompile Include="LocalFileSource.cpp" />
     <ClCompile Include="module\BlackMagic\DeckLinkDeviceDiscovery\DeckLinkDeviceDiscovery.cpp" />
     <ClCompile Include="module\decoderedDataHandler\PcmDatahandler.cpp" />
     <ClCompile Include="module\decoderedDataHandler\PreviewAndPlay\AtomPreviewAndPlay.cpp" />
@@ -131,6 +132,7 @@
     <ClCompile Include="module\MXF++\avid_mxf_info.c" />
     <ClCompile Include="module\MyContainer\Buffer.cpp" />
     <ClCompile Include="module\MyContainer\MyQueue.cpp" />
+    <ClCompile Include="module\source\SourceBase.cpp" />
     <ClCompile Include="module\ThreadPool\ThreadPool.cpp" />
     <ClCompile Include="module\utils\utils.cpp" />
     <ClCompile Include="module\VideoDecoder\AtomDecoder.cpp" />
@@ -166,6 +168,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CommonDef.h" />
+    <ClInclude Include="LocalFileSource.h" />
     <ClInclude Include="module\decoderedDataHandler\PcmDatahandler.h" />
     <ClInclude Include="module\decoderedDataHandler\PreviewAndPlay\AtomPreviewAndPlay.h" />
     <ClInclude Include="module\decoderedDataHandler\PreviewAndPlay\PreviewAndPlay.h" />
@@ -174,6 +177,7 @@
     <ClInclude Include="module\MXF++\avid_mxf_info.h" />
     <ClInclude Include="module\MyContainer\Buffer.h" />
     <ClInclude Include="module\MyContainer\MyQueue.h" />
+    <ClInclude Include="module\source\SourceBase.h" />
     <ClInclude Include="module\ThreadPool\ThreadPool.h" />
     <ClInclude Include="module\utils\utils.h" />
     <ClInclude Include="module\VideoDecoder\AtomDecoder.h" />

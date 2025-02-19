@@ -151,14 +151,14 @@ struct AudioInfo
 };
 
 /*!
- * \class VideoCallbackInfo
+ * \class DecodedImageInfo
  *
  * \brief 解码后的yuv数据存储结构体，包含yuv数据，宽高、图片格式、在视频中的pts等
  *
  * \author DELL
  * \date 2024/12/10 14:30
  */
-struct VideoCallbackInfo
+struct DecodedImageInfo
 {
 	uint32_t width;
 	uint32_t height;
@@ -166,7 +166,7 @@ struct VideoCallbackInfo
 	AVPixelFormat videoFormat;
 	uint8_t* yuvData{ nullptr };
 	double m_dPts{ 0.0 };
-	~VideoCallbackInfo()
+	~DecodedImageInfo()
 	{
 		if (yuvData)
 		{
@@ -207,7 +207,7 @@ struct AudioCallbackInfo
 	}
 };
 #ifndef MY_DLL_EXPORT 
-	Q_DECLARE_METATYPE(VideoCallbackInfo);
+	Q_DECLARE_METATYPE(DecodedImageInfo);
 #endif
 struct PacketWaitDecoded
 {
@@ -283,6 +283,19 @@ struct DataHandlerInitedInfo
 {
 	uint32_t uiNeedSleepTime{ 0 };
 	uint32_t uiPerFrameSampleCnt{ 0 };
+};
+
+enum class SeekType
+{
+	SeekInvalid = 0,
+	SeekAbsolute,	//按照绝对位置seek
+	SeekFrameStep,	//按照帧步进
+};
+
+struct SeekParams
+{
+	double dSeekTime{ 0.0 };
+	SeekType seekType{ SeekType::SeekInvalid };
 };
 
 enum class ErrorCode

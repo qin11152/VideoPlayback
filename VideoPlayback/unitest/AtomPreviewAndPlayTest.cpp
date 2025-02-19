@@ -33,7 +33,7 @@ TEST_F(AtomPreviewAndPlayTest, AtomPreviewAndPlayInited)
 
 TEST_F(AtomPreviewAndPlayTest, AtomPreviewAndPlaySetVideoQueue)
 {
-	std::shared_ptr<MyPacketQueue<std::shared_ptr<VideoCallbackInfo>>> ptr = std::make_shared<MyPacketQueue<std::shared_ptr<VideoCallbackInfo>>>();
+	std::shared_ptr<MyPacketQueue<std::shared_ptr<DecodedImageInfo>>> ptr = std::make_shared<MyPacketQueue<std::shared_ptr<DecodedImageInfo>>>();
 	EXPECT_EQ(m_ptrAtomPreviewAndPlay->setVideoQueue(ptr), 0);
 }
 

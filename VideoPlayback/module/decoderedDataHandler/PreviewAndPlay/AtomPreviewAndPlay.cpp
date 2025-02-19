@@ -82,7 +82,7 @@ void AtomPreviewAndPlay::resume()
 	m_PauseCV.notify_one();
 }
 
-int32_t AtomPreviewAndPlay::setVideoQueue(std::shared_ptr <MyPacketQueue<std::shared_ptr<VideoCallbackInfo>>> ptrQueueDecodedVideo)
+int32_t AtomPreviewAndPlay::setVideoQueue(std::shared_ptr <MyPacketQueue<std::shared_ptr<DecodedImageInfo>>> ptrQueueDecodedVideo)
 {
 	m_ptrQueueDecodedVideo = ptrQueueDecodedVideo;
 	return 0;
@@ -150,7 +150,7 @@ void AtomPreviewAndPlay::handler()
 			continue;
 		}
 
-		std::shared_ptr<VideoCallbackInfo> videoInfo = nullptr;
+		std::shared_ptr<DecodedImageInfo> videoInfo = nullptr;
 		std::shared_ptr<AudioCallbackInfo> audioInfo = std::make_shared<AudioCallbackInfo>();
 
 		if (m_ptrQueueDecodedVideo)

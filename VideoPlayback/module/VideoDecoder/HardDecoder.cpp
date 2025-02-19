@@ -120,7 +120,7 @@ int32_t HardDecoder::addPCMBuffer(std::shared_ptr<Buffer> ptrPCMBuffer)
 	return 0;
 }
 
-int32_t HardDecoder::addPacketQueue(std::shared_ptr<MyPacketQueue<std::shared_ptr<VideoCallbackInfo>>> ptrPacketQueue)
+int32_t HardDecoder::addPacketQueue(std::shared_ptr<MyPacketQueue<std::shared_ptr<DecodedImageInfo>>> ptrPacketQueue)
 {
 	std::unique_lock<std::mutex> lck(m_VideoQueueAddMutex);
 	if (std::find(m_vecQueDecodedPacket.begin(), m_vecQueDecodedPacket.end(), ptrPacketQueue) == m_vecQueDecodedPacket.end())
@@ -257,7 +257,7 @@ void HardDecoder::flushDecoder()
 	while (avcodec_receive_frame(videoCodecContext, frame) >= 0)
 	{
 		double pts = frame->pts * m_dFrameDuration;
-		std::shared_ptr<VideoCallbackInfo> videoInfo = std::make_shared<VideoCallbackInfo>();
+		std::shared_ptr<DecodedImageInfo> videoInfo = std::make_shared<DecodedImageInfo>();
 		videoInfo->width = videoCodecContext->width;
 		videoInfo->height = videoCodecContext->height;
 		videoInfo->videoFormat = videoCodecContext->pix_fmt;
@@ -343,6 +343,7 @@ void HardDecoder::seekOperate()
 {
 	m_ptrDemuxer->pause();
 	m_bPauseState = true;
+	m_bSeekState = true;
 
 	m_ptrQueNeedDecodedPacket->clearQueue();
 	for (auto iter : m_vecQueDecodedPacket)
@@ -357,7 +358,8 @@ void HardDecoder::seekOperate()
 	//准备移动操作，计算要移动的位置
 	auto midva = av_q2d(fileFormat->streams[m_iVideoStreamIndex]->time_base);
 	long long videoPos = m_dSeekTime / midva;
-
+	m_dseekDst = m_dSeekTime;
+	qDebug() << "set seek time " << m_dseekDst;
 	int ret = av_seek_frame(fileFormat, m_iVideoStreamIndex, videoPos, AVSEEK_FLAG_BACKWARD);
 	if (0 != ret)
 	{
@@ -401,7 +403,6 @@ void HardDecoder::seekOperate()
 	{
 		iter->resume();
 	}
-	m_bSeekState = false;
 	m_bPauseState = false;
 	m_PauseCV.notify_one();
 }
@@ -480,6 +481,7 @@ void HardDecoder::decodeVideo(std::shared_ptr<PacketWaitDecoded> packet)
 	{
 		return;
 	}
+
 	if (avcodec_send_packet(videoCodecContext, packet->packet) == 0)
 	{
 		int ret = avcodec_receive_frame(videoCodecContext, frame);
@@ -490,7 +492,7 @@ void HardDecoder::decodeVideo(std::shared_ptr<PacketWaitDecoded> packet)
 		while (ret >= 0)
 		{
 			double pts = frame->pts * m_dFrameDuration;
-			std::shared_ptr<VideoCallbackInfo> videoInfo = std::make_shared<VideoCallbackInfo>();
+			std::shared_ptr<DecodedImageInfo> videoInfo = std::make_shared<DecodedImageInfo>();
 			videoInfo->width = videoCodecContext->width;
 			videoInfo->height = videoCodecContext->height;
 			videoInfo->videoFormat = videoCodecContext->pix_fmt;
@@ -564,9 +566,13 @@ void HardDecoder::decodeVideo(std::shared_ptr<PacketWaitDecoded> packet)
 				av_freep(yuvFrame->data);
 				av_frame_free(&yuvFrame);
 			}
-			for (auto& it : m_vecQueDecodedPacket)
+			if (!m_bSeekState || (videoInfo->m_dPts > m_dseekDst))
 			{
-				it->addPacket(videoInfo);
+				m_bSeekState = false; // 如果进入了这个分支，说明已经到达了目标点，重置状态
+				for (auto& it : m_vecQueDecodedPacket)
+				{
+					it->addPacket(videoInfo);
+				}
 			}
 			ret = avcodec_receive_frame(videoCodecContext, frame);
 		}

@@ -53,9 +53,9 @@ public:
 	// Returns:   int32_t
 	// Qualifier:
 	// brief: 添加解码后的视频数据队列到vector中，解码后的视频数据会存放在vector中的队列中
-	// Parameter: std::shared_ptr<MyPacketQueue<VideoCallbackInfo>> ptrPacketQueue
+	// Parameter: std::shared_ptr<MyPacketQueue<DecodedImageInfo>> ptrPacketQueue
 	//************************************
-	int32_t addPacketQueue(std::shared_ptr<MyPacketQueue<std::shared_ptr<VideoCallbackInfo>>> ptrPacketQueue);
+	int32_t addPacketQueue(std::shared_ptr<MyPacketQueue<std::shared_ptr<DecodedImageInfo>>> ptrPacketQueue);
 
 	int32_t seekTo(double_t seekTime)override;
 
@@ -130,7 +130,6 @@ private:
 
 	bool m_bDecoderedFinished{ false };
 
-	std::atomic<bool> m_bSeekState{ false };
 	std::atomic<double_t> m_dSeekTime{ 0 };
 
 	AudioInfo m_stuAudioInfo;
@@ -146,6 +145,6 @@ private:
 	std::mutex m_PcmBufferAddMutex;
 	std::mutex m_VideoQueueAddMutex;
 	std::vector<std::shared_ptr<Buffer>> m_vecPCMBufferPtr;	//解码后的音频数据队列
-	std::vector<std::shared_ptr <MyPacketQueue<std::shared_ptr<VideoCallbackInfo>>>> m_vecQueDecodedPacket;	//解码后的视频数据队列
+	std::vector<std::shared_ptr <MyPacketQueue<std::shared_ptr<DecodedImageInfo>>>> m_vecQueDecodedPacket;	//解码后的视频数据队列
 };
 

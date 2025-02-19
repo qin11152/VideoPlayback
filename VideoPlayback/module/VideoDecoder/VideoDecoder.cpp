@@ -125,7 +125,7 @@ int32_t VideoDecoder::addPCMBuffer(std::shared_ptr<Buffer> ptrPCMBuffer)
 	return 0;
 }
 
-int32_t VideoDecoder::addPacketQueue(std::shared_ptr<MyPacketQueue<std::shared_ptr<VideoCallbackInfo>>> ptrPacketQueue)
+int32_t VideoDecoder::addPacketQueue(std::shared_ptr<MyPacketQueue<std::shared_ptr<DecodedImageInfo>>> ptrPacketQueue)
 {
 	std::unique_lock<std::mutex> lck(m_VideoQueueAddMutex);
 	if (std::find(m_vecQueDecodedPacket.begin(), m_vecQueDecodedPacket.end(), ptrPacketQueue) == m_vecQueDecodedPacket.end())
@@ -351,7 +351,7 @@ void VideoDecoder::flushDecoder()
 	while (avcodec_receive_frame(videoCodecContext, frame) >= 0)
 	{
 		double pts = frame->pts * m_dFrameDuration;
-		std::shared_ptr<VideoCallbackInfo> videoInfo = std::make_shared<VideoCallbackInfo>();
+		std::shared_ptr<DecodedImageInfo> videoInfo = std::make_shared<DecodedImageInfo>();
 		videoInfo->width = videoCodecContext->width;
 		videoInfo->height = videoCodecContext->height;
 		videoInfo->videoFormat = videoCodecContext->pix_fmt;
@@ -480,7 +480,7 @@ void VideoDecoder::decodeVideo(std::shared_ptr<PacketWaitDecoded> packet)
 			LOG_INFO("Video Decoder Begin Handle");
 			double pts = frame->pts * av_q2d(fileFormat->streams[m_iVideoStreamIndex]->time_base);
 
-			std::shared_ptr<VideoCallbackInfo> videoInfo = std::make_shared<VideoCallbackInfo>();
+			std::shared_ptr<DecodedImageInfo> videoInfo = std::make_shared<DecodedImageInfo>();
 			videoInfo->width = videoCodecContext->width;
 			videoInfo->height = videoCodecContext->height;
 			videoInfo->videoFormat = videoCodecContext->pix_fmt;
@@ -721,7 +721,7 @@ void VideoDecoder::decodeVideo()
 				AVFrame *yuvFrame = av_frame_alloc();
 				av_image_alloc(yuvFrame->data, yuvFrame->linesize, m_stuVideoInfo.width, m_stuVideoInfo.height, m_stuVideoInfo.videoFormat, 1);
 				sws_scale(swsContext, frame->data, frame->linesize, 0, videoCodecContext->height, yuvFrame->data, yuvFrame->linesize);
-				VideoCallbackInfo videoInfo;
+				DecodedImageInfo videoInfo;
 				videoInfo.width = m_stuVideoInfo.width;
 				videoInfo.height = m_stuVideoInfo.height;
 				videoInfo.videoFormat = m_stuVideoInfo.videoFormat;

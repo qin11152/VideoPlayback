@@ -33,7 +33,7 @@ public:
 	//************************************
 	int32_t uninitModule()override;
 
-	int32_t addAtomVideoPacketQueue(std::shared_ptr<MyPacketQueue<std::shared_ptr<VideoCallbackInfo>>> ptrPacketQueue)override;
+	int32_t addAtomVideoPacketQueue(std::shared_ptr<MyPacketQueue<std::shared_ptr<DecodedImageInfo>>> ptrPacketQueue)override;
 
 	int32_t addAtomAudioPacketQueue(std::shared_ptr<std::vector<std::shared_ptr<Buffer>>> vecBuffer)override;
 
@@ -127,6 +127,6 @@ private:
 	std::mutex m_PcmBufferAddMutex;
 	std::mutex m_VideoQueueAddMutex;
 	std::vector<std::shared_ptr<std::vector<std::shared_ptr<Buffer>>>> m_vecPCMBuffer;	//解码后的音频数据队列
-	std::vector<std::shared_ptr <MyPacketQueue<std::shared_ptr<VideoCallbackInfo>>>> m_vecQueDecodedVideoPacket;	//解码后的视频数据队列
+	std::vector<std::shared_ptr <MyPacketQueue<std::shared_ptr<DecodedImageInfo>>>> m_vecQueDecodedVideoPacket;	//解码后的视频数据队列
     
 };

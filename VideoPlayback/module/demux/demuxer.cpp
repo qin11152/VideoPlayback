@@ -15,7 +15,7 @@ int customRead(void* opaque, uint8_t* buf, int buf_size)
 // 自定义seek函数
 int64_t customSeek(void* opaque, int64_t offset, int whence)
 {
-	qDebug() << "call seek,type:" << whence << ",byte:" << offset;
+	//qDebug() << "call seek,type:" << whence << ",byte:" << offset;
 	FILE* file = (FILE*)opaque;  // 将 opaque 转换回文件指针
 
 	switch (whence) {

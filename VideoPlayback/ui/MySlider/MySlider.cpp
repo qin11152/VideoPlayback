@@ -29,12 +29,11 @@ void MySlider::mousePressEvent(QMouseEvent *event)
     
     //value转为int，四舍五入
     value = qRound(value);
-
+    qDebug() << "set value" << value;
     //设定滑动条位置
-    qDebug()<<"set value"<<value;
     this->setValue(value);
 
-    emit signalSliderValueChanged(per*100);
+    emit signalSliderValueChanged(value);
 }
 
 void MySlider::mouseReleaseEvent(QMouseEvent *event)

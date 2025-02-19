@@ -5,7 +5,7 @@
 class MY_EXPORT YuvDataHandler
 {
 protected:
-	using YuvCallBack = std::function<void(std::shared_ptr<VideoCallbackInfo> videoInfo)>;
+	using YuvCallBack = std::function<void(std::shared_ptr<DecodedImageInfo> videoInfo)>;
 	using YuvFinishedCallback = std::function<void()>;
 	YuvCallBack m_YuvCallback;
 	YuvFinishedCallback m_FinishedCallback;

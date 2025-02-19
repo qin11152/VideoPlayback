@@ -18,38 +18,14 @@
     <Filter Include="module">
       <UniqueIdentifier>{0023dc31-2895-4975-9203-5579162f0fb4}</UniqueIdentifier>
     </Filter>
-    <Filter Include="module\VideoInfo">
-      <UniqueIdentifier>{14da333f-c04a-484d-beb2-4792eee81c26}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="module\VideoDecoder">
-      <UniqueIdentifier>{e666386c-5dcc-4358-aa73-70c453f18077}</UniqueIdentifier>
-    </Filter>
     <Filter Include="ui\OpenGLPreviewWidget">
       <UniqueIdentifier>{cc614ea9-ddf1-4b41-949b-f4b3973b5bd6}</UniqueIdentifier>
     </Filter>
     <Filter Include="ui\MySlider">
       <UniqueIdentifier>{a29cd20c-80b4-42d0-8ee5-d12622651d88}</UniqueIdentifier>
     </Filter>
-    <Filter Include="module\LogModule">
-      <UniqueIdentifier>{ee5c8059-577a-4d72-a49e-9ec17ab91f24}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="module\BlackMagic">
-      <UniqueIdentifier>{474a7a85-020b-4d85-a4c6-25eb88b0ab55}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="module\BlackMagic\DeckLinkDeviceDiscovery">
-      <UniqueIdentifier>{bced9f6c-bafa-42bc-8058-4827c5309a8b}</UniqueIdentifier>
-    </Filter>
     <Filter Include="ui\MyTipDialog">
       <UniqueIdentifier>{380ae465-c2a6-4a1b-be1d-8f23c6154b0e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="module\ThreadPool">
-      <UniqueIdentifier>{66d238eb-cf99-4662-b00d-bad17103cad7}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="module\MyContainer">
-      <UniqueIdentifier>{72a405ac-3f3a-46c6-8313-666fc72179c9}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="module\VideoReader">
-      <UniqueIdentifier>{6363a812-01e3-4542-9366-c1a9d0e5c1f4}</UniqueIdentifier>
     </Filter>
     <Filter Include="module\utils">
       <UniqueIdentifier>{40b80c16-3dd8-495c-95fd-c84986c6a9dd}</UniqueIdentifier>
@@ -60,11 +36,38 @@
     <Filter Include="module\decoderedDataHandler\PreviewAndPlay">
       <UniqueIdentifier>{4aa0adf4-4a5b-42c5-a2d9-7180199a47d4}</UniqueIdentifier>
     </Filter>
-    <Filter Include="module\MXF++">
-      <UniqueIdentifier>{dcc1010f-7eb8-4f5e-be4c-cf82aeed186c}</UniqueIdentifier>
-    </Filter>
     <Filter Include="module\demux">
       <UniqueIdentifier>{30fed77b-bf4f-4107-835a-0878c6be8162}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="module\source">
+      <UniqueIdentifier>{d1338a76-b032-45f8-b778-b9b150e270e3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="module\mycontainer">
+      <UniqueIdentifier>{72a405ac-3f3a-46c6-8313-666fc72179c9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="module\logmodule">
+      <UniqueIdentifier>{ee5c8059-577a-4d72-a49e-9ec17ab91f24}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="module\blackmagic">
+      <UniqueIdentifier>{474a7a85-020b-4d85-a4c6-25eb88b0ab55}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="module\blackmagic\DeckLinkDeviceDiscovery">
+      <UniqueIdentifier>{bced9f6c-bafa-42bc-8058-4827c5309a8b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="module\threadpool">
+      <UniqueIdentifier>{66d238eb-cf99-4662-b00d-bad17103cad7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="module\videodecoder">
+      <UniqueIdentifier>{e666386c-5dcc-4358-aa73-70c453f18077}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="module\videoinfo">
+      <UniqueIdentifier>{14da333f-c04a-484d-beb2-4792eee81c26}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="module\videoreader">
+      <UniqueIdentifier>{6363a812-01e3-4542-9366-c1a9d0e5c1f4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="module\mxf++">
+      <UniqueIdentifier>{dcc1010f-7eb8-4f5e-be4c-cf82aeed186c}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -83,13 +86,13 @@
       <Filter>unitest</Filter>
     </ClCompile>
     <ClCompile Include="module\VideoInfo\VideoInfoAcqure.cpp">
-      <Filter>module\VideoInfo</Filter>
+      <Filter>module\videoinfo</Filter>
     </ClCompile>
     <ClCompile Include="unitest\VideoInfoAcqureTest.cpp">
       <Filter>unitest</Filter>
     </ClCompile>
     <ClCompile Include="module\VideoDecoder\VideoDecoder.cpp">
-      <Filter>module\VideoDecoder</Filter>
+      <Filter>module\videodecoder</Filter>
     </ClCompile>
     <ClCompile Include="unitest\VideoDecoderTest.cpp">
       <Filter>unitest</Filter>
@@ -101,34 +104,34 @@
       <Filter>ui\MySlider</Filter>
     </ClCompile>
     <ClCompile Include="module\LogModule\Log.cpp">
-      <Filter>module\LogModule</Filter>
+      <Filter>module\logmodule</Filter>
     </ClCompile>
     <ClCompile Include="module\BlackMagic\DeckLinkDeviceDiscovery\DeckLinkDeviceDiscovery.cpp">
-      <Filter>module\BlackMagic\DeckLinkDeviceDiscovery</Filter>
+      <Filter>module\blackmagic\DeckLinkDeviceDiscovery</Filter>
     </ClCompile>
     <ClCompile Include="..\include\blackmagic_win\DeckLinkAPI_i.c">
-      <Filter>module\BlackMagic</Filter>
+      <Filter>module\blackmagic</Filter>
     </ClCompile>
     <ClCompile Include="ui\MyTipDialog\MyTipDialog.cpp">
       <Filter>ui\MyTipDialog</Filter>
     </ClCompile>
     <ClCompile Include="module\ThreadPool\ThreadPool.cpp">
-      <Filter>module\ThreadPool</Filter>
+      <Filter>module\threadpool</Filter>
     </ClCompile>
     <ClCompile Include="module\VideoDecoder\HardDecoder.cpp">
-      <Filter>module\VideoDecoder</Filter>
+      <Filter>module\videodecoder</Filter>
     </ClCompile>
     <ClCompile Include="module\MyContainer\Buffer.cpp">
-      <Filter>module\MyContainer</Filter>
+      <Filter>module\mycontainer</Filter>
     </ClCompile>
     <ClCompile Include="module\MyContainer\MyQueue.cpp">
-      <Filter>module\MyContainer</Filter>
+      <Filter>module\mycontainer</Filter>
     </ClCompile>
     <ClCompile Include="module\VideoDecoder\VideoDecoderBase.cpp">
-      <Filter>module\VideoDecoder</Filter>
+      <Filter>module\videodecoder</Filter>
     </ClCompile>
     <ClCompile Include="module\VideoReader\VideoReader.cpp">
-      <Filter>module\VideoReader</Filter>
+      <Filter>module\videoreader</Filter>
     </ClCompile>
     <ClCompile Include="module\utils\utils.cpp">
       <Filter>module\utils</Filter>
@@ -158,10 +161,10 @@
       <Filter>unitest</Filter>
     </ClCompile>
     <ClCompile Include="module\MXF++\avid_mxf_info.c">
-      <Filter>module\MXF++</Filter>
+      <Filter>module\mxf++</Filter>
     </ClCompile>
     <ClCompile Include="module\VideoDecoder\AtomDecoder.cpp">
-      <Filter>module\VideoDecoder</Filter>
+      <Filter>module\videodecoder</Filter>
     </ClCompile>
     <ClCompile Include="module\decoderedDataHandler\PreviewAndPlay\AtomPreviewAndPlay.cpp">
       <Filter>module\decoderedDataHandler\PreviewAndPlay</Filter>
@@ -171,6 +174,12 @@
     </ClCompile>
     <ClCompile Include="module\demux\demuxer.cpp">
       <Filter>module\demux</Filter>
+    </ClCompile>
+    <ClCompile Include="module\source\SourceBase.cpp">
+      <Filter>module\source</Filter>
+    </ClCompile>
+    <ClCompile Include="LocalFileSource.cpp">
+      <Filter>module\source</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -194,37 +203,37 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="module\VideoInfo\VideoInfoAcqure.h">
-      <Filter>module\VideoInfo</Filter>
+      <Filter>module\videoinfo</Filter>
     </ClInclude>
     <ClInclude Include="CommonDef.h">
       <Filter>Source Files</Filter>
     </ClInclude>
     <ClInclude Include="module\VideoDecoder\VideoDecoder.h">
-      <Filter>module\VideoDecoder</Filter>
+      <Filter>module\videodecoder</Filter>
     </ClInclude>
     <ClInclude Include="module\LogModule\Log.h">
-      <Filter>module\LogModule</Filter>
+      <Filter>module\logmodule</Filter>
     </ClInclude>
     <ClInclude Include="module\BlackMagic\DeckLinkDeviceDiscovery\DeckLinkDeviceDiscovery.h">
-      <Filter>module\BlackMagic\DeckLinkDeviceDiscovery</Filter>
+      <Filter>module\blackmagic\DeckLinkDeviceDiscovery</Filter>
     </ClInclude>
     <ClInclude Include="module\ThreadPool\ThreadPool.h">
-      <Filter>module\ThreadPool</Filter>
+      <Filter>module\threadpool</Filter>
     </ClInclude>
     <ClInclude Include="module\VideoDecoder\HardDecoder.h">
-      <Filter>module\VideoDecoder</Filter>
+      <Filter>module\videodecoder</Filter>
     </ClInclude>
     <ClInclude Include="module\MyContainer\Buffer.h">
-      <Filter>module\MyContainer</Filter>
+      <Filter>module\mycontainer</Filter>
     </ClInclude>
     <ClInclude Include="module\MyContainer\MyQueue.h">
-      <Filter>module\MyContainer</Filter>
+      <Filter>module\mycontainer</Filter>
     </ClInclude>
     <ClInclude Include="module\VideoDecoder\VideoDecoderBase.h">
-      <Filter>module\VideoDecoder</Filter>
+      <Filter>module\videodecoder</Filter>
     </ClInclude>
     <ClInclude Include="module\VideoReader\VideoReader.h">
-      <Filter>module\VideoReader</Filter>
+      <Filter>module\videoreader</Filter>
     </ClInclude>
     <ClInclude Include="module\utils\utils.h">
       <Filter>module\utils</Filter>
@@ -239,10 +248,10 @@
       <Filter>module\decoderedDataHandler\PreviewAndPlay</Filter>
     </ClInclude>
     <ClInclude Include="module\MXF++\avid_mxf_info.h">
-      <Filter>module\MXF++</Filter>
+      <Filter>module\mxf++</Filter>
     </ClInclude>
     <ClInclude Include="module\VideoDecoder\AtomDecoder.h">
-      <Filter>module\VideoDecoder</Filter>
+      <Filter>module\videodecoder</Filter>
     </ClInclude>
     <ClInclude Include="module\decoderedDataHandler\PreviewAndPlay\AtomPreviewAndPlay.h">
       <Filter>module\decoderedDataHandler\PreviewAndPlay</Filter>
@@ -252,6 +261,12 @@
     </ClInclude>
     <ClInclude Include="module\demux\demuxer.h">
       <Filter>module\demux</Filter>
+    </ClInclude>
+    <ClInclude Include="module\source\SourceBase.h">
+      <Filter>module\source</Filter>
+    </ClInclude>
+    <ClInclude Include="LocalFileSource.h">
+      <Filter>module\source</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -41,9 +41,9 @@ public:
     // Returns:   void
     // Qualifier:
 	// brief: 视频的回调，进行视频播放
-    // Parameter: std::shared_ptr<VideoCallbackInfo> videoInfo
+    // Parameter: std::shared_ptr<DecodedImageInfo> videoInfo
     //************************************
-    void previewCallback(std::shared_ptr<VideoCallbackInfo> videoInfo);
+    void previewCallback(std::shared_ptr<DecodedImageInfo> videoInfo);
 
     //************************************
     // Method:    audioPlayCallBack
@@ -56,7 +56,7 @@ public:
     //************************************
     void audioPlayCallBack(std::shared_ptr<AudioCallbackInfo> audioInfo);
 
-    void SDIOutputCallback(const VideoCallbackInfo& videoInfo);
+    void SDIOutputCallback(const DecodedImageInfo& videoInfo);
 
     void atomAudioCallback(std::shared_ptr<AudioCallbackInfo> audioInfo);
 
@@ -80,7 +80,7 @@ private:
     bool uninitAllSubModule();
 
     void updateTimeLabel(const int currentTime, const int totalTime);
-	void updateTimeSliderPosition(int64_t currentTime);
+	void updateTimeSliderPosition(double currentTime);
     void setTimeSliderRange(int64_t totalTime);
 
     void onDecoderFinshed();

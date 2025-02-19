@@ -47,9 +47,9 @@ public:
 	// Returns:   int32_t
 	// Qualifier:
 	// brief: 添加一个队列到解码器中，解码后的数据放在此队列，该队列可有多个，解码出的数据可供多个handler使用
-	// Parameter: std::shared_ptr<MyPacketQueue<std::shared_ptr<VideoCallbackInfo>>> ptrPacketQueue
+	// Parameter: std::shared_ptr<MyPacketQueue<std::shared_ptr<DecodedImageInfo>>> ptrPacketQueue
 	//************************************
-	virtual int32_t addPacketQueue(std::shared_ptr<MyPacketQueue<std::shared_ptr<VideoCallbackInfo>>> ptrPacketQueue) { return 0; };
+	virtual int32_t addPacketQueue(std::shared_ptr<MyPacketQueue<std::shared_ptr<DecodedImageInfo>>> ptrPacketQueue) { return 0; };
 
 	//************************************
 	// Method:    addAtomVideoPacketQueue
@@ -58,9 +58,9 @@ public:
 	// Returns:   int32_t
 	// brief: 添加一个队列到解码器中，解码后的数据放在此队列，该队列可有多个，解码出的数据可供多个handler使用
 	// Qualifier:
-	// Parameter: std::shared_ptr<MyPacketQueue<std::shared_ptr<VideoCallbackInfo>>> ptrPacketQueue
+	// Parameter: std::shared_ptr<MyPacketQueue<std::shared_ptr<DecodedImageInfo>>> ptrPacketQueue
 	//************************************
-	virtual int32_t addAtomVideoPacketQueue(std::shared_ptr<MyPacketQueue<std::shared_ptr<VideoCallbackInfo>>> ptrPacketQueue) { return 0; };
+	virtual int32_t addAtomVideoPacketQueue(std::shared_ptr<MyPacketQueue<std::shared_ptr<DecodedImageInfo>>> ptrPacketQueue) { return 0; };
 
 	//************************************
 	// Method:    addAtomAudioPacketQueue
@@ -76,5 +76,8 @@ public:
 	virtual int32_t seekTo(double_t seekTime) = 0;
 
 	virtual void registerFinishedCallback(DecoderFinishedCallback callback) = 0;
+
+	double m_dseekDst{ 0 };
+	std::atomic<bool> m_bSeekState{ false };
 };
 

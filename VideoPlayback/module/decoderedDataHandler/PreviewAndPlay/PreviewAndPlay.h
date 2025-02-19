@@ -22,7 +22,7 @@ public:
 	void pause() override;
 	void resume() override;
 
-	int32_t setVideoQueue(std::shared_ptr <MyPacketQueue<std::shared_ptr<VideoCallbackInfo>>> ptrQueueDecodedVideo);
+	int32_t setVideoQueue(std::shared_ptr <MyPacketQueue<std::shared_ptr<DecodedImageInfo>>> ptrQueueDecodedVideo);
 	int32_t setAudioQueue(std::shared_ptr<Buffer> ptrPcmBuffer);
 
 	void setDecoderFinshedState(bool state);
@@ -46,7 +46,7 @@ private:
 	std::thread m_ConsumeThread;
 
 	std::mutex m_VideoQueueMutex;
-	std::shared_ptr <MyPacketQueue<std::shared_ptr<VideoCallbackInfo>>> m_ptrQueueDecodedVideo;
+	std::shared_ptr <MyPacketQueue<std::shared_ptr<DecodedImageInfo>>> m_ptrQueueDecodedVideo;
 
 	std::mutex m_PcmBufferMutex;
 	std::shared_ptr<Buffer> m_ptrPcmBuffer;
