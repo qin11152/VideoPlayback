@@ -1,3 +1,4 @@
+#define NOMINMAX
 #include "PreviewAndPlay.h"
 #include "module/utils/utils.h"
 
@@ -72,6 +73,34 @@ void PreviewAndPlay::resume()
 	m_PauseCV.notify_one();
 }
 
+void PreviewAndPlay::seekTo(SeekParams params)
+{
+	m_bSeekState = true;
+	m_dSeekTime = params.m_dSeekTime;
+}
+
+void PreviewAndPlay::nextFrame()
+{
+	pause();
+	if (m_ptrQueueDecodedVideo->getSize() <= 0)
+	{
+		return;
+	}
+	std::shared_ptr<DecodedImageInfo> videoInfo = nullptr;
+	m_ptrQueueDecodedVideo->getPacket(videoInfo);
+
+	if (m_YuvCallback)
+	{
+		m_YuvCallback(videoInfo);
+		m_dCurrentVideoPts = videoInfo->m_dPts;
+	}
+
+	int length = m_uiPerFrameSampleCnt * kOutputAudioChannels * av_get_bytes_per_sample((AVSampleFormat)kOutputAudioFormat);
+	auto ptrPCMData = new uint8_t[length]{ 0 };
+	m_ptrPcmBuffer->getBuffer(ptrPCMData, length);
+	delete[]ptrPCMData;
+}
+
 void PreviewAndPlay::setFinishedCallback(YuvFinishedCallback callback)
 {
 	m_FinishedCallback = callback;
@@ -115,6 +144,7 @@ void PreviewAndPlay::handler()
 	{
 		continue;
 	}
+	int audioLength = m_uiPerFrameSampleCnt * kOutputAudioChannels * av_get_bytes_per_sample((AVSampleFormat)kOutputAudioFormat);
 	static int cnt = 0;
 	while (true)
 	{
@@ -151,11 +181,41 @@ void PreviewAndPlay::handler()
 			m_ptrQueueDecodedVideo->getPacket(videoInfo);
 		}
 
+		//视频为空或音频数量不足的时候，继续等待
 		if (/*nullptr == audioInfo ||*/ nullptr == videoInfo)
 		{
 			continue;
 		}
 
+		if (!m_bSeekState || ((videoInfo->m_dPts - m_dSeekTime) / std::max(std::abs(videoInfo->m_dPts), std::abs(m_dSeekTime)) >= -kdEpsilon))
+		{
+			m_bSeekState = false; // 如果进入了这个分支，说明已经到达了目标点，重置状态
+		}
+		else
+		{
+			m_ulDropVideoFrameCntAfterSeek++;
+			continue;
+		}
+
+		while (m_ulDropVideoFrameCntAfterSeek > 0)
+		{
+			if (audioLength < m_ptrPcmBuffer->getBufferSize())
+			{
+				m_ptrPcmBuffer->popFromTop(audioLength);
+				m_ulDropVideoFrameCntAfterSeek--;
+			}
+			else
+			{
+				break;
+			}
+		}
+
+		if (m_ulDropVideoFrameCntAfterSeek > 0 || m_ptrPcmBuffer->getBufferSize() < audioLength)
+		{
+			m_ptrQueueDecodedVideo->addPacket(videoInfo);
+			continue;
+		}
+		
 		//计算需要休眠多少
 		auto currentTime = std::chrono::system_clock::now();
 		auto diff = std::chrono::duration_cast<std::chrono::microseconds>(needPaintTime - currentTime).count();
@@ -172,17 +232,17 @@ void PreviewAndPlay::handler()
 		if (m_YuvCallback)
 		{
 			m_YuvCallback(videoInfo);
+			m_dCurrentVideoPts = videoInfo->m_dPts;
 			cnt++;
 		}
 		if (m_AudioCallback)
 		{
 			if (m_ptrPcmBuffer)
 			{
-				int length = m_uiPerFrameSampleCnt * kOutputAudioChannels * av_get_bytes_per_sample((AVSampleFormat)kOutputAudioFormat);
-				audioInfo->m_pPCMData = new uint8_t[length]{ 0 };
-				if (m_ptrPcmBuffer->getBuffer(audioInfo->m_pPCMData, length))
+				audioInfo->m_pPCMData = new uint8_t[audioLength]{ 0 };
+				if (m_ptrPcmBuffer->getBuffer(audioInfo->m_pPCMData, audioLength))
 				{
-					audioInfo->m_ulPCMLength = length;
+					audioInfo->m_ulPCMLength = audioLength;
 					//std::fstream fs("audio.pcm", std::ios::app | std::ios::binary);
 					////把重采样之后的数据保存本地
 					//fs.write((const char*)audioInfo->m_pPCMData, audioInfo->m_ulPCMLength);

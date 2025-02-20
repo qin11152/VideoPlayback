@@ -214,6 +214,32 @@ int32_t demuxer::resume()
 	return 0;
 }
 
+int32_t demuxer::seek(const SeekParams& params)
+{
+	m_dSeekTime = params.m_dSeekTime;
+	m_bPauseState = true;
+
+	//准备移动操作，计算要移动的位置
+	auto midva = av_q2d(formatContext->streams[m_iVideoStreamIndex]->time_base);
+	long long videoPos = m_dSeekTime / midva;
+	qDebug() << "set seek time " << m_dSeekTime;
+	int ret = av_seek_frame(formatContext, m_iVideoStreamIndex, videoPos, AVSEEK_FLAG_BACKWARD);
+	if (0 != ret)
+	{
+		LOG_ERROR("seek video error:{}", ret);
+		return -1;
+	}
+
+	m_bPauseState = false;
+	m_PauseCV.notify_one();
+	return 0;
+}
+
+void demuxer::seekOperate()
+{
+
+}
+
 void demuxer::demux()
 {
 	if (!m_bInitState)

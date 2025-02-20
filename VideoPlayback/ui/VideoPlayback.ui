@@ -63,6 +63,20 @@
          </property>
         </widget>
        </item>
+       <item>
+        <widget class="QPushButton" name="lastFramePushButton">
+         <property name="text">
+          <string>上一帧</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="nextFramePushButton">
+         <property name="text">
+          <string>下一帧</string>
+         </property>
+        </widget>
+       </item>
       </layout>
      </item>
      <item>

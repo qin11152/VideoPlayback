@@ -54,6 +54,7 @@ extern "C"
 #include <fstream>
 #include <sstream>
 #include <iomanip>
+#include <algorithm>
 
 #define BlackMagicEnabled
 
@@ -74,6 +75,8 @@ constexpr int kAfterDecoderCachedCnt = 50;
 
 constexpr int kmicroSecondsPerSecond = 1000000;
 constexpr int kmilliSecondsPerSecond = 1000;
+
+constexpr double kdEpsilon = 1e-9;
 
 enum class PacketType
 {
@@ -166,6 +169,7 @@ struct DecodedImageInfo
 	AVPixelFormat videoFormat;
 	uint8_t* yuvData{ nullptr };
 	double m_dPts{ 0.0 };
+	bool m_bRefresh{ false };		//是否需要立即刷新到界面
 	~DecodedImageInfo()
 	{
 		if (yuvData)
@@ -294,7 +298,8 @@ enum class SeekType
 
 struct SeekParams
 {
-	double dSeekTime{ 0.0 };
+	double m_dSeekTime{ 0.0 };
+	int m_iSeekCnt{ 0 };
 	SeekType seekType{ SeekType::SeekInvalid };
 };
 

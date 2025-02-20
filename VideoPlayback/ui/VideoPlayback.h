@@ -7,6 +7,7 @@
 //#include "module/VideoReader/VideoReader.h"
 #include "module/demux/demuxer.h"
 #include "module/VideoDecoder/VideoDecoderBase.h"
+#include "module/source/LocalFileSource.h"
 #include "module/decoderedDataHandler/PcmDatahandler.h"
 #include "module/decoderedDataHandler/YuvDataHandler.h"
 #include "module/decoderedDataHandler/PreviewAndPlay/PreviewAndPlay.h"
@@ -79,6 +80,8 @@ private:
     bool initAllSubModule();
     bool uninitAllSubModule();
 
+    void initLocalFileSource();
+
     void updateTimeLabel(const int currentTime, const int totalTime);
 	void updateTimeSliderPosition(double currentTime);
     void setTimeSliderRange(int64_t totalTime);
@@ -102,6 +105,16 @@ private:
 	std::shared_ptr<VideoDecoderBase> m_ptrVideoDecoder{ nullptr };
 	std::shared_ptr<PreviewAndPlay> m_ptrPreviewAndPlay{ nullptr };
 	std::shared_ptr<AtomPreviewAndPlay> m_ptrAtomPreviewAndPlay{ nullptr };
+
+    std::shared_ptr<LocalFileSource> m_ptrLocalFileSource{ nullptr };
+	std::shared_ptr<MyPacketQueue<std::shared_ptr<PacketWaitDecoded>>> m_ptrQueuePacketNeededDecoded{ nullptr }; //存储需要解码的数据
+    std::shared_ptr<MyPacketQueue<std::shared_ptr<DecodedImageInfo>>> m_ptrQueueDecodedImageData{ nullptr };    //解码的视频帧
+    std::shared_ptr< Buffer> m_ptrAudioBuffer{ nullptr };       //解码的音频帧
+
+
+	VideoReaderInitedInfo m_stuVideoInitedInfo;
+	DecoderInitedInfo m_stuDecoderInitedInfo;
+	DataHandlerInitedInfo m_stuDataHandlerInfo;
 
     //AudioPlay* m_ptrAudioPlay{ nullptr };
     QString m_strChooseFileName{ "" };

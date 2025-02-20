@@ -108,7 +108,7 @@ private:
 	void seekOperate();
 
 private:
-	std::shared_ptr<demuxer> m_ptrDemuxer{ nullptr };
+	//std::shared_ptr<demuxer> m_ptrDemuxer{ nullptr };
 	AVFormatContext* fileFormat{ nullptr };
 
 	AVBufferRef* m_ptrHWDeviceCtx;

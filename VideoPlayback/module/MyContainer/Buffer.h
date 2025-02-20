@@ -25,6 +25,10 @@ public:
 
 	bool clearBuffer();
 
+	uint64_t getBufferSize()const;
+
+	void popFromTop(uint64_t size);
+
 private:
 	bool m_bInited{ false };
 	std::mutex m_mutex;

@@ -17,6 +17,10 @@ public:
 
 	int32_t resume();
 
+	int32_t seek(const SeekParams& params);
+
+	void seekOperate();
+
 	bool getFinishedState()const { return m_bReadFinished; };
 
 	void demux();
@@ -38,6 +42,9 @@ private:
 	bool m_bPauseState{ false };
 	std::mutex m_PauseMutex;
 	std::condition_variable m_PauseCV;	//暂停时的条件变量
+
+	bool m_bSeekState{ false };
+	std::atomic<double_t> m_dSeekTime{ 0 };
 
 	std::shared_ptr < MyPacketQueue<std::shared_ptr<PacketWaitDecoded>>> m_ptrQueNeedDecodedPacket;
 };

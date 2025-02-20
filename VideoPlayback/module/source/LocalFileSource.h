@@ -4,6 +4,7 @@
 #include "module/source/SourceBase.h"
 #include "module/demux/demuxer.h"
 #include "module/VideoDecoder/VideoDecoderBase.h"
+#include "module/decoderedDataHandler/PreviewAndPlay/PreviewAndPlay.h"
 
 class LocalFileSource :public SourceBase
 {
@@ -11,8 +12,11 @@ public:
 	LocalFileSource();
 	~LocalFileSource();
 
-	int seek() override;
+	int seek(const SeekParams& params) override;
 	int pause() override;
+	int resume() override;
+
+	void nextFrame();
 
 	static void setDemuxerFinishState(bool state);
 	static bool getDemuxerFinishState();
@@ -23,12 +27,18 @@ public:
 	std::shared_ptr<demuxer> m_ptrDemuxer{ nullptr };
 	std::shared_ptr<VideoDecoderBase> m_ptrVideoDecoder{ nullptr };
 
+	std::shared_ptr<PreviewAndPlay> m_ptrPreviewAndPlay{ nullptr };
+
 	//存放等待解码的avpacket
 	std::shared_ptr < MyPacketQueue<std::shared_ptr<PacketWaitDecoded>>> m_ptrQueueWaitedDecodedPacket{ nullptr };
 
-	//存放解码后的视频
-	std::shared_ptr<Buffer>m_ptrAudioBuffer{ nullptr };
-	std::shared_ptr < MyPacketQueue<std::shared_ptr<DecodedImageInfo>>>m_ptrQueueDecodedImage{ nullptr };
+	//存放解码后的视频和音频
+	std::vector<std::shared_ptr<Buffer>> m_vecPCMBufferPtr;	
+	std::vector<std::shared_ptr <MyPacketQueue<std::shared_ptr<DecodedImageInfo>>>> m_vecQueDecodedPacket;
+
+private:
+	void clearAllQueueAndBuffer();
+	void resumeAllQueueAndBuffer();
 
 private:
 	static std::atomic<bool> m_bDemuxerFinished;

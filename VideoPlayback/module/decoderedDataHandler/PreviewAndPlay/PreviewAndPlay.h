@@ -21,6 +21,11 @@ public:
 
 	void pause() override;
 	void resume() override;
+	void seekTo(SeekParams params);
+
+	void nextFrame();
+
+	double getCurrentFramePts()const { return m_dCurrentVideoPts; }
 
 	int32_t setVideoQueue(std::shared_ptr <MyPacketQueue<std::shared_ptr<DecodedImageInfo>>> ptrQueueDecodedVideo);
 	int32_t setAudioQueue(std::shared_ptr<Buffer> ptrPcmBuffer);
@@ -54,5 +59,10 @@ private:
 	uint32_t m_uiConsumeThreadSleepTime{ 0 };
 	uint32_t m_uiPerFrameSampleCnt{ 0 };
 
+	bool m_bSeekState{ false };
+	double m_dSeekTime{ 0.0 };
+	uint32_t m_ulDropVideoFrameCntAfterSeek{ 0 };
+
+	double m_dCurrentVideoPts{ 0 };
 };
 

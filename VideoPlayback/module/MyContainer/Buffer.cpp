@@ -87,3 +87,18 @@ bool Buffer::clearBuffer()
 	m_uiEndPos = 0;
 	return true;
 }
+
+uint64_t Buffer::getBufferSize() const
+{
+	return m_uiEndPos - m_uiStartPos;
+}
+
+void Buffer::popFromTop(uint64_t size)
+{
+	std::unique_lock<std::mutex> lck(m_mutex);
+	if (m_uiStartPos + size > m_uiEndPos)
+	{
+		return;
+	}
+	m_uiStartPos += size;
+}

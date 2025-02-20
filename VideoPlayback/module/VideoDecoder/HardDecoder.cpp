@@ -1,7 +1,10 @@
 #include "HardDecoder.h"
 
+#include "module/source/LocalFileSource.h"
+
+
 HardDecoder::HardDecoder(std::shared_ptr<demuxer> ptrDemuxer)
-	: m_ptrDemuxer(ptrDemuxer), videoCodecContext(nullptr), audioCodecContext(nullptr),
+	: videoCodecContext(nullptr), audioCodecContext(nullptr),
 	m_iVideoStreamIndex(-1), m_iAudioStreamIndex(-1)
 {
 
@@ -136,24 +139,29 @@ int32_t HardDecoder::addPacketQueue(std::shared_ptr<MyPacketQueue<std::shared_pt
 
 int32_t HardDecoder::seekTo(double_t seekTime)
 {
-	//正在快进或者快退，不处理
-	if (m_bSeekState)
-	{
-		return -1;
-	}
-	//未初始化的时候不处理
-	if (!m_bInitState)
-	{
-		return -2;
-	}
-	if (seekTime < 0 || seekTime > fileFormat->duration)
-	{
-		return -3;
-	}
-	m_dSeekTime = seekTime;
+	avcodec_flush_buffers(videoCodecContext);
+	avcodec_flush_buffers(audioCodecContext);
 	m_bSeekState = true;
-	ThreadPool::get_mutable_instance().submit(std::bind(&HardDecoder::seekOperate, this));
+	m_dseekDst = seekTime;
 	return 0;
+	////正在快进或者快退，不处理
+	//if (m_bSeekState)
+	//{
+	//	return -1;
+	//}
+	////未初始化的时候不处理
+	//if (!m_bInitState)
+	//{
+	//	return -2;
+	//}
+	//if (seekTime < 0 || seekTime > fileFormat->duration)
+	//{
+	//	return -3;
+	//}
+	//m_dSeekTime = seekTime;
+	//m_bSeekState = true;
+	//ThreadPool::get_mutable_instance().submit(std::bind(&HardDecoder::seekOperate, this));
+	//return 0;
 }
 
 void HardDecoder::registerFinishedCallback(DecoderFinishedCallback callback)
@@ -249,6 +257,7 @@ int32_t HardDecoder::initAudioDecoder(const DecoderInitedInfo& info)
 
 void HardDecoder::flushDecoder()
 {
+	LocalFileSource::getDecoderFinishState();
 	AVFrame* frame = av_frame_alloc();
 	AVFrame* swFrame = nullptr;
 	avcodec_send_packet(videoCodecContext, NULL);
@@ -341,7 +350,6 @@ void HardDecoder::flushDecoder()
 
 void HardDecoder::seekOperate()
 {
-	m_ptrDemuxer->pause();
 	m_bPauseState = true;
 	m_bSeekState = true;
 
@@ -397,7 +405,6 @@ void HardDecoder::seekOperate()
 	//	}
 	//}
 	
-	m_ptrDemuxer->resume();
 	m_ptrQueNeedDecodedPacket->resume();
 	for (auto iter : m_vecQueDecodedPacket)
 	{
@@ -426,7 +433,7 @@ void HardDecoder::decode()
 				m_PauseCV.wait(lck, [this]() {return !m_bRunningState || !m_bPauseState; });
 			}
 		}
-		if (m_ptrDemuxer->getFinishedState() && 0 == m_ptrQueNeedDecodedPacket->getSize())
+		if (LocalFileSource::getDemuxerFinishState() && 0 == m_ptrQueNeedDecodedPacket->getSize())
 		{
 			if (!m_bDecoderedFinished)
 			{
@@ -566,13 +573,9 @@ void HardDecoder::decodeVideo(std::shared_ptr<PacketWaitDecoded> packet)
 				av_freep(yuvFrame->data);
 				av_frame_free(&yuvFrame);
 			}
-			if (!m_bSeekState || (videoInfo->m_dPts > m_dseekDst))
+			for (auto& it : m_vecQueDecodedPacket)
 			{
-				m_bSeekState = false; // 如果进入了这个分支，说明已经到达了目标点，重置状态
-				for (auto& it : m_vecQueDecodedPacket)
-				{
-					it->addPacket(videoInfo);
-				}
+				it->addPacket(videoInfo);
 			}
 			ret = avcodec_receive_frame(videoCodecContext, frame);
 		}
@@ -630,7 +633,13 @@ void HardDecoder::decodeAudio(std::shared_ptr<PacketWaitDecoded> packet)
 			////把重采样之后的数据保存本地
 			//fs.write((const char*)resampled_data[0], pcmNumber);
 			//fs.close();
-
+			double audioDts = frame->pts * av_q2d(fileFormat->streams[m_iAudioStreamIndex]->time_base);
+			//qDebug() << "audio pts:" << audioDts;
+			//if (!m_bSeekState || ((audioDts - m_dseekDst) / std::max(std::abs(audioDts), std::abs(m_dseekDst)) >= -kdEpsilon))
+			//{
+			//	m_bSeekState = false; // 如果进入了这个分支，说明已经到达了目标点，重置状态
+			//	
+			//}
 			if (resampled_data)
 			{
 				for (auto& it : m_vecPCMBufferPtr)
