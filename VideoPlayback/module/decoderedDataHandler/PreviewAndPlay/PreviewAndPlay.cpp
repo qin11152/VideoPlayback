@@ -1,6 +1,7 @@
 #define NOMINMAX
 #include "PreviewAndPlay.h"
 #include "module/utils/utils.h"
+#include "module/source/LocalFileSource.h"
 
 PreviewAndPlay::PreviewAndPlay()
 	: PcmDatahandler(), YuvDataHandler()
@@ -101,6 +102,60 @@ void PreviewAndPlay::nextFrame()
 	delete[]ptrPCMData;
 }
 
+void PreviewAndPlay::renderPreviousFrame(const SeekParams& params)
+{
+	m_bSeekState = true;
+	m_dSeekTime = params.m_dDstPts;
+	std::shared_ptr<DecodedImageInfo> videoInfo = nullptr;
+	int audioLength = m_uiPerFrameSampleCnt * kOutputAudioChannels * av_get_bytes_per_sample((AVSampleFormat)kOutputAudioFormat);
+	while(true)
+	{ 
+		m_ptrQueueDecodedVideo->getPacket(videoInfo);
+		if (params.direction<0 && videoInfo->m_dPts>m_dSeekTime)
+		{
+			qDebug() << "old frame";
+			continue;
+		}
+		if (!m_bSeekState || ((videoInfo->m_dPts - m_dSeekTime) / std::max(std::abs(videoInfo->m_dPts), std::abs(m_dSeekTime)) >= -kdEpsilon))
+		{
+			qDebug() << "seek to frame pts" << videoInfo->m_dPts;
+			m_ptrQueueDecodedVideo->addPacket(videoInfo);
+			m_bSeekState = false; // 如果进入了这个分支，说明已经到达了目标点，重置状态
+		}
+		else
+		{
+			qDebug() << "drop frame pts:" << videoInfo->m_dPts;
+			m_ulDropVideoFrameCntAfterSeek++;
+			continue;
+		}
+		while (m_ulDropVideoFrameCntAfterSeek > 0)
+		{
+			if (audioLength < m_ptrPcmBuffer->getBufferSize())
+			{
+				m_ptrPcmBuffer->popFromTop(audioLength);
+				m_ulDropVideoFrameCntAfterSeek--;
+			}
+			else
+			{
+				break;
+			}
+		}
+
+		if (m_ulDropVideoFrameCntAfterSeek > 0)
+		{
+			continue;
+		}
+		else
+		{
+			break;
+		}
+	}
+	m_ptrQueueDecodedVideo->getPacket(videoInfo);
+	m_YuvCallback(videoInfo);
+	m_dCurrentVideoPts = videoInfo->m_dPts;
+	m_ptrQueueDecodedVideo->addPacket(videoInfo);
+}
+
 void PreviewAndPlay::setFinishedCallback(YuvFinishedCallback callback)
 {
 	m_FinishedCallback = callback;
@@ -165,7 +220,7 @@ void PreviewAndPlay::handler()
 			break;
 		}
 
-		if (m_bDecoderFinished)
+		if (LocalFileSource::getDecoderFinishState())
 		{
 			if (m_FinishedCallback)
 			{

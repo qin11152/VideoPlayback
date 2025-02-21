@@ -18,7 +18,9 @@ public:
 	// 反初始化模块
 	int32_t uninitModule();
 
-	// 添加数据到队列
+	// 添加数据到队列尾
+	int32_t pushPacket(T packet);
+
 	int32_t addPacket(T packet);
 
 	// 从队列中取出数据
@@ -36,8 +38,26 @@ private:
 
 	std::mutex m_mutex;                     // 互斥锁
 	std::condition_variable m_packetCV;     // 条件变量
-	std::queue<T> m_packetQueue;            // 队列，存储模板类型的数据
+	std::deque<T> m_packetQueue;            // 队列，存储模板类型的数据
 };
+
+template <typename T>
+int32_t MyPacketQueue<T>::addPacket(T packet)
+{
+	{
+		std::unique_lock<std::mutex> lock(m_mutex);
+		if (m_packetQueue.size() > m_uiMaxQueueSize)
+		{
+			m_packetCV.wait(lock, [this]() { return m_packetQueue.size() <= m_uiMaxQueueSize || !m_bRunningState; });
+		}
+		if (!m_bRunningState)
+		{
+			return -1; // 队列未运行
+		}
+		m_packetQueue.push_front(std::move(packet));
+	}
+	return 0;
+}
 
 template <typename T>
 int32_t MyPacketQueue<T>::resume()
@@ -53,7 +73,7 @@ int32_t MyPacketQueue<T>::clearQueue()
 	std::unique_lock<std::mutex> lock(m_mutex);
 	while (!m_packetQueue.empty())
 	{
-		m_packetQueue.pop();
+		m_packetQueue.pop_front();
 	}
 	return 0;
 }
@@ -94,7 +114,7 @@ int32_t MyPacketQueue<T>::uninitModule()
 	// 清空队列
 	while (!m_packetQueue.empty()) 
 	{
-		m_packetQueue.pop();
+		m_packetQueue.pop_front();
 	}
 
 	// 通知所有等待的线程
@@ -104,7 +124,7 @@ int32_t MyPacketQueue<T>::uninitModule()
 
 // 添加数据到队列
 template <typename T>
-int32_t MyPacketQueue<T>::addPacket(T packet) {
+int32_t MyPacketQueue<T>::pushPacket(T packet) {
 	{
 		std::unique_lock<std::mutex> lock(m_mutex);
 		if (m_packetQueue.size() > m_uiMaxQueueSize)
@@ -115,7 +135,7 @@ int32_t MyPacketQueue<T>::addPacket(T packet) {
 		{
 			return -1; // 队列未运行
 		}
-		m_packetQueue.push(std::move(packet));
+		m_packetQueue.push_back(std::move(packet));
 	}
 	m_packetCV.notify_one(); // 通知等待的线程
 	return 0; // 成功
@@ -135,7 +155,7 @@ int32_t MyPacketQueue<T>::getPacket(T& packet) {
 	}
 
 	packet = std::move(m_packetQueue.front()); // 取出队列头部数据
-	m_packetQueue.pop();                       // 弹出队列头部
+	m_packetQueue.pop_front();                       // 弹出队列头部
 	m_packetCV.notify_one();
 	return 0; // 成功
 }

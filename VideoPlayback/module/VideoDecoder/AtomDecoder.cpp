@@ -353,7 +353,7 @@ void AtomDecoder::flushDecoder()
 		}
 		for (auto& it : m_vecQueDecodedVideoPacket)
 		{
-			it->addPacket(videoInfo);
+			it->pushPacket(videoInfo);
 		}
 		// ¥¶¿Ìframe
 	}
@@ -636,7 +636,7 @@ void AtomDecoder::decodeVideo(std::shared_ptr<PacketWaitDecoded> packet)
 			}
 			for (auto& it : m_vecQueDecodedVideoPacket)
 			{
-				it->addPacket(videoInfo);
+				it->pushPacket(videoInfo);
 			}
 			ret = avcodec_receive_frame(videoCodecContext, frame);
 		}

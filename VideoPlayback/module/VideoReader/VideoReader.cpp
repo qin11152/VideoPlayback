@@ -242,7 +242,7 @@ void VideoReader::readFrameFromFile()
 				// 音频包需要解码
 				if (m_ptrQueNeedDecodedPacket)
 				{
-					m_ptrQueNeedDecodedPacket->addPacket(std::make_shared<PacketWaitDecoded>(packet, PacketType::Audio)); // 把音频包加入队列
+					m_ptrQueNeedDecodedPacket->pushPacket(std::make_shared<PacketWaitDecoded>(packet, PacketType::Audio)); // 把音频包加入队列
 				}
 			}
 			else if (packet->stream_index == videoStreamIndex)
@@ -250,7 +250,7 @@ void VideoReader::readFrameFromFile()
 				// 视频包需要解码
 				if (m_ptrQueNeedDecodedPacket)
 				{
-					m_ptrQueNeedDecodedPacket->addPacket(std::make_shared<PacketWaitDecoded>(packet, PacketType::Video)); // 把视频包加入队列
+					m_ptrQueNeedDecodedPacket->pushPacket(std::make_shared<PacketWaitDecoded>(packet, PacketType::Video)); // 把视频包加入队列
 				}
 			}
 			//std::this_thread::sleep_for(std::chrono::milliseconds(1));

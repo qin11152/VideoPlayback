@@ -460,7 +460,7 @@ void VideoDecoder::flushDecoder()
 		}
 		for (auto& it : m_vecQueDecodedPacket)
 		{
-			it->addPacket(videoInfo);
+			it->pushPacket(videoInfo);
 		}
 		// ¥¶¿Ìframe
 	}
@@ -589,7 +589,7 @@ void VideoDecoder::decodeVideo(std::shared_ptr<PacketWaitDecoded> packet)
 			}
 			for (auto& it : m_vecQueDecodedPacket)
 			{
-				it->addPacket(videoInfo);
+				it->pushPacket(videoInfo);
 			}
 			ret = avcodec_receive_frame(videoCodecContext, frame);
 		}

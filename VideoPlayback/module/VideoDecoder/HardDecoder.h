@@ -57,9 +57,9 @@ public:
 	//************************************
 	int32_t addPacketQueue(std::shared_ptr<MyPacketQueue<std::shared_ptr<DecodedImageInfo>>> ptrPacketQueue);
 
-	int32_t seekTo(double_t seekTime)override;
+	void pause()override;
 
-	void registerFinishedCallback(DecoderFinishedCallback callback)override;
+	void resume()override;
 
 private:
 	//************************************
@@ -105,7 +105,9 @@ private:
 
 	void flushDecoder();
 
-	void seekOperate();
+	int32_t seekTo(double_t seekTime)override;
+
+	void registerFinishedCallback(DecoderFinishedCallback callback)override;
 
 private:
 	//std::shared_ptr<demuxer> m_ptrDemuxer{ nullptr };
@@ -124,11 +126,11 @@ private:
 	bool m_bInitState{ false };
 	bool m_bRunningState{ false };
 
+	bool m_bDecoderedFinished{ false };
+
 	bool m_bPauseState = false;
 	std::mutex m_PauseMutex;
 	std::condition_variable m_PauseCV;
-
-	bool m_bDecoderedFinished{ false };
 
 	std::atomic<double_t> m_dSeekTime{ 0 };
 

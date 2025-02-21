@@ -75,6 +75,10 @@ public:
 
 	virtual int32_t seekTo(double_t seekTime) = 0;
 
+	virtual void pause() {};
+
+	virtual void resume() {};
+
 	virtual void registerFinishedCallback(DecoderFinishedCallback callback) = 0;
 
 	double m_dseekDst{ 0 };

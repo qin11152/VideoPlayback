@@ -19,6 +19,8 @@ public:
 
 	int32_t seek(const SeekParams& params);
 
+	double getFrameRate();
+
 	void seekOperate();
 
 	bool getFinishedState()const { return m_bReadFinished; };

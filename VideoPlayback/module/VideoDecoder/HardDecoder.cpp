@@ -137,36 +137,17 @@ int32_t HardDecoder::addPacketQueue(std::shared_ptr<MyPacketQueue<std::shared_pt
 	return 0;
 }
 
-int32_t HardDecoder::seekTo(double_t seekTime)
+void HardDecoder::pause()
 {
-	avcodec_flush_buffers(videoCodecContext);
-	avcodec_flush_buffers(audioCodecContext);
-	m_bSeekState = true;
-	m_dseekDst = seekTime;
-	return 0;
-	////正在快进或者快退，不处理
-	//if (m_bSeekState)
-	//{
-	//	return -1;
-	//}
-	////未初始化的时候不处理
-	//if (!m_bInitState)
-	//{
-	//	return -2;
-	//}
-	//if (seekTime < 0 || seekTime > fileFormat->duration)
-	//{
-	//	return -3;
-	//}
-	//m_dSeekTime = seekTime;
-	//m_bSeekState = true;
-	//ThreadPool::get_mutable_instance().submit(std::bind(&HardDecoder::seekOperate, this));
-	//return 0;
+	std::unique_lock<std::mutex> lck(m_PauseMutex);
+	m_bPauseState = true;
 }
 
-void HardDecoder::registerFinishedCallback(DecoderFinishedCallback callback)
+void HardDecoder::resume()
 {
-	m_finishedCallback = callback;
+	std::unique_lock<std::mutex> lck(m_PauseMutex);
+	m_bPauseState = false;
+	m_PauseCV.notify_one();
 }
 
 int32_t HardDecoder::initVideoDecoder(const DecoderInitedInfo& info)
@@ -342,76 +323,22 @@ void HardDecoder::flushDecoder()
 		}
 		for (auto& it : m_vecQueDecodedPacket)
 		{
-			it->addPacket(videoInfo);
+			it->pushPacket(videoInfo);
 		}
 		// 处理frame
 	}
 }
 
-void HardDecoder::seekOperate()
+int32_t HardDecoder::seekTo(double_t seekTime)
 {
-	m_bPauseState = true;
-	m_bSeekState = true;
-
-	m_ptrQueNeedDecodedPacket->clearQueue();
-	for (auto iter : m_vecQueDecodedPacket)
-	{
-		iter->clearQueue();
-	}
-	for (auto iter : m_vecPCMBufferPtr)
-	{
-		iter->clearBuffer();
-	}
-
-	//准备移动操作，计算要移动的位置
-	auto midva = av_q2d(fileFormat->streams[m_iVideoStreamIndex]->time_base);
-	long long videoPos = m_dSeekTime / midva;
-	m_dseekDst = m_dSeekTime;
-	qDebug() << "set seek time " << m_dseekDst;
-	int ret = av_seek_frame(fileFormat, m_iVideoStreamIndex, videoPos, AVSEEK_FLAG_BACKWARD);
-	if (0 != ret)
-	{
-		LOG_ERROR("seek video error:{}", ret);
-	}
 	avcodec_flush_buffers(videoCodecContext);
 	avcodec_flush_buffers(audioCodecContext);
+	return 0;
+}
 
-	////移动之后看一下实际上移动到了那个位置，然后再seek一下
-	//AVPacket* packet = av_packet_alloc(); // 分配一个数据包
-
-	//while (true)
-	//{
-	//	if (av_read_frame(fileFormat, packet) >= 0)
-	//	{
-	//		if (packet->stream_index == m_iAudioStreamIndex)
-	//		{
-	//			continue;
-	//		}
-	//		else if (packet->stream_index == m_iVideoStreamIndex)
-	//		{													 // 视频包需要解码
-	//			//获取这一帧的时间戳，
-	//			double pts = packet->pts * av_q2d(fileFormat->streams[m_iVideoStreamIndex]->time_base);
-	//			m_dSeekTime = pts;
-	//			//根据此时间戳，seek到这个时间戳
-	//			auto midva = av_q2d(fileFormat->streams[m_iVideoStreamIndex]->time_base);
-	//			auto videoPos = pts / midva;
-	//			//根据实际的位置再seek一下
-	//			av_seek_frame(fileFormat, m_iVideoStreamIndex, videoPos, AVSEEK_FLAG_BACKWARD);
-	//			LOG_INFO("Try Seek Time:{},Really Seek Time Is:{}", m_dSeekTime.load(), videoPos);
-	//			avcodec_flush_buffers(videoCodecContext);
-	//			avcodec_flush_buffers(audioCodecContext);
-	//			break;
-	//		}
-	//	}
-	//}
-	
-	m_ptrQueNeedDecodedPacket->resume();
-	for (auto iter : m_vecQueDecodedPacket)
-	{
-		iter->resume();
-	}
-	m_bPauseState = false;
-	m_PauseCV.notify_one();
+void HardDecoder::registerFinishedCallback(DecoderFinishedCallback callback)
+{
+	return;
 }
 
 void HardDecoder::decode()
@@ -439,6 +366,7 @@ void HardDecoder::decode()
 			{
 				flushDecoder();
 				m_bDecoderedFinished = true;
+				LocalFileSource::setDecoderFinishState(true);
 				if (m_finishedCallback)
 				{
 					m_finishedCallback();
@@ -575,7 +503,8 @@ void HardDecoder::decodeVideo(std::shared_ptr<PacketWaitDecoded> packet)
 			}
 			for (auto& it : m_vecQueDecodedPacket)
 			{
-				it->addPacket(videoInfo);
+				//qDebug() << "decoder push video pts" << videoInfo->m_dPts << "video size" << it->getSize();
+				it->pushPacket(videoInfo);
 			}
 			ret = avcodec_receive_frame(videoCodecContext, frame);
 		}

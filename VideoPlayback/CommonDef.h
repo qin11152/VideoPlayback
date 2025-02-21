@@ -45,6 +45,7 @@ extern "C"
 #include <atomic>
 #include <mutex>
 #include <memory>
+#include <deque>
 #include <queue>
 #include <thread>
 #include <algorithm>
@@ -299,7 +300,9 @@ enum class SeekType
 struct SeekParams
 {
 	double m_dSeekTime{ 0.0 };
+	double m_dDstPts{ 0.0 };
 	int m_iSeekCnt{ 0 };
+	int direction{ 0 };
 	SeekType seekType{ SeekType::SeekInvalid };
 };
 

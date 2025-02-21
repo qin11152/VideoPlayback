@@ -222,7 +222,7 @@ int32_t demuxer::seek(const SeekParams& params)
 	//准备移动操作，计算要移动的位置
 	auto midva = av_q2d(formatContext->streams[m_iVideoStreamIndex]->time_base);
 	long long videoPos = m_dSeekTime / midva;
-	qDebug() << "set seek time " << m_dSeekTime;
+	qDebug() << "set demuxer seek time " << m_dSeekTime;
 	int ret = av_seek_frame(formatContext, m_iVideoStreamIndex, videoPos, AVSEEK_FLAG_BACKWARD);
 	if (0 != ret)
 	{
@@ -233,6 +233,12 @@ int32_t demuxer::seek(const SeekParams& params)
 	m_bPauseState = false;
 	m_PauseCV.notify_one();
 	return 0;
+}
+
+double demuxer::getFrameRate()
+{
+	AVRational frameRate = formatContext->streams[m_iVideoStreamIndex]->avg_frame_rate;
+	return av_q2d(frameRate);
 }
 
 void demuxer::seekOperate()
@@ -254,13 +260,13 @@ void demuxer::demux()
 		{
 			break;
 		}
-		//{
-		//	std::unique_lock<std::mutex> lck(m_PauseMutex);
-		//	if (m_bPauseState)
-		//	{
-		//		m_PauseCV.wait(lck, [this]() {return !m_bPauseState || !m_bRunningState; });
-		//	}
-		//}
+		{
+			std::unique_lock<std::mutex> lck(m_PauseMutex);
+			if (m_bPauseState)
+			{
+				m_PauseCV.wait(lck, [this]() {return !m_bPauseState || !m_bRunningState; });
+			}
+		}
 		if (av_read_frame(formatContext, packet) >= 0)
 		{
 			if (packet->stream_index == m_iAudioStreamIndex)
@@ -268,7 +274,7 @@ void demuxer::demux()
 				// 音频包需要解码
 				if (m_ptrQueNeedDecodedPacket)
 				{
-					m_ptrQueNeedDecodedPacket->addPacket(std::make_shared<PacketWaitDecoded>(packet, PacketType::Audio)); // 把音频包加入队列
+					m_ptrQueNeedDecodedPacket->pushPacket(std::make_shared<PacketWaitDecoded>(packet, PacketType::Audio)); // 把音频包加入队列
 				}
 			}
 			else if (packet->stream_index == m_iVideoStreamIndex)
@@ -276,7 +282,7 @@ void demuxer::demux()
 				// 视频包需要解码
 				if (m_ptrQueNeedDecodedPacket)
 				{
-					m_ptrQueNeedDecodedPacket->addPacket(std::make_shared<PacketWaitDecoded>(packet, PacketType::Video)); // 把视频包加入队列
+					m_ptrQueNeedDecodedPacket->pushPacket(std::make_shared<PacketWaitDecoded>(packet, PacketType::Video)); // 把视频包加入队列
 				}
 			}
 			//std::this_thread::sleep_for(std::chrono::milliseconds(1));

@@ -18,6 +18,8 @@ public:
 
 	void nextFrame();
 
+	void previousFrame();
+
 	static void setDemuxerFinishState(bool state);
 	static bool getDemuxerFinishState();
 

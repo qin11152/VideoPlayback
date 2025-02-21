@@ -25,6 +25,8 @@ public:
 
 	void nextFrame();
 
+	void renderPreviousFrame(const SeekParams& params);
+
 	double getCurrentFramePts()const { return m_dCurrentVideoPts; }
 
 	int32_t setVideoQueue(std::shared_ptr <MyPacketQueue<std::shared_ptr<DecodedImageInfo>>> ptrQueueDecodedVideo);
@@ -61,6 +63,7 @@ private:
 
 	bool m_bSeekState{ false };
 	double m_dSeekTime{ 0.0 };
+	int direction{ 0 };
 	uint32_t m_ulDropVideoFrameCntAfterSeek{ 0 };
 
 	double m_dCurrentVideoPts{ 0 };

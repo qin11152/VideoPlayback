@@ -118,6 +118,13 @@ VideoPlayback::VideoPlayback(QWidget* parent)
 			m_ptrLocalFileSource->nextFrame();
 		}
 		});
+
+	connect(ui.lastFramePushButton, &QPushButton::clicked, this, [=]() {
+		if (m_ptrLocalFileSource)
+		{
+			m_ptrLocalFileSource->previousFrame();
+		}
+		});
 }
 
 VideoPlayback::~VideoPlayback()
@@ -382,6 +389,7 @@ void VideoPlayback::onSignalSliderValueChanged(double vlaue)
 	if (m_ptrLocalFileSource)
 	{
 		SeekParams params;
+		params.m_dDstPts = time;
 		params.m_dSeekTime = time;
 		params.seekType = SeekType::SeekAbsolute;
 		m_ptrLocalFileSource->seek(params);

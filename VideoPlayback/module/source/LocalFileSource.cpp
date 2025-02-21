@@ -53,6 +53,10 @@ int LocalFileSource::pause()
 	{
 		m_ptrDemuxer->pause();
 	}
+	if (m_ptrVideoDecoder)
+	{
+		m_ptrVideoDecoder->pause();
+	}
 	if (m_ptrPreviewAndPlay)
 	{
 		m_ptrPreviewAndPlay->pause();
@@ -66,6 +70,10 @@ int LocalFileSource::resume()
 	{
 		m_ptrDemuxer->resume();
 	}
+	if (m_ptrVideoDecoder)
+	{
+		m_ptrVideoDecoder->resume();
+	}
 	if (m_ptrPreviewAndPlay)
 	{
 		m_ptrPreviewAndPlay->resume();
@@ -75,7 +83,26 @@ int LocalFileSource::resume()
 
 void LocalFileSource::nextFrame()
 {
+	m_ptrPreviewAndPlay->pause();
 	m_ptrPreviewAndPlay->nextFrame();
+}
+
+void LocalFileSource::previousFrame()
+{
+	pause();
+	clearAllQueueAndBuffer();
+	auto curPts = m_ptrPreviewAndPlay->getCurrentFramePts();
+	qDebug() << "current pts" << curPts;
+	//计算上一帧时间戳
+	auto prePts = curPts - 1.0 / m_ptrDemuxer->getFrameRate();
+	qDebug() << "last frame" << prePts;
+	SeekParams params{ prePts - 0.3 , prePts  , -1 , -1 , SeekType::SeekAbsolute };
+	m_ptrDemuxer->seek(params);
+	m_ptrVideoDecoder->seekTo(params.m_dSeekTime);
+	m_ptrDemuxer->resume();
+	m_ptrVideoDecoder->resume();
+	resumeAllQueueAndBuffer();
+	m_ptrPreviewAndPlay->renderPreviousFrame(params);
 }
 
 void LocalFileSource::setDemuxerFinishState(bool state)
@@ -104,6 +131,7 @@ void LocalFileSource::clearAllQueueAndBuffer()
 	for (auto iter : m_vecQueDecodedPacket)
 	{
 		iter->clearQueue();
+		qDebug() << "queue size:" << iter->getSize();
 	}
 	for (auto iter : m_vecPCMBufferPtr)
 	{
