@@ -345,6 +345,8 @@ void HardDecoder::flushDecoder()
 
 int32_t HardDecoder::seekTo(double_t seekTime)
 {
+	m_bDecoderedFinished = false;
+	LocalFileSource::setDecoderFinishState(false);
 	avcodec_flush_buffers(videoCodecContext);
 	avcodec_flush_buffers(audioCodecContext);
 	return 0;

@@ -326,6 +326,13 @@ struct SeekParams
 	SeekType seekType{ SeekType::SeekInvalid };
 };
 
+enum class SyncType
+{
+	SYNC_AUDIO_MASTER, /* default choice */
+	SYNC_VIDEO_MASTER,
+	SYNC_EXTERNAL_CLOCK, /* synchronize to an external clock */
+};
+
 enum class ErrorCode
 {
 	NoError=0,

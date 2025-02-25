@@ -55,6 +55,10 @@ int32_t AudioAndVideoOutput::uninitModule()
 void AudioAndVideoOutput::pause()
 {
 	std::unique_lock<std::mutex> lck(m_PauseMutex);
+	if (m_bPauseState)
+	{
+		return;
+	}
 	m_bPauseState = true;
 }
 
@@ -65,7 +69,7 @@ void AudioAndVideoOutput::resume()
 	m_PauseCV.notify_all();
 }
 
-void AudioAndVideoOutput::seekTo(SeekParams params)
+void AudioAndVideoOutput::seekTo(const SeekParams& params)
 {
 	m_dSeekTime = params.m_dSeekTime;
 	m_bAudioSeekState = true;
@@ -80,25 +84,77 @@ void AudioAndVideoOutput::nextFrame()
 	}
 	std::shared_ptr<DecodedImageInfo> videoInfo = nullptr;
 	m_ptrQueueDecodedVideo->getPacket(videoInfo);
-	qDebug() << "audio pts:" << m_ptrQueueDecodedAudio->front()->m_dPts << ",video pts:" << videoInfo->m_dPts;
+	//qDebug() << "audio pts:" << m_ptrQueueDecodedAudio->front()->m_dPts << ",video pts:" << videoInfo->m_dPts;
 	while (m_ptrQueueDecodedVideo->getSize() > 0 && m_ptrQueueDecodedAudio->front()->m_dPts < videoInfo->m_dPts)
 	{
 		m_ptrQueueDecodedAudio->pop_front();
 	}
 	if (m_YuvCallback)
 	{
+		m_dCurrentVideoPts = videoInfo->m_dPts;
 		m_YuvCallback(videoInfo);
 	}
 }
 
-void AudioAndVideoOutput::renderPreviousFrame(const SeekParams& params)
+void AudioAndVideoOutput::previousFrame(const SeekParams& params)
 {
+	//直到拿到目标帧
+	while (true)
+	{
+		std::shared_ptr<DecodedImageInfo> videoInfo = nullptr;
+		m_ptrQueueDecodedVideo->getPacket(videoInfo);
+		qDebug() << "get packet pts" << videoInfo->m_dPts;
+		//if ((videoInfo->m_dPts - params.m_dDstPts) / max(std::abs(videoInfo->m_dPts), std::abs(params.m_dDstPts)) >= -kdEpsilon)
+		if (std::fabs(videoInfo->m_dPts - params.m_dDstPts) <= kdEpsilon)
+		{
+			//处理异常情况，解码器有可能残留之前的帧，此时dts大于目标dts，但是diff很大
+			//if ((videoInfo->m_dPts - params.m_dDstPts) > 0.5)
+			//{
+			//	continue;
+			//}
+			if (m_YuvCallback)
+			{
+				qDebug() << "render previous frame:" << videoInfo->m_dPts << ",dst pts:" << params.m_dDstPts;
+				m_dCurrentVideoPts = videoInfo->m_dPts;
+				m_YuvCallback(videoInfo);
+			}
+			break;
+		}
 
+		std::shared_ptr<DecodedAudioInfo> audioInfo = nullptr;
+		m_ptrQueueDecodedAudio->getPacket(audioInfo);
+		//小于时间戳的抛弃
+		qDebug() << "get audio packet pts" << audioInfo->m_dPts;
+		if (audioInfo->m_dPts - params.m_dDstPts > kdEpsilon)
+		{
+			//异常帧抛弃
+			if ((audioInfo->m_dPts - params.m_dDstPts) > 0.1)
+			{
+				continue;
+			}
+			//到了目标，视频还没到，加回去
+			m_ptrQueueDecodedAudio->addPacket(audioInfo);
+		}
+	}
+	while (true)
+	{
+		std::shared_ptr<DecodedAudioInfo> audioInfo = nullptr;
+		m_ptrQueueDecodedAudio->getPacket(audioInfo);
+		if ((audioInfo->m_dPts - params.m_dDstPts) / max(std::abs(audioInfo->m_dPts), std::abs(params.m_dDstPts)) >= -kdEpsilon)
+		{
+			if ((audioInfo->m_dPts - params.m_dDstPts) > 0.1)
+			{
+				continue;
+			}
+			m_ptrQueueDecodedAudio->addPacket(audioInfo);
+			break;
+		}
+	}
+	qDebug() << "render audio pts:" << m_ptrQueueDecodedAudio->front()->m_dPts;
 }
 
 void AudioAndVideoOutput::audio()
 {
-	qDebug() << "audio";
 	if (!m_bInitState)
 	{
 		return;
@@ -135,6 +191,7 @@ void AudioAndVideoOutput::audio()
 		{
 			continue;
 		}
+		auto audio_callback_time = av_gettime_relative();
 		if (!m_bAudioSeekState || ((audioInfo->m_dPts - m_dSeekTime) / max(std::abs(audioInfo->m_dPts), std::abs(m_dSeekTime)) >= -kdEpsilon))
 		{
 			m_bAudioSeekState = false;
@@ -173,6 +230,7 @@ void AudioAndVideoOutput::audio()
 		{
 			m_AudioCallback(audioInfo);
 		}
+		m_stuAudioClock.setClock(audioInfo->m_dPts, audio_callback_time / 1000000.0);
 		utils::preciseSleep(frame_duration_ms);
 	}
 }
@@ -233,6 +291,7 @@ void AudioAndVideoOutput::video()
 
 		if (m_YuvCallback)
 		{
+			m_dCurrentVideoPts = videoInfo->m_dPts;
 			m_YuvCallback(videoInfo);
 		}
 	}

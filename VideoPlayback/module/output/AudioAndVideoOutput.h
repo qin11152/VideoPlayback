@@ -4,6 +4,18 @@
 
 class AudioAndVideoOutput
 {
+	typedef struct Clock {
+		double m_dPts;           /* clock base */
+		double m_dPtsDrift;     /* clock base minus time at which we updated the clock */
+		double m_dLastuUpdated;
+
+		void setClock(double pts, double time) {
+			m_dPts = pts;
+			m_dLastuUpdated = time;
+			m_dPtsDrift = m_dPts - time;
+		}
+	} Clock;
+
 	using YuvCallBack = std::function<void(std::shared_ptr<DecodedImageInfo> videoInfo)>;
 	using AudioPlayCallback = std::function< void(std::shared_ptr<DecodedAudioInfo> audioInfo)>;
 
@@ -22,11 +34,13 @@ public:
 
 	void pause();
 	void resume();
-	void seekTo(SeekParams params);
+	void seekTo(const SeekParams& params);
 
 	void nextFrame();
 
-	void renderPreviousFrame(const SeekParams& params);
+	void previousFrame(const SeekParams& params);
+
+	double getCurrentVideoDts()const { return m_dCurrentVideoPts; }
 
 	int32_t setVideoQueue(std::shared_ptr <MyPacketQueue<std::shared_ptr<DecodedImageInfo>>> ptrQueueDecodedVideo) {
 		m_ptrQueueDecodedVideo = ptrQueueDecodedVideo; return 0;}
@@ -70,5 +84,9 @@ private:
 	int direction{ 0 };
 
 	std::atomic<double> m_dCurrentAduioPts{ 0.0 };
+	std::atomic<double> m_dCurrentVideoPts{ 0.0 };
+
+	Clock m_stuAudioClock;
+	Clock m_stuVideoClock;
 };
 

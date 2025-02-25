@@ -1,4 +1,5 @@
 #include "demuxer.h"
+#include "module/source/LocalFileSource.h"
 
 int customRead(void* opaque, uint8_t* buf, int buf_size)
 {
@@ -216,13 +217,14 @@ int32_t demuxer::resume()
 
 int32_t demuxer::seek(const SeekParams& params)
 {
+	m_bReadFinished = false;
+	LocalFileSource::setDemuxerFinishState(false);
 	m_dSeekTime = params.m_dSeekTime;
 	m_bPauseState = true;
 
 	//准备移动操作，计算要移动的位置
 	auto midva = av_q2d(formatContext->streams[m_iVideoStreamIndex]->time_base);
 	long long videoPos = m_dSeekTime / midva;
-	qDebug() << "set demuxer seek time " << m_dSeekTime;
 	int ret = av_seek_frame(formatContext, m_iVideoStreamIndex, videoPos, AVSEEK_FLAG_BACKWARD);
 	if (0 != ret)
 	{
@@ -291,10 +293,14 @@ void demuxer::demux()
 		{
 			// 现在读取到文件末尾就退出
 			av_packet_unref(packet);
-			m_bReadFinished = true;
-			std::unique_lock <std::mutex> lck(m_ReadFinishedMutex);
+			if (!m_bReadFinished)
+			{
+				LocalFileSource::setDemuxerFinishState(true);
+				m_bReadFinished = true;
+			}
+			//std::unique_lock <std::mutex> lck(m_ReadFinishedMutex);
 			//int ret = av_seek_frame(formatContext, videoStreamIndex, 0, AVSEEK_FLAG_BACKWARD);
-			m_ReadFinishedCV.wait(lck, [this] {return !m_bReadFinished || !m_bRunningState; });
+			//m_ReadFinishedCV.wait(lck, [this] {return !m_bReadFinished || !m_bRunningState; });
 		}
 		//LOG_INFO("Read End");
 	}

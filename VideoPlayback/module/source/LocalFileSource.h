@@ -48,5 +48,9 @@ private:
 private:
 	static std::atomic<bool> m_bDemuxerFinished;
 	static std::atomic<bool> m_bDecoderFinished;
+
+	std::atomic<bool> m_bSeekState{ false };
+	std::atomic<bool> m_bNextFrameState{ false };
+	std::atomic<bool> m_bPreviousState{ false };
 };
 

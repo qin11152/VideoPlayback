@@ -15,6 +15,11 @@ LocalFileSource::~LocalFileSource()
 
 int LocalFileSource::seek(const SeekParams& params)
 {
+	if (m_bSeekState)
+	{
+		return -1;
+	}
+	m_bSeekState = true;
 	pause();
 	
 	clearAllQueueAndBuffer();
@@ -35,28 +40,21 @@ int LocalFileSource::seek(const SeekParams& params)
 		}
 	}
 	resumeAllQueueAndBuffer();
-	if (SeekType::SeekAbsolute == params.seekType)
-	{
-		resume();
-	}
-	else if (SeekType::SeekFrameStep == params.seekType)
-	{
-		//不恢复消耗，队列恢复
-	}
-
+	resume();
+	m_bSeekState = false;
 	return 0;
 }
 
 int LocalFileSource::pause()
 {
-	//if (m_ptrDemuxer)
-	//{
-	//	m_ptrDemuxer->pause();
-	//}
-	//if (m_ptrVideoDecoder)
-	//{
-	//	m_ptrVideoDecoder->pause();
-	//}
+	if (m_ptrDemuxer)
+	{
+		m_ptrDemuxer->pause();
+	}
+	if (m_ptrVideoDecoder)
+	{
+		m_ptrVideoDecoder->pause();
+	}
 	if (m_ptrAudioAndVideoOutput)
 	{
 		m_ptrAudioAndVideoOutput->pause();
@@ -83,26 +81,37 @@ int LocalFileSource::resume()
 
 void LocalFileSource::nextFrame()
 {
+	if (m_bNextFrameState)
+	{
+		return;
+	}
+	m_bNextFrameState = true;
 	m_ptrAudioAndVideoOutput->pause();
 	m_ptrAudioAndVideoOutput->nextFrame();
+	m_bNextFrameState = false;
 }
 
 void LocalFileSource::previousFrame()
 {
-	//pause();
-	//clearAllQueueAndBuffer();
-	//auto curPts = m_ptrPreviewAndPlay->getCurrentFramePts();
-	//qDebug() << "current pts" << curPts;
-	////计算上一帧时间戳
-	//auto prePts = curPts - 1.0 / m_ptrDemuxer->getFrameRate();
-	//qDebug() << "last frame" << prePts;
-	//SeekParams params{ prePts - 0.3 , prePts  , -1 , -1 , SeekType::SeekAbsolute };
-	//m_ptrDemuxer->seek(params);
-	//m_ptrVideoDecoder->seekTo(params.m_dSeekTime);
-	//m_ptrDemuxer->resume();
-	//m_ptrVideoDecoder->resume();
-	//resumeAllQueueAndBuffer();
-	//m_ptrPreviewAndPlay->renderPreviousFrame(params);
+	if (m_bPreviousState)
+	{
+		return;
+	}
+	m_bPreviousState = true;
+	pause();
+	clearAllQueueAndBuffer();
+	auto curPts = m_ptrAudioAndVideoOutput->getCurrentVideoDts();
+	//计算上一帧时间戳
+	auto prePts = curPts - 1.0 / m_ptrDemuxer->getFrameRate();
+	qDebug() << "current pts" << curPts << "last frame pts" << prePts << ",dst frame pts" << prePts - 0.5;
+	SeekParams params{ prePts - 0.5 , prePts  , -1 , -1 , SeekType::SeekAbsolute };
+	m_ptrDemuxer->seek(params);
+	m_ptrVideoDecoder->seekTo(params.m_dSeekTime);
+	m_ptrDemuxer->resume();
+	m_ptrVideoDecoder->resume();
+	resumeAllQueueAndBuffer();
+	m_ptrAudioAndVideoOutput->previousFrame(params);
+	m_bPreviousState = false;
 }
 
 void LocalFileSource::setDemuxerFinishState(bool state)
@@ -131,7 +140,6 @@ void LocalFileSource::clearAllQueueAndBuffer()
 	for (auto iter : m_vecQueDecodedPacket)
 	{
 		iter->clearQueue();
-		qDebug() << "queue size:" << iter->getSize();
 	}
 	for (auto iter : m_vecQueDecodedAudioPacket)
 	{
