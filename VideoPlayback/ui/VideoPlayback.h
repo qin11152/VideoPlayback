@@ -55,7 +55,7 @@ public:
     // brief: 音频的回调，进行音频播放
     // Parameter: std::shared_ptr<AudioCallbackInfo> audioInfo
     //************************************
-    void audioPlayCallBack(std::shared_ptr<AudioCallbackInfo> audioInfo);
+    void audioPlayCallBack(std::shared_ptr<DecodedAudioInfo> audioInfo);
 
     void SDIOutputCallback(const DecodedImageInfo& videoInfo);
 
@@ -110,6 +110,7 @@ private:
 	std::shared_ptr<MyPacketQueue<std::shared_ptr<PacketWaitDecoded>>> m_ptrQueuePacketNeededDecoded{ nullptr }; //存储需要解码的数据
     std::shared_ptr<MyPacketQueue<std::shared_ptr<DecodedImageInfo>>> m_ptrQueueDecodedImageData{ nullptr };    //解码的视频帧
     std::shared_ptr< Buffer> m_ptrAudioBuffer{ nullptr };       //解码的音频帧
+    std::shared_ptr<MyPacketQueue<std::shared_ptr<DecodedAudioInfo>>> m_ptrQueueDecodedAudioData{ nullptr };
 
 
 	VideoReaderInitedInfo m_stuVideoInitedInfo;

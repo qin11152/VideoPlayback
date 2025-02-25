@@ -57,6 +57,8 @@ public:
 	//************************************
 	int32_t addPacketQueue(std::shared_ptr<MyPacketQueue<std::shared_ptr<DecodedImageInfo>>> ptrPacketQueue);
 
+	int32_t addAudioPacketQueue(std::shared_ptr<MyPacketQueue<std::shared_ptr<DecodedAudioInfo>>> ptrPacketQueue)override;
+
 	void pause()override;
 
 	void resume()override;
@@ -146,7 +148,9 @@ private:
 //一个解码器可能有多个消耗者，对应多个队列
 	std::mutex m_PcmBufferAddMutex;
 	std::mutex m_VideoQueueAddMutex;
+	std::mutex m_AudioQueueAddMutex;
+	std::vector<std::shared_ptr<MyPacketQueue<std::shared_ptr<DecodedAudioInfo>>>> m_vecQueueDecodedAudioPacket;
 	std::vector<std::shared_ptr<Buffer>> m_vecPCMBufferPtr;	//解码后的音频数据队列
-	std::vector<std::shared_ptr <MyPacketQueue<std::shared_ptr<DecodedImageInfo>>>> m_vecQueDecodedPacket;	//解码后的视频数据队列
+	std::vector<std::shared_ptr <MyPacketQueue<std::shared_ptr<DecodedImageInfo>>>> m_vecQueDecodedVideoPacket;	//解码后的视频数据队列
 };
 

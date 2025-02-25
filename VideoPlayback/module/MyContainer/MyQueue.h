@@ -26,6 +26,10 @@ public:
 	// 从队列中取出数据
 	int32_t getPacket(T& packet);
 
+	T front();
+
+	void pop_front();
+
 	uint32_t getSize();
 
 	int32_t clearQueue();
@@ -40,6 +44,23 @@ private:
 	std::condition_variable m_packetCV;     // 条件变量
 	std::deque<T> m_packetQueue;            // 队列，存储模板类型的数据
 };
+
+template <typename T>
+void MyPacketQueue<T>::pop_front()
+{
+	std::unique_lock<std::mutex> lock(m_mutex);
+	if (m_packetQueue.size() > 0)
+	{
+		m_packetQueue.pop_front();
+		m_packetCV.notify_one();
+	}
+}
+
+template <typename T>
+T MyPacketQueue<T>::front()
+{
+	return m_packetQueue.front();
+}
 
 template <typename T>
 int32_t MyPacketQueue<T>::addPacket(T packet)

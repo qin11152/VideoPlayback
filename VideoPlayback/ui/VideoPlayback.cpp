@@ -152,9 +152,11 @@ bool VideoPlayback::initModule()
 	m_ptrQueuePacketNeededDecoded = std::make_shared<MyPacketQueue<std::shared_ptr<PacketWaitDecoded>>>();
 	m_ptrQueueDecodedImageData = std::make_shared<MyPacketQueue<std::shared_ptr<DecodedImageInfo>>>();
 	m_ptrAudioBuffer = std::make_shared<Buffer>();
+	m_ptrQueueDecodedAudioData = std::make_shared<MyPacketQueue<std::shared_ptr<DecodedAudioInfo>>>();
 
 	m_ptrQueuePacketNeededDecoded->initModule();
 	m_ptrQueueDecodedImageData->initModule();
+	m_ptrQueueDecodedAudioData->initModule();
 	m_ptrAudioBuffer->initBuffer(1024 * 10);
 
 #if defined(BlackMagicEnabled)
@@ -202,10 +204,10 @@ void VideoPlayback::previewCallback(std::shared_ptr<DecodedImageInfo> videoInfo)
 	updateTimeSliderPosition(videoInfo->m_dPts * m_stuMediaInfo.fps);
 }
 
-void VideoPlayback::audioPlayCallBack(std::shared_ptr<AudioCallbackInfo> audioInfo)
+void VideoPlayback::audioPlayCallBack(std::shared_ptr<DecodedAudioInfo> audioInfo)
 {
 	//int cvafd = kOutputAudioChannels * channelSampleNumber * av_get_bytes_per_sample((AVSampleFormat)kOutputAudioFormat);
-	QByteArray data((char*)audioInfo->m_pPCMData, audioInfo->m_ulPCMLength);
+	QByteArray data((char*)audioInfo->m_ptrPCMData, audioInfo->m_uiPCMLength);
 	inputPcmData(data);
 
 	//TODOµ¥¶ÀÕª³öÀ´
@@ -215,15 +217,15 @@ void VideoPlayback::audioPlayCallBack(std::shared_ptr<AudioCallbackInfo> audioIn
 		uint8_t* destData = nullptr;
 		uint32_t iWritten = 0;
 		std::unique_lock<std::mutex> lck(m_mutex);
-		uint64_t ret = m_ptrSelectedDeckLinkOutput->WriteAudioSamplesSync(audioInfo->m_pPCMData, audioInfo->m_ulPCMLength, &iWritten);
+		uint64_t ret = m_ptrSelectedDeckLinkOutput->WriteAudioSamplesSync(audioInfo->m_ptrPCMData, audioInfo->m_uiPCMLength, &iWritten);
 		lck.unlock();
 		if (ret != S_OK)
 		{
 			LOG_ERROR("WriteAudioSamplesSync error,ret={}", ret);
 		}
-		if (iWritten != audioInfo->m_ulPCMLength)
+		if (iWritten != audioInfo->m_uiPCMLength)
 		{
-			LOG_ERROR("WriteAudioSamplesSync error,iWritten={},dest cnt={}", iWritten, audioInfo->m_ulPCMLength);
+			LOG_ERROR("WriteAudioSamplesSync error,iWritten={},dest cnt={}", iWritten, audioInfo->m_uiPCMLength);
 		}
 	}
 #endif
@@ -594,15 +596,18 @@ bool VideoPlayback::initAllSubModule()
 	{
 		m_ptrQueuePacketNeededDecoded->clearQueue();
 		m_ptrQueueDecodedImageData->clearQueue();
-		m_ptrAudioBuffer->clearBuffer();
+		//m_ptrAudioBuffer->clearBuffer();
+		m_ptrQueueDecodedAudioData->clearQueue();
 
 		m_ptrQueuePacketNeededDecoded->initModule();
 		m_ptrQueueDecodedImageData->initModule();
-		m_ptrAudioBuffer->initBuffer(1024 * 10);
+		m_ptrQueueDecodedAudioData->initModule(150);
+		//m_ptrAudioBuffer->initBuffer(1024 * 10);
 
 		m_ptrLocalFileSource->m_ptrQueueWaitedDecodedPacket = m_ptrQueuePacketNeededDecoded;
 
-		m_ptrLocalFileSource->m_vecPCMBufferPtr.push_back(m_ptrAudioBuffer);
+		//m_ptrLocalFileSource->m_vecPCMBufferPtr.push_back(m_ptrAudioBuffer);
+		m_ptrLocalFileSource->m_vecQueDecodedAudioPacket.push_back(m_ptrQueueDecodedAudioData);
 		m_ptrLocalFileSource->m_vecQueDecodedPacket.push_back(m_ptrQueueDecodedImageData);
 
 		m_ptrLocalFileSource->m_ptrDemuxer = std::make_shared<demuxer>();
@@ -615,7 +620,7 @@ bool VideoPlayback::initAllSubModule()
 			LOG_INFO("Use Hardware Decoder");
 			m_ptrLocalFileSource->m_ptrVideoDecoder = std::make_shared< HardDecoder>(m_ptrDemuxer);
 		}
-		m_ptrLocalFileSource->m_ptrPreviewAndPlay = std::make_shared<PreviewAndPlay>();
+		m_ptrLocalFileSource->m_ptrAudioAndVideoOutput = std::make_shared<AudioAndVideoOutput>();
 
 		m_stuVideoInitedInfo.m_strFileName = m_strChooseFileName.toStdString();
 		m_stuVideoInitedInfo.m_bAtom = false;
@@ -632,7 +637,7 @@ bool VideoPlayback::uninitAllSubModule()
 	m_ptrLocalFileSource->m_vecPCMBufferPtr.clear();
 	m_ptrLocalFileSource->m_vecQueDecodedPacket.clear();
 	m_ptrLocalFileSource->m_ptrDemuxer = nullptr;
-	m_ptrLocalFileSource->m_ptrPreviewAndPlay = nullptr;
+	m_ptrLocalFileSource->m_ptrAudioAndVideoOutput = nullptr;
 	m_ptrLocalFileSource->m_ptrVideoDecoder = nullptr;
 	//if (m_ptrDemuxer)
 	//{
@@ -672,16 +677,18 @@ void VideoPlayback::initLocalFileSource()
 	m_ptrLocalFileSource->m_ptrDemuxer->initModule(m_stuVideoInitedInfo, m_stuDecoderInitedInfo);
 
 	m_ptrLocalFileSource->m_ptrVideoDecoder->addPacketQueue(m_ptrQueueDecodedImageData);
-	m_ptrLocalFileSource->m_ptrVideoDecoder->addPCMBuffer(m_ptrAudioBuffer);
+	//m_ptrLocalFileSource->m_ptrVideoDecoder->addPCMBuffer(m_ptrAudioBuffer);
+	m_ptrLocalFileSource->m_ptrVideoDecoder->addAudioPacketQueue(m_ptrQueueDecodedAudioData);
 	m_ptrLocalFileSource->m_ptrVideoDecoder->initModule(m_stuDecoderInitedInfo, m_stuDataHandlerInfo);
 	m_ptrLocalFileSource->m_ptrVideoDecoder->registerFinishedCallback(std::bind(&VideoPlayback::onDecoderFinshed, this));
 
-	m_ptrLocalFileSource->m_ptrPreviewAndPlay->setVideoQueue(m_ptrQueueDecodedImageData);
-	m_ptrLocalFileSource->m_ptrPreviewAndPlay->setAudioQueue(m_ptrAudioBuffer);
-	m_ptrLocalFileSource->m_ptrPreviewAndPlay->setCallback(std::bind(&VideoPlayback::previewCallback, this, std::placeholders::_1));
-	m_ptrLocalFileSource->m_ptrPreviewAndPlay->setCallback(std::bind(&VideoPlayback::audioPlayCallBack, this, std::placeholders::_1));
-	m_ptrLocalFileSource->m_ptrPreviewAndPlay->setFinishedCallback(std::bind(&VideoPlayback::onConsumeFinished, this));
-	m_ptrLocalFileSource->m_ptrPreviewAndPlay->initModule(m_stuDataHandlerInfo);
+	m_ptrLocalFileSource->m_ptrAudioAndVideoOutput->setVideoQueue(m_ptrQueueDecodedImageData);
+	//m_ptrLocalFileSource->m_ptrAudioAndVideoOutput->setAudioQueue(m_ptrAudioBuffer);
+	m_ptrLocalFileSource->m_ptrAudioAndVideoOutput->setAudioQueue(m_ptrQueueDecodedAudioData);
+	m_ptrLocalFileSource->m_ptrAudioAndVideoOutput->setCallback(std::bind(&VideoPlayback::previewCallback, this, std::placeholders::_1));
+	m_ptrLocalFileSource->m_ptrAudioAndVideoOutput->setCallback(std::bind(&VideoPlayback::audioPlayCallBack, this, std::placeholders::_1));
+	m_ptrLocalFileSource->m_ptrAudioAndVideoOutput->setFinishedCallback(std::bind(&VideoPlayback::onConsumeFinished, this));
+	m_ptrLocalFileSource->m_ptrAudioAndVideoOutput->initModule(m_stuDataHandlerInfo);
 }
 
 void VideoPlayback::updateTimeLabel(const int currentTime, const int totalTime)
@@ -782,6 +789,7 @@ bool VideoPlayback::startPlay()
 {
 	if (m_ptrAudioOutput)
 	{
+		m_ptrAudioOutput->setBufferSize(1024 * 15);
 		m_ptr_AudioDevice = m_ptrAudioOutput->start();
 	}
 	return nullptr == m_ptr_AudioDevice ? false : true;

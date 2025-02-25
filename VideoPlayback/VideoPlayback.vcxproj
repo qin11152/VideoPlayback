@@ -131,6 +131,7 @@
     <ClCompile Include="module\MXF++\avid_mxf_info.c" />
     <ClCompile Include="module\MyContainer\Buffer.cpp" />
     <ClCompile Include="module\MyContainer\MyQueue.cpp" />
+    <ClCompile Include="module\output\AudioAndVideoOutput.cpp" />
     <ClCompile Include="module\source\LocalFileSource.cpp" />
     <ClCompile Include="module\source\SourceBase.cpp" />
     <ClCompile Include="module\ThreadPool\ThreadPool.cpp" />
@@ -176,6 +177,7 @@
     <ClInclude Include="module\MXF++\avid_mxf_info.h" />
     <ClInclude Include="module\MyContainer\Buffer.h" />
     <ClInclude Include="module\MyContainer\MyQueue.h" />
+    <ClInclude Include="module\output\AudioAndVideoOutput.h" />
     <ClInclude Include="module\source\LocalFileSource.h" />
     <ClInclude Include="module\source\SourceBase.h" />
     <ClInclude Include="module\ThreadPool\ThreadPool.h" />

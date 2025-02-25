@@ -69,6 +69,9 @@
     <Filter Include="module\mxf++">
       <UniqueIdentifier>{dcc1010f-7eb8-4f5e-be4c-cf82aeed186c}</UniqueIdentifier>
     </Filter>
+    <Filter Include="module\output">
+      <UniqueIdentifier>{3abece2a-8384-4b99-9452-93e80b48c9df}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <QtRcc Include="VideoPlayback.qrc">
@@ -181,6 +184,9 @@
     <ClCompile Include="module\source\LocalFileSource.cpp">
       <Filter>module\source</Filter>
     </ClCompile>
+    <ClCompile Include="module\output\AudioAndVideoOutput.cpp">
+      <Filter>module\output</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <QtMoc Include="ui\VideoPlayback.h">
@@ -267,6 +273,9 @@
     </ClInclude>
     <ClInclude Include="module\source\LocalFileSource.h">
       <Filter>module\source</Filter>
+    </ClInclude>
+    <ClInclude Include="module\output\AudioAndVideoOutput.h">
+      <Filter>module\output</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

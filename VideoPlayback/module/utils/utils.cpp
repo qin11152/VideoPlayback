@@ -61,6 +61,17 @@ namespace utils
 		}
 	}
 
+	void preciseSleep(double milliseconds)
+	{
+		auto duration = std::chrono::duration<double, std::nano>(milliseconds * 1e6);
+		auto start = std::chrono::high_resolution_clock::now();
+
+		// 忙等待，比较纳秒级时间
+		while (std::chrono::high_resolution_clock::now() - start < duration) {
+			// 忙等待循环，避免线程切换
+		}
+	}
+
 #if defined(WIN32)
 	std::wstring BSTRToWString(const BSTR bstr)
 	{

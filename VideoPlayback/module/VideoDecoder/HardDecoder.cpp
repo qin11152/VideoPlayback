@@ -68,7 +68,7 @@ int32_t HardDecoder::uninitModule()
 	{
 		it->unInitBuffer();
 	}
-	for (auto& it : m_vecQueDecodedPacket)
+	for (auto& it : m_vecQueDecodedVideoPacket)
 	{
 		it->uninitModule();
 	}
@@ -80,7 +80,7 @@ int32_t HardDecoder::uninitModule()
 	{
 		m_DecoderThread.join();
 	}
-	m_vecQueDecodedPacket.clear();
+	m_vecQueDecodedVideoPacket.clear();
 	m_vecPCMBufferPtr.clear();
 	m_iAudioStreamIndex = -1;
 	m_iVideoStreamIndex = -1;
@@ -126,9 +126,23 @@ int32_t HardDecoder::addPCMBuffer(std::shared_ptr<Buffer> ptrPCMBuffer)
 int32_t HardDecoder::addPacketQueue(std::shared_ptr<MyPacketQueue<std::shared_ptr<DecodedImageInfo>>> ptrPacketQueue)
 {
 	std::unique_lock<std::mutex> lck(m_VideoQueueAddMutex);
-	if (std::find(m_vecQueDecodedPacket.begin(), m_vecQueDecodedPacket.end(), ptrPacketQueue) == m_vecQueDecodedPacket.end())
+	if (std::find(m_vecQueDecodedVideoPacket.begin(), m_vecQueDecodedVideoPacket.end(), ptrPacketQueue) == m_vecQueDecodedVideoPacket.end())
 	{
-		m_vecQueDecodedPacket.push_back(ptrPacketQueue);
+		m_vecQueDecodedVideoPacket.push_back(ptrPacketQueue);
+	}
+	else
+	{
+		return -1;
+	}
+	return 0;
+}
+
+int32_t HardDecoder::addAudioPacketQueue(std::shared_ptr<MyPacketQueue<std::shared_ptr<DecodedAudioInfo>>> ptrPacketQueue)
+{
+	std::lock_guard<std::mutex> lck(m_AudioQueueAddMutex);
+	if (std::find(m_vecQueueDecodedAudioPacket.begin(), m_vecQueueDecodedAudioPacket.end(), ptrPacketQueue) == m_vecQueueDecodedAudioPacket.end())
+	{
+		m_vecQueueDecodedAudioPacket.push_back(ptrPacketQueue);
 	}
 	else
 	{
@@ -321,7 +335,7 @@ void HardDecoder::flushDecoder()
 			av_freep(yuvFrame->data);
 			av_frame_free(&yuvFrame);
 		}
-		for (auto& it : m_vecQueDecodedPacket)
+		for (auto& it : m_vecQueDecodedVideoPacket)
 		{
 			it->pushPacket(videoInfo);
 		}
@@ -501,7 +515,7 @@ void HardDecoder::decodeVideo(std::shared_ptr<PacketWaitDecoded> packet)
 				av_freep(yuvFrame->data);
 				av_frame_free(&yuvFrame);
 			}
-			for (auto& it : m_vecQueDecodedPacket)
+			for (auto& it : m_vecQueDecodedVideoPacket)
 			{
 				//qDebug() << "decoder push video pts" << videoInfo->m_dPts << "video size" << it->getSize();
 				it->pushPacket(videoInfo);
@@ -536,7 +550,7 @@ void HardDecoder::decodeAudio(std::shared_ptr<PacketWaitDecoded> packet)
 			////把重采样之前的数据保存本地
 			//fs.write((const char *)frame->data[0], frame->linesize[0]);
 			//fs.close();
-
+			std::shared_ptr<DecodedAudioInfo> audioInfo = std::make_shared<DecodedAudioInfo>();
 			int resampled_samples = av_rescale_rnd(
 				swr_get_delay(swrContext, audioCodecContext->sample_rate) + frame->nb_samples,
 				m_stuAudioInfo.audioSampleRate, audioCodecContext->sample_rate, AV_ROUND_UP);
@@ -563,6 +577,15 @@ void HardDecoder::decodeAudio(std::shared_ptr<PacketWaitDecoded> packet)
 			//fs.write((const char*)resampled_data[0], pcmNumber);
 			//fs.close();
 			double audioDts = frame->pts * av_q2d(fileFormat->streams[m_iAudioStreamIndex]->time_base);
+			audioInfo->m_dPts = audioDts;
+			audioInfo->m_uiNumberSamples = converted_samples;
+			audioInfo->m_uiChannelCnt = kOutputAudioChannels;
+			audioInfo->m_AudioFormat = m_stuAudioInfo.audioFormat;
+			audioInfo->m_uiPCMLength = pcmNumber;
+			audioInfo->m_ptrPCMData = new uint8_t[pcmNumber]{ 0 };
+			audioInfo->m_uiSampleRate = m_stuAudioInfo.audioSampleRate;
+			memcpy(audioInfo->m_ptrPCMData, resampled_data[0], pcmNumber);
+
 			//qDebug() << "audio pts:" << audioDts;
 			//if (!m_bSeekState || ((audioDts - m_dseekDst) / std::max(std::abs(audioDts), std::abs(m_dseekDst)) >= -kdEpsilon))
 			//{
@@ -571,9 +594,9 @@ void HardDecoder::decodeAudio(std::shared_ptr<PacketWaitDecoded> packet)
 			//}
 			if (resampled_data)
 			{
-				for (auto& it : m_vecPCMBufferPtr)
+				for (auto& it : m_vecQueueDecodedAudioPacket)
 				{
-					it->appendData(resampled_data[0], pcmNumber);
+					it->pushPacket(audioInfo);
 				}
 			}
 		}

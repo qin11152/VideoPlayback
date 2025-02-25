@@ -51,6 +51,8 @@ public:
 	//************************************
 	virtual int32_t addPacketQueue(std::shared_ptr<MyPacketQueue<std::shared_ptr<DecodedImageInfo>>> ptrPacketQueue) { return 0; };
 
+	virtual int32_t addAudioPacketQueue(std::shared_ptr<MyPacketQueue<std::shared_ptr<DecodedAudioInfo>>> ptrPacketQueue) { return 0; };
+
 	//************************************
 	// Method:    addAtomVideoPacketQueue
 	// FullName:  VideoDecoderBase::addAtomVideoPacketQueue

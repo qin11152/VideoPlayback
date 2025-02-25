@@ -181,6 +181,26 @@ struct DecodedImageInfo
 	}
 };
 
+struct DecodedAudioInfo
+{
+	uint32_t m_uiChannelCnt;
+	uint32_t m_uiNumberSamples;
+	uint32_t m_uiSampleRate;
+	uint32_t m_uiPCMLength;
+	uint8_t* m_ptrPCMData{ nullptr };
+	AVSampleFormat m_AudioFormat{ AVSampleFormat::AV_SAMPLE_FMT_NONE };
+	double m_dPts{ 0.0 };
+
+	~DecodedAudioInfo()
+	{
+		if (m_ptrPCMData)
+		{
+			delete[]m_ptrPCMData;
+			m_ptrPCMData = nullptr;
+		}
+	}
+};
+
 /*!
  * \class AudioCallbackInfo
  *
