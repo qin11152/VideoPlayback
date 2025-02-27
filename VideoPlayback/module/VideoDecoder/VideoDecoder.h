@@ -52,7 +52,7 @@ public:
 
 	//************************************
 	// Method:    addPacketQueue
-	// FullName:  HardDecoder::addPacketQueue
+	// FullName:  VideoDecoder::addPacketQueue
 	// Access:    public 
 	// Returns:   int32_t
 	// Qualifier:
@@ -61,9 +61,11 @@ public:
 	//************************************
 	int32_t addPacketQueue(std::shared_ptr<MyPacketQueue<std::shared_ptr<DecodedImageInfo>>> ptrPacketQueue);
 
-	int32_t seekTo(double_t seekTime)override;
+	int32_t addAudioPacketQueue(std::shared_ptr<MyPacketQueue<std::shared_ptr<DecodedAudioInfo>>> ptrPacketQueue)override;
 
-	void registerFinishedCallback(DecoderFinishedCallback callback)override;
+	void pause()override;
+
+	void resume()override;
 
 private:
 	//************************************
@@ -109,7 +111,9 @@ private:
 
 	void flushDecoder();
 
-	void seekOperate();
+	int32_t seekTo(double_t seekTime)override;
+
+	void registerFinishedCallback(DecoderFinishedCallback callback)override;
 
 private:
 	//std::shared_ptr<demuxer> m_ptrDemuxer{ nullptr };
@@ -147,6 +151,8 @@ private:
 	//一个解码器可能有多个消耗者，对应多个队列
 	std::mutex m_PcmBufferAddMutex;
 	std::mutex m_VideoQueueAddMutex;
-	std::vector<std::shared_ptr<Buffer>> m_vecPCMBufferPtr;
-	std::vector<std::shared_ptr <MyPacketQueue<std::shared_ptr<DecodedImageInfo>>>> m_vecQueDecodedPacket;
+	std::mutex m_AudioQueueAddMutex;
+	std::vector<std::shared_ptr<MyPacketQueue<std::shared_ptr<DecodedAudioInfo>>>> m_vecQueueDecodedAudioPacket;
+	std::vector<std::shared_ptr<Buffer>> m_vecPCMBufferPtr;	//解码后的音频数据队列
+	std::vector<std::shared_ptr <MyPacketQueue<std::shared_ptr<DecodedImageInfo>>>> m_vecQueDecodedVideoPacket;	//解码后的视频数据队列
 };

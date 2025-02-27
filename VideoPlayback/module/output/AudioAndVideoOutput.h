@@ -85,6 +85,7 @@ private:
 
 	std::atomic<double> m_dCurrentAduioPts{ 0.0 };
 	std::atomic<double> m_dCurrentVideoPts{ 0.0 };
+	double m_dFrameTimer{ 0 };	//视频帧的时间,localtime
 
 	Clock m_stuAudioClock;
 	Clock m_stuVideoClock;
