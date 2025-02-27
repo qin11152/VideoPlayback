@@ -140,7 +140,11 @@ void AudioAndVideoOutput::previousFrame(const SeekParams& params)
 	{
 		std::shared_ptr<DecodedAudioInfo> audioInfo = nullptr;
 		m_ptrQueueDecodedAudio->getPacket(audioInfo);
+#ifndef  WIN32
+		if ((audioInfo->m_dPts - params.m_dDstPts) / std::max(std::abs(audioInfo->m_dPts), std::abs(params.m_dDstPts)) >= -kdEpsilon)
+#else
 		if ((audioInfo->m_dPts - params.m_dDstPts) / max(std::abs(audioInfo->m_dPts), std::abs(params.m_dDstPts)) >= -kdEpsilon)
+#endif // ! WIN32
 		{
 			if ((audioInfo->m_dPts - params.m_dDstPts) > 0.1)
 			{
@@ -192,7 +196,11 @@ void AudioAndVideoOutput::audio()
 			continue;
 		}
 		auto audio_callback_time = av_gettime_relative();
+#ifndef  WIN32
+		if (!m_bAudioSeekState || ((audioInfo->m_dPts - m_dSeekTime) / std::max(std::abs(audioInfo->m_dPts), std::abs(m_dSeekTime)) >= -kdEpsilon))
+#else
 		if (!m_bAudioSeekState || ((audioInfo->m_dPts - m_dSeekTime) / max(std::abs(audioInfo->m_dPts), std::abs(m_dSeekTime)) >= -kdEpsilon))
+#endif // ! WIN32
 		{
 			m_bAudioSeekState = false;
 		}
@@ -268,8 +276,11 @@ void AudioAndVideoOutput::video()
 		{
 			m_ptrQueueDecodedVideo->getPacket(videoInfo);
 		}
-
+#ifndef WIN32
+		if (nullptr != videoInfo && (!m_bVideoSeekState || ((videoInfo->m_dPts - m_dSeekTime) / std::max(std::abs(videoInfo->m_dPts), std::abs(m_dSeekTime))) >= -kdEpsilon))
+#else
 		if (nullptr != videoInfo && (!m_bVideoSeekState || ((videoInfo->m_dPts - m_dSeekTime) / max(std::abs(videoInfo->m_dPts), std::abs(m_dSeekTime))) >= -kdEpsilon))
+#endif // !WIN32
 		{
 			m_bAudioSeekState = false;
 		}
