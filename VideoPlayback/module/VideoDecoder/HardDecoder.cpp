@@ -64,6 +64,8 @@ int32_t HardDecoder::initModule(const DecoderInitedInfo& info, DataHandlerInited
 int32_t HardDecoder::uninitModule()
 {
 	m_bRunningState = false;
+	m_bPauseState = false;
+	m_PauseCV.notify_all();
 	for (auto& it : m_vecPCMBufferPtr)
 	{
 		it->unInitBuffer();
@@ -160,18 +162,102 @@ void HardDecoder::pause()
 void HardDecoder::resume()
 {
 	std::unique_lock<std::mutex> lck(m_PauseMutex);
+	if (!m_bPauseState)
+	{
+		return;
+	}
 	m_bPauseState = false;
 	m_PauseCV.notify_one();
 }
 
 int32_t HardDecoder::initVideoDecoder(const DecoderInitedInfo& info)
 {
+#if 0
 	if (nullptr == info.videoCodecParameters)
 	{
 		return -1;
 	}
-	videoCodecContext = avcodec_alloc_context3(info.videoCodec);
 
+#if defined __APPLE__
+	bool bAppleSupport = true;
+	//只有264,265，prores支持硬解
+	std::map<int, std::string> supportCodec = {
+		{AV_CODEC_ID_H264,"h264_videotoolbox"},
+		{AV_CODEC_ID_HEVC,"hevc_videotoolbox"},
+		{AV_CODEC_ID_PRORES,"prores_videotoolbox"}
+	};
+	if (!supportCodec.count(info.videoCodecParameters->codec_id))
+	{
+		bAppleSupport = false;
+	}
+	if (bAppleSupport)
+	{
+		videoCodecContext = avcodec_alloc_context3(supportCodec[info.videoCodecParameters->codec_id]);
+		if (avcodec_parameters_to_context(videoCodecContext, info.videoCodecParameters) < 0)
+		{
+			avcodec_free_context(&videoCodecContext);
+			return (int32_t)ErrorCode::AllocateContextError;
+		}
+
+		qDebug() << "Using hardware decoder";
+		AVBufferRef* hwDeviceCtx = nullptr;
+		int err = av_hwdevice_ctx_create(&hwDeviceCtx, info.m_eDeviceType, nullptr, nullptr, 0);
+		if (err < 0)
+		{
+			avcodec_free_context(&videoCodecContext);
+			return (int32_t)ErrorCode::AllocateContextError;
+		}
+
+		// 设置硬件设备上下文
+		videoCodecContext->hw_device_ctx = av_buffer_ref(hwDeviceCtx);
+		av_buffer_unref(&hwDeviceCtx);
+
+		videoCodecContext->thread_count = 16; // 根据实际 CPU 核心数调整
+		videoCodecContext->thread_type = FF_THREAD_FRAME; // 按帧并行解码
+
+		videoCodecContext->flags |= AVFMT_FLAG_GENPTS;
+
+
+		// 打开解码器
+		if (avcodec_open2(videoCodecContext, supportCodec[info.videoCodecParameters->codec_id], nullptr) < 0)
+			//if (avcodec_open2(videoCodecContext, codec, nullptr) < 0)
+		{
+			avcodec_free_context(&videoCodecContext);
+			return (int32_t)ErrorCode::AllocateContextError;
+		}
+	}
+	else
+	{
+		videoCodecContext = avcodec_alloc_context3(info.videoCodec);
+		if (avcodec_parameters_to_context(videoCodecContext, info.videoCodecParameters) < 0)
+		{
+			avcodec_free_context(&videoCodecContext);
+			return (int32_t)ErrorCode::AllocateContextError;
+		}
+
+		videoCodecContext->thread_count = 16; // 根据实际 CPU 核心数调整
+		videoCodecContext->thread_type = FF_THREAD_FRAME; // 按帧并行解码
+
+		videoCodecContext->flags |= AVFMT_FLAG_GENPTS;
+
+
+		// 打开解码器
+		if (avcodec_open2(videoCodecContext, info.videoCodec, nullptr) < 0)
+			//if (avcodec_open2(videoCodecContext, codec, nullptr) < 0)
+		{
+			avcodec_free_context(&videoCodecContext);
+			return (int32_t)ErrorCode::AllocateContextError;
+		}
+	}
+#else
+	videoCodecContext = avcodec_alloc_context3(info.videoCodec);
+	if (avcodec_parameters_to_context(videoCodecContext, info.videoCodecParameters) < 0)
+	{
+		avcodec_free_context(&videoCodecContext);
+		return (int32_t)ErrorCode::AllocateContextError;
+	}
+
+	qDebug() << "Using hardware decoder";
 	AVBufferRef* hwDeviceCtx = nullptr;
 	int err = av_hwdevice_ctx_create(&hwDeviceCtx, info.m_eDeviceType, nullptr, nullptr, 0);
 	if (err < 0)
@@ -189,23 +275,82 @@ int32_t HardDecoder::initVideoDecoder(const DecoderInitedInfo& info)
 
 	videoCodecContext->flags |= AVFMT_FLAG_GENPTS;
 
-	if (avcodec_parameters_to_context(videoCodecContext, info.videoCodecParameters) < 0)
+
+	// 打开解码器
+	if (avcodec_open2(videoCodecContext, info.videoCodec, nullptr) < 0)
+		//if (avcodec_open2(videoCodecContext, codec, nullptr) < 0)
+	{
+		avcodec_free_context(&videoCodecContext);
+		return (int32_t)ErrorCode::AllocateContextError;
+	}
+#endif
+	printf("Using decoder: %s\n", videoCodecContext->codec->name);
+#endif
+	if (nullptr == info.videoCodecParameters)
+	{
+		return -1;
+	}
+
+	// 定义支持的硬件解码器
+	std::map<int, std::string> supportedCodecs = 
+	{
+		{AV_CODEC_ID_H264, "h264_videotoolbox"},
+		{AV_CODEC_ID_HEVC, "hevc_videotoolbox"},
+		{AV_CODEC_ID_PRORES, "prores_videotoolbox"}
+	};
+
+	bool useHardwareDecoder = false;
+	AVCodec* codec = nullptr;
+	//auto codec = avcodec_find_decoder_by_name("h264_qsv");
+	// 检查是否支持硬件解码
+#if defined __APPLE__
+	useHardwareDecoder = supportedCodecs.count(info.videoCodecParameters->codec_id) > 0;
+	if (useHardwareDecoder) 
+	{
+		codec = avcodec_find_decoder_by_name(supportedCodecs[info.videoCodecParameters->codec_id].c_str());
+	}
+#else
+	useHardwareDecoder = true;
+#endif
+
+	// 分配解码器上下文
+	videoCodecContext = avcodec_alloc_context3(codec ? codec : info.videoCodec);
+	if (!videoCodecContext || avcodec_parameters_to_context(videoCodecContext, info.videoCodecParameters) < 0)
 	{
 		avcodec_free_context(&videoCodecContext);
 		return (int32_t)ErrorCode::AllocateContextError;
 	}
 
+	// 设置解码器参数
+	videoCodecContext->thread_count = 16; // 根据实际 CPU 核心数调整
+	videoCodecContext->thread_type = FF_THREAD_FRAME; // 按帧并行解码
+	videoCodecContext->flags |= AVFMT_FLAG_GENPTS;
+
+	// 如果支持硬件解码，设置硬件设备上下文
+	if (useHardwareDecoder) 
+	{
+		AVBufferRef* hwDeviceCtx = nullptr;
+		int err = av_hwdevice_ctx_create(&hwDeviceCtx, info.m_eDeviceType, nullptr, nullptr, 0);
+		if (err < 0) {
+			avcodec_free_context(&videoCodecContext);
+			return (int32_t)ErrorCode::AllocateContextError;
+		}
+
+		videoCodecContext->hw_device_ctx = av_buffer_ref(hwDeviceCtx);
+		av_buffer_unref(&hwDeviceCtx);
+	}
+
 	// 打开解码器
-	if (avcodec_open2(videoCodecContext, info.videoCodec, nullptr) < 0) 
+	if (avcodec_open2(videoCodecContext, codec ? codec : info.videoCodec, nullptr) < 0) 
 	{
 		avcodec_free_context(&videoCodecContext);
 		return (int32_t)ErrorCode::AllocateContextError;
 	}
 	printf("Using decoder: %s\n", videoCodecContext->codec->name);
-	swsContext = sws_getContext(
-		videoCodecContext->width, videoCodecContext->height, videoCodecContext->pix_fmt,
-		m_stuVideoInfo.width, m_stuVideoInfo.height, m_stuVideoInfo.videoFormat,
-		SWS_BILINEAR, nullptr, nullptr, nullptr);
+	//swsContext = sws_getContext(
+	//	videoCodecContext->width, videoCodecContext->height, videoCodecContext->pix_fmt,
+	//	m_stuVideoInfo.width, m_stuVideoInfo.height, m_stuVideoInfo.videoFormat,
+	//	SWS_BILINEAR, nullptr, nullptr, nullptr);
 	return 0;
 }
 

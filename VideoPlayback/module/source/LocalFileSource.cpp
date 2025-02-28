@@ -88,6 +88,8 @@ void LocalFileSource::nextFrame()
 	m_bNextFrameState = true;
 	m_ptrAudioAndVideoOutput->pause();
 	m_ptrAudioAndVideoOutput->nextFrame();
+	m_ptrDemuxer->resume();
+	m_ptrVideoDecoder->resume();
 	m_bNextFrameState = false;
 }
 

@@ -1,4 +1,3 @@
-#define NOMINMAX
 #include "PreviewAndPlay.h"
 #include "module/utils/utils.h"
 #include "module/source/LocalFileSource.h"
@@ -116,7 +115,7 @@ void PreviewAndPlay::renderPreviousFrame(const SeekParams& params)
 			qDebug() << "old frame";
 			continue;
 		}
-		if (!m_bSeekState || ((videoInfo->m_dPts - m_dSeekTime) / std::max(std::abs(videoInfo->m_dPts), std::abs(m_dSeekTime)) >= -kdEpsilon))
+		if (!m_bSeekState || ((videoInfo->m_dPts - m_dSeekTime) / (std::max)(std::abs(videoInfo->m_dPts), std::abs(m_dSeekTime)) >= -kdEpsilon))
 		{
 			qDebug() << "seek to frame pts" << videoInfo->m_dPts;
 			m_ptrQueueDecodedVideo->addPacket(videoInfo);
@@ -242,7 +241,7 @@ void PreviewAndPlay::handler()
 			continue;
 		}
 
-		if (!m_bSeekState || ((videoInfo->m_dPts - m_dSeekTime) / std::max(std::abs(videoInfo->m_dPts), std::abs(m_dSeekTime)) >= -kdEpsilon))
+		if (!m_bSeekState || ((videoInfo->m_dPts - m_dSeekTime) / (std::max)(std::abs(videoInfo->m_dPts), std::abs(m_dSeekTime)) >= -kdEpsilon))
 		{
 			m_bSeekState = false; // 如果进入了这个分支，说明已经到达了目标点，重置状态
 		}

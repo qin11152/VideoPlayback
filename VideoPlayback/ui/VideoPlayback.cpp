@@ -370,7 +370,7 @@ QString VideoPlayback::onSignalChooseFileClicked()
 	else
 	{
 		// 打开一个文件选择框，返回选择的文件，只选择mxf，mp4，mov格式的文件
-		QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"), "", tr("Video Files (*.mxf *.mp4 *.mov *.venc)"));
+		QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"), "", tr("Video Files (*.mxf *.mp4 *.mov *.venc *.mkv)"));
 		if (!fileName.isEmpty())
 		{
 			ui.fileNameLabel->setText(fileName);

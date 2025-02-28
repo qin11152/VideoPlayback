@@ -31,6 +31,7 @@ extern "C"
 #include <libavutil/imgutils.h>
 #include <libswscale/swscale.h>
 #include <libswresample/swresample.h>
+#include <libavutil/opt.h>
 }
 
 #ifndef MY_DLL_EXPORT 

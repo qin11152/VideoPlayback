@@ -208,6 +208,10 @@ int32_t demuxer::pause()
 int32_t demuxer::resume()
 {
 	std::unique_lock<std::mutex> lck(m_PauseMutex);
+	if (!m_bPauseState)
+	{
+		return 0;
+	}
 	m_bPauseState = false;
 	m_PauseCV.notify_one();
 	m_bReadFinished = false;
