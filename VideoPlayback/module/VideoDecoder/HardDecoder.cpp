@@ -334,7 +334,7 @@ int32_t HardDecoder::initVideoDecoder(const DecoderInitedInfo& info)
 		codec = avcodec_find_decoder_by_name(supportedCodecs[info.videoCodecParameters->codec_id].c_str());
 	}
 #else
-	useHardwareDecoder = true;
+	useHardwareDecoder = info.m_eDeviceType != AV_HWDEVICE_TYPE_NONE;
 #endif
 
 	// 分配解码器上下文
@@ -802,7 +802,6 @@ void HardDecoder::decodeAudio()
 				audioInfo->m_uiSampleRate = m_stuAudioInfo.audioSampleRate;
 				memcpy(audioInfo->m_ptrPCMData, resampled_data[0], pcmNumber);
 
-				qDebug() << "audio pts:" << audioDts;
 				//if (!m_bSeekState || ((audioDts - m_dseekDst) / std::max(std::abs(audioDts), std::abs(m_dseekDst)) >= -kdEpsilon))
 				//{
 				//	m_bSeekState = false; // 如果进入了这个分支，说明已经到达了目标点，重置状态

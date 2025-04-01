@@ -140,7 +140,6 @@ bool VideoPlayback::initModule()
 	if (AV_HWDEVICE_TYPE_NONE == m_eDeviceType)
 	{
 		LOG_ERROR("No supported hardware device found");
-		return false;
 	}
 	else
 	{
@@ -158,8 +157,8 @@ bool VideoPlayback::initModule()
 	m_ptrQueueDecodedAudioData = std::make_shared<MyPacketQueue<std::shared_ptr<DecodedAudioInfo>>>();
 
 	m_ptrQueuePacketNeededDecoded->initModule();
-	m_ptrQueueAudioPacketNeededDecoded->initModule();
-	m_ptrQueueVideoPacketNeededDecoded->initModule();
+	m_ptrQueueAudioPacketNeededDecoded->initModule(1000);
+	m_ptrQueueVideoPacketNeededDecoded->initModule(1000);
 
 	m_ptrQueueDecodedImageData->initModule();
 	m_ptrQueueDecodedAudioData->initModule();
@@ -616,8 +615,8 @@ bool VideoPlayback::initAllSubModule()
 		m_ptrQueueDecodedAudioData->clearQueue();
 
 		m_ptrQueuePacketNeededDecoded->initModule();
-		m_ptrQueueVideoPacketNeededDecoded->initModule();
-		m_ptrQueueAudioPacketNeededDecoded->initModule();
+	m_ptrQueueAudioPacketNeededDecoded->initModule(1000);
+	m_ptrQueueVideoPacketNeededDecoded->initModule(1000);
 
 		m_ptrQueueDecodedImageData->initModule();
 		m_ptrQueueDecodedAudioData->initModule(150);
@@ -634,7 +633,7 @@ bool VideoPlayback::initAllSubModule()
 		m_ptrLocalFileSource->m_ptrDemuxer = std::make_shared<demuxer>();
 		if (AV_HWDEVICE_TYPE_NONE == m_eDeviceType)
 		{
-			m_ptrLocalFileSource->m_ptrVideoDecoder = std::make_shared<VideoDecoder>(m_ptrDemuxer);
+			m_ptrLocalFileSource->m_ptrVideoDecoder = std::make_shared<HardDecoder>(m_ptrDemuxer);
 		}
 		else
 		{
@@ -643,7 +642,7 @@ bool VideoPlayback::initAllSubModule()
 		}
 		m_ptrLocalFileSource->m_ptrAudioAndVideoOutput = std::make_shared<AudioAndVideoOutput>();
 
-		m_stuVideoInitedInfo.m_strFileName = m_strChooseFileName.toLocal8Bit().constData();
+		m_stuVideoInitedInfo.m_strFileName = m_strChooseFileName.toUtf8().constData();
 		m_stuVideoInitedInfo.m_bAtom = false;
 
 		initLocalFileSource();
@@ -655,7 +654,7 @@ bool VideoPlayback::initAllSubModule()
 
 bool VideoPlayback::uninitAllSubModule()
 {
-	m_ptrLocalFileSource->m_vecPCMBufferPtr.clear();
+	// m_ptrLocalFileSource->m_vecPCMBufferPtr.clear();
 	m_ptrLocalFileSource->m_vecQueDecodedPacket.clear();
 	m_ptrLocalFileSource->m_ptrDemuxer = nullptr;
 	m_ptrLocalFileSource->m_ptrAudioAndVideoOutput = nullptr;

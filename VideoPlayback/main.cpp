@@ -10,7 +10,7 @@
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
-	LogConfig conf("info", "log/VideoPlayback.log", 500 * 1024 * 1024, 10);
+	LogConfig conf("error", "log/VideoPlayback.log", 500 * 1024 * 1024, 10);
 	INITLOG(conf);
 #if UNITTEST
     testing::InitGoogleMock(&argc, argv);

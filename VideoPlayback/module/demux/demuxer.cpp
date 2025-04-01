@@ -62,33 +62,34 @@ int32_t demuxer::initModule(const VideoReaderInitedInfo& info, DecoderInitedInfo
 		return -1;
 	}
 
-	FILE* file = fopen(info.m_strFileName.c_str(), "rb");
-	if (!file)
-	{
-		fprintf(stderr, "Failed to open file\n");
-		return -1;
-	}
+	// FILE* file = fopen(info.m_strFileName.c_str(), "rb");
+	// if (!file)
+	// {
+	// 	fprintf(stderr, "Failed to open file\n");
+	// 	return -1;
+	// }
 
-	// 分配缓冲区
-	unsigned char* buffer = (unsigned char*)av_malloc(4096);
-	if (!buffer)
-	{
-		fprintf(stderr, "Failed to allocate buffer\n");
-		return -1;
-	}
+	// // 分配缓冲区
+	// unsigned char* buffer = (unsigned char*)av_malloc(4096);
+	// if (!buffer)
+	// {
+	// 	fprintf(stderr, "Failed to allocate buffer\n");
+	// 	return -1;
+	// }
 
-	m_ptrIOContext = avio_alloc_context(
-		buffer, 4096, 0, file, customRead, nullptr, customSeek);
-	if (!m_ptrIOContext)
-	{
-		fprintf(stderr, "Failed to create AVIOContext\n");
-		return -1;
-	}
+	// m_ptrIOContext = avio_alloc_context(
+	// 	buffer, 4096, 0, file, customRead, nullptr, customSeek);
+	// if (!m_ptrIOContext)
+	// {
+	// 	fprintf(stderr, "Failed to create AVIOContext\n");
+	// 	return -1;
+	// }
 
-	formatContext = avformat_alloc_context();
-	formatContext->pb = m_ptrIOContext;
+	// formatContext = avformat_alloc_context();
+	// formatContext->pb = m_ptrIOContext;
+	formatContext=nullptr;
 
-	int ret = avformat_open_input(&formatContext, nullptr, nullptr, nullptr);
+	int ret = avformat_open_input(&formatContext, info.m_strFileName.c_str(), nullptr, nullptr);
 	if (ret != 0)
 	{
 		//获取错误码
