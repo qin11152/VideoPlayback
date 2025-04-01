@@ -108,6 +108,9 @@ private:
 
     std::shared_ptr<LocalFileSource> m_ptrLocalFileSource{ nullptr };
 	std::shared_ptr<MyPacketQueue<std::shared_ptr<PacketWaitDecoded>>> m_ptrQueuePacketNeededDecoded{ nullptr }; //存储需要解码的数据
+    std::shared_ptr<MyPacketQueue<std::shared_ptr<PacketWaitDecoded>>> m_ptrQueueVideoPacketNeededDecoded{ nullptr };
+    std::shared_ptr<MyPacketQueue<std::shared_ptr<PacketWaitDecoded>>> m_ptrQueueAudioPacketNeededDecoded{ nullptr };
+
     std::shared_ptr<MyPacketQueue<std::shared_ptr<DecodedImageInfo>>> m_ptrQueueDecodedImageData{ nullptr };    //解码的视频帧
     std::shared_ptr< Buffer> m_ptrAudioBuffer{ nullptr };       //解码的音频帧
     std::shared_ptr<MyPacketQueue<std::shared_ptr<DecodedAudioInfo>>> m_ptrQueueDecodedAudioData{ nullptr };

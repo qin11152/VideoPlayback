@@ -35,6 +35,9 @@ public:
 
 	//存放等待解码的avpacket
 	std::shared_ptr < MyPacketQueue<std::shared_ptr<PacketWaitDecoded>>> m_ptrQueueWaitedDecodedPacket{ nullptr };
+	std::shared_ptr < MyPacketQueue<std::shared_ptr<PacketWaitDecoded>>> m_ptrQueueWaitedDecodedVideoPacket{ nullptr };
+	std::shared_ptr < MyPacketQueue<std::shared_ptr<PacketWaitDecoded>>> m_ptrQueueWaitedDecodedAudioPacket{ nullptr };
+
 
 	//存放解码后的视频和音频
 	std::vector<std::shared_ptr<Buffer>> m_vecPCMBufferPtr;	

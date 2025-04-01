@@ -139,6 +139,9 @@ bool LocalFileSource::getDecoderFinishState()
 void LocalFileSource::clearAllQueueAndBuffer()
 {
 	m_ptrQueueWaitedDecodedPacket->clearQueue();
+	m_ptrQueueWaitedDecodedAudioPacket->clearQueue();
+	m_ptrQueueWaitedDecodedVideoPacket->clearQueue();
+
 	for (auto iter : m_vecQueDecodedPacket)
 	{
 		iter->clearQueue();
@@ -156,6 +159,8 @@ void LocalFileSource::clearAllQueueAndBuffer()
 void LocalFileSource::resumeAllQueueAndBuffer()
 {
 	m_ptrQueueWaitedDecodedPacket->resume();
+	m_ptrQueueWaitedDecodedAudioPacket->resume();
+	m_ptrQueueWaitedDecodedVideoPacket->resume();
 	for (auto iter : m_vecQueDecodedPacket)
 	{
 		iter->resume();

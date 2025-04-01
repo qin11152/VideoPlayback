@@ -17,6 +17,9 @@ int32_t AudioAndVideoOutput::initModule(const DataHandlerInitedInfo& info)
 {
 	m_bInitState = true;
 	m_bRunningState = true;
+
+	m_uiPerFrameSampleCnt = info.uiPerFrameSampleCnt;
+
 	m_AudioThread = std::thread(&AudioAndVideoOutput::audio, this);
 	m_VideoThread = std::thread(&AudioAndVideoOutput::video, this);
 
@@ -224,6 +227,7 @@ void AudioAndVideoOutput::audio()
 		int sample_rate = audioInfo->m_uiSampleRate; // 采样率
 		double frame_duration_ms = (frame_size * 1000.0) / sample_rate; // 持续时间（毫秒）
 		m_dCurrentAduioPts = audioInfo->m_dPts;
+		qDebug() << "frame size:" << frame_size << ",duration:" << frame_duration_ms << ",pts:" << audioInfo->m_dPts;
 #if 0
 		if (start_pts == AV_NOPTS_VALUE) {
 			// 初始化起始时间和起始 PTS

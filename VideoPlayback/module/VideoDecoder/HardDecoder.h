@@ -82,7 +82,7 @@ private:
 	// brief: 视频包解码函数
 	// Parameter: PacketWaitDecoded & packet待解码的包，包含数据和类型
 	//************************************
-	void decodeVideo(std::shared_ptr<PacketWaitDecoded> packet)override;
+	void decodeVideo();
 	//************************************
 	// Method:    decodeAudio
 	// FullName:  HardDecoder::decodeAudio
@@ -92,7 +92,7 @@ private:
 	// brief: 音频包解码函数
 	// Parameter: PacketWaitDecoded & packet 待解码的包，包含数据和类型
 	//************************************
-	void decodeAudio(std::shared_ptr<PacketWaitDecoded> packet)override;
+	void decodeAudio();
 
 	//************************************
 	// Method:    initVideoDecoder
@@ -112,6 +112,8 @@ private:
 	void registerFinishedCallback(DecoderFinishedCallback callback)override;
 
 private:
+	std::thread m_VideoDecodeThread;
+	std::thread m_AudioDecodeThread;
 	//std::shared_ptr<demuxer> m_ptrDemuxer{ nullptr };
 	AVFormatContext* fileFormat{ nullptr };
 
@@ -148,13 +150,13 @@ private:
 	//待解码的包队列
 	std::shared_ptr<MyPacketQueue<std::shared_ptr<PacketWaitDecoded>>> m_ptrQueNeedDecodedPacket;
 
-//一个解码器可能有多个消耗者，对应多个队列
+	//一个解码器可能有多个消耗者，对应多个队列
 	std::mutex m_PcmBufferAddMutex;
 	std::mutex m_VideoQueueAddMutex;
 	std::mutex m_AudioQueueAddMutex;
 
-	MyPacketQueue<std::shared_ptr<PacketWaitDecoded>> m_queNeedDecodedVideoPacket;
-	MyPacketQueue<std::shared_ptr<PacketWaitDecoded>> m_queNeedDecodedAudioPacket;
+	std::shared_ptr < MyPacketQueue<std::shared_ptr<PacketWaitDecoded>>> m_ptrQueNeedDecodedVideoPacket;
+	std::shared_ptr<MyPacketQueue<std::shared_ptr<PacketWaitDecoded>>> m_ptrQueNeedDecodedAudioPacket;
 
 	std::vector<std::shared_ptr<MyPacketQueue<std::shared_ptr<DecodedAudioInfo>>>> m_vecQueueDecodedAudioPacket;
 	std::vector<std::shared_ptr<Buffer>> m_vecPCMBufferPtr;	//解码后的音频数据队列

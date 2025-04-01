@@ -150,11 +150,17 @@ bool VideoPlayback::initModule()
 	m_ptrLocalFileSource = std::make_shared<LocalFileSource>();
 
 	m_ptrQueuePacketNeededDecoded = std::make_shared<MyPacketQueue<std::shared_ptr<PacketWaitDecoded>>>();
+	m_ptrQueueVideoPacketNeededDecoded = std::make_shared<MyPacketQueue<std::shared_ptr<PacketWaitDecoded>>>();
+	m_ptrQueueAudioPacketNeededDecoded = std::make_shared<MyPacketQueue<std::shared_ptr<PacketWaitDecoded>>>();
+
 	m_ptrQueueDecodedImageData = std::make_shared<MyPacketQueue<std::shared_ptr<DecodedImageInfo>>>();
 	m_ptrAudioBuffer = std::make_shared<Buffer>();
 	m_ptrQueueDecodedAudioData = std::make_shared<MyPacketQueue<std::shared_ptr<DecodedAudioInfo>>>();
 
 	m_ptrQueuePacketNeededDecoded->initModule();
+	m_ptrQueueAudioPacketNeededDecoded->initModule();
+	m_ptrQueueVideoPacketNeededDecoded->initModule();
+
 	m_ptrQueueDecodedImageData->initModule();
 	m_ptrQueueDecodedAudioData->initModule();
 	m_ptrAudioBuffer->initBuffer(1024 * 10);
@@ -182,6 +188,9 @@ bool VideoPlayback::initModule()
 	m_stuVideoInitedInfo.outVideoInfo = m_stuVideoInfo;
 	m_stuVideoInitedInfo.outAudioInfo = m_stuAudioInfo;
 	m_stuVideoInitedInfo.ptrPacketQueue = m_ptrQueuePacketNeededDecoded;
+
+	m_stuDecoderInitedInfo.ptrVideoPacketQueue = m_ptrQueueVideoPacketNeededDecoded;
+	m_stuDecoderInitedInfo.ptrAudioPacketQueue = m_ptrQueueAudioPacketNeededDecoded;
 
 	return initConnect();
 }
@@ -599,16 +608,24 @@ bool VideoPlayback::initAllSubModule()
 	else
 	{
 		m_ptrQueuePacketNeededDecoded->clearQueue();
+		m_ptrQueueVideoPacketNeededDecoded->clearQueue();
+		m_ptrQueueAudioPacketNeededDecoded->clearQueue();
+
 		m_ptrQueueDecodedImageData->clearQueue();
 		//m_ptrAudioBuffer->clearBuffer();
 		m_ptrQueueDecodedAudioData->clearQueue();
 
 		m_ptrQueuePacketNeededDecoded->initModule();
+		m_ptrQueueVideoPacketNeededDecoded->initModule();
+		m_ptrQueueAudioPacketNeededDecoded->initModule();
+
 		m_ptrQueueDecodedImageData->initModule();
 		m_ptrQueueDecodedAudioData->initModule(150);
 		//m_ptrAudioBuffer->initBuffer(1024 * 10);
 
 		m_ptrLocalFileSource->m_ptrQueueWaitedDecodedPacket = m_ptrQueuePacketNeededDecoded;
+		m_ptrLocalFileSource->m_ptrQueueWaitedDecodedVideoPacket = m_ptrQueueVideoPacketNeededDecoded;
+		m_ptrLocalFileSource->m_ptrQueueWaitedDecodedAudioPacket = m_ptrQueueAudioPacketNeededDecoded;
 
 		//m_ptrLocalFileSource->m_vecPCMBufferPtr.push_back(m_ptrAudioBuffer);
 		m_ptrLocalFileSource->m_vecQueDecodedAudioPacket.push_back(m_ptrQueueDecodedAudioData);

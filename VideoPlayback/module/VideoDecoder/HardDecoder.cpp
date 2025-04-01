@@ -51,13 +51,20 @@ int32_t HardDecoder::initModule(const DecoderInitedInfo& info, DataHandlerInited
 	m_ulStartTime = av_rescale_q(info.formatContext->start_time, tmp, info.formatContext->streams[m_iVideoStreamIndex]->time_base);
 	dataHandlerInfo.uiNeedSleepTime = m_uiReadThreadSleepTime;
 	dataHandlerInfo.uiPerFrameSampleCnt = m_uiPerFrameSampleCnt;
-
+	
+	assert(info.ptrPacketQueue);
+	assert(info.ptrVideoPacketQueue);
+	assert(info.ptrAudioPacketQueue);
 	m_ptrQueNeedDecodedPacket = info.ptrPacketQueue;
+	m_ptrQueNeedDecodedVideoPacket = info.ptrVideoPacketQueue;
+	m_ptrQueNeedDecodedAudioPacket = info.ptrAudioPacketQueue;
 
 	m_bInitState = true;
 	m_bRunningState = true;
 
 	m_DecoderThread = std::thread(&HardDecoder::decode, this);
+	m_VideoDecodeThread = std::thread(&HardDecoder::decodeVideo, this);
+	m_AudioDecodeThread = std::thread(&HardDecoder::decodeAudio, this);
 	return 0;
 
 }
@@ -79,9 +86,25 @@ int32_t HardDecoder::uninitModule()
 	{
 		m_ptrQueNeedDecodedPacket->uninitModule();
 	}
+	if (m_ptrQueNeedDecodedVideoPacket)
+	{
+		m_ptrQueNeedDecodedVideoPacket->uninitModule();
+	}
+	if (m_ptrQueNeedDecodedAudioPacket)
+	{
+		m_ptrQueNeedDecodedAudioPacket->uninitModule();
+	}
 	if (m_DecoderThread.joinable())
 	{
 		m_DecoderThread.join();
+	}
+	if (m_VideoDecodeThread.joinable())
+	{
+		m_VideoDecodeThread.join();
+	}
+	if (m_AudioDecodeThread.joinable())
+	{
+		m_AudioDecodeThread.join();
 	}
 	m_vecQueDecodedVideoPacket.clear();
 	m_vecPCMBufferPtr.clear();
@@ -522,7 +545,7 @@ void HardDecoder::decode()
 				m_PauseCV.wait(lck, [this]() {return !m_bRunningState || !m_bPauseState; });
 			}
 		}
-		if (LocalFileSource::getDemuxerFinishState() && 0 == m_ptrQueNeedDecodedPacket->getSize())
+		if (LocalFileSource::getDemuxerFinishState() && 0 == m_ptrQueNeedDecodedVideoPacket->getSize() && 0 == m_ptrQueNeedDecodedAudioPacket)
 		{
 			if (!m_bDecoderedFinished)
 			{
@@ -545,20 +568,19 @@ void HardDecoder::decode()
 		}
 		if (packet)
 		{
-			qDebug() << "decoder type:" << (int)packet->type;
+			//qDebug() << "decoder type:" << (int)packet->type;
 			switch (packet->type)
 			{
 			case PacketType::Video:
 			{
-				auto start = std::chrono::steady_clock::now();
-				decodeVideo(packet);
-				auto end = std::chrono::steady_clock::now();
-				printf("decoder time:%lld\n", std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
+				m_ptrQueNeedDecodedVideoPacket->pushPacket(packet);
+				//decodeVideo(packet);
 				break;
 			}
 			case PacketType::Audio:
 			{
-				decodeAudio(packet);
+				m_ptrQueNeedDecodedAudioPacket->pushPacket(packet);
+				//decodeAudio(packet);
 				break;
 			}
 			default:
@@ -568,60 +590,111 @@ void HardDecoder::decode()
 	}
 }
 
-void HardDecoder::decodeVideo(std::shared_ptr<PacketWaitDecoded> packet)
+void HardDecoder::decodeVideo()
 {
-	AVFrame* frame = av_frame_alloc();
-	AVFrame* swFrame = av_frame_alloc(); // 用于硬件帧转换
-	int ret = 0;
-	if (!packet)
+	if (!m_bInitState)
 	{
 		return;
 	}
-
-	if (avcodec_send_packet(videoCodecContext, packet->packet) == 0)
+	while (true)
 	{
-		int ret = avcodec_receive_frame(videoCodecContext, frame);
-		if (ret < 0)
+		if (!m_bRunningState)
 		{
-			LOG_ERROR("Avcodec_receive_frame Error,Ret:{}", ret);
+			break;
 		}
-		while (ret >= 0)
+		std::shared_ptr<PacketWaitDecoded> packet = nullptr;
+		m_ptrQueNeedDecodedVideoPacket->getPacket(packet);
 		{
-			double pts = (frame->pts - m_ulStartTime) * m_dFrameDuration;
-			std::shared_ptr<DecodedImageInfo> videoInfo = std::make_shared<DecodedImageInfo>();
-			videoInfo->width = videoCodecContext->width;
-			videoInfo->height = videoCodecContext->height;
-			videoInfo->videoFormat = videoCodecContext->pix_fmt;
-			videoInfo->m_dPts = pts;
-			// 如果是硬件帧，需要转换到系统内存
-			if (frame->hw_frames_ctx) 
+			std::unique_lock<std::mutex> lck(m_PauseMutex);
+			if (m_bPauseState)
 			{
-				swFrame = av_frame_alloc();
-				auto transfer_start = std::chrono::steady_clock::now();
-				// 将硬件帧转换为软件帧
-				if (av_hwframe_transfer_data(swFrame, frame, 0) < 0) 
+				m_PauseCV.wait(lck, [this]() {return !m_bRunningState || !m_bPauseState; });
+			}
+		}
+		if (LocalFileSource::getDemuxerFinishState() && 0 == m_ptrQueNeedDecodedVideoPacket->getSize() && 0 == m_ptrQueNeedDecodedAudioPacket)
+		{
+			std::this_thread::sleep_for(std::chrono::milliseconds(100));
+			continue;
+		}
+		if (!packet)
+		{
+			continue;
+		}
+		AVFrame* frame = av_frame_alloc();
+		if (avcodec_send_packet(videoCodecContext, packet->packet) == 0)
+		{
+			AVFrame* swFrame = nullptr; // 用于硬件帧转换
+			int ret = avcodec_receive_frame(videoCodecContext, frame);
+			if (ret < 0)
+			{
+				LOG_ERROR("Avcodec_receive_frame Error,Ret:{}", ret);
+			}
+			while (ret >= 0)
+			{
+				double pts = (frame->pts - m_ulStartTime) * m_dFrameDuration;
+				std::shared_ptr<DecodedImageInfo> videoInfo = std::make_shared<DecodedImageInfo>();
+				videoInfo->width = videoCodecContext->width;
+				videoInfo->height = videoCodecContext->height;
+				videoInfo->videoFormat = videoCodecContext->pix_fmt;
+				videoInfo->m_dPts = pts;
+				// 如果是硬件帧，需要转换到系统内存
+				if (frame->hw_frames_ctx)
 				{
-					av_frame_free(&frame);
+					swFrame = av_frame_alloc();
+					auto transfer_start = std::chrono::steady_clock::now();
+					// 将硬件帧转换为软件帧
+					if (av_hwframe_transfer_data(swFrame, frame, 0) < 0)
+					{
+						av_frame_free(&frame);
+						av_frame_free(&swFrame);
+						return;
+					}
+					auto transfer_end = std::chrono::steady_clock::now();
+					// 转换为目标格式
+					if (!swsContext)
+					{
+						swsContext = sws_getContext(
+							videoCodecContext->width, videoCodecContext->height, (AVPixelFormat)swFrame->format,
+							m_stuVideoInfo.width, m_stuVideoInfo.height, m_stuVideoInfo.videoFormat,
+							SWS_BILINEAR, nullptr, nullptr, nullptr);
+					}
+					{
+						auto convert_start = std::chrono::steady_clock::now();
+						AVFrame* yuvFrame = av_frame_alloc();
+						av_image_alloc(yuvFrame->data, yuvFrame->linesize, m_stuVideoInfo.width, m_stuVideoInfo.height, m_stuVideoInfo.videoFormat, 1);
+
+						sws_scale(swsContext, swFrame->data, swFrame->linesize, 0, videoCodecContext->height, yuvFrame->data, yuvFrame->linesize);
+						auto convert_end = std::chrono::steady_clock::now();
+						//printf("decoder time:%lld,transfer time: %lld, convert time: %lld\n", std::chrono::duration_cast<std::chrono::milliseconds>(decode_end-decode_start).count(), std::chrono::duration_cast<std::chrono::milliseconds>(transfer_end - transfer_start).count(), std::chrono::duration_cast<std::chrono::milliseconds>(convert_end - convert_start).count());
+						videoInfo->videoFormat = m_stuVideoInfo.videoFormat;
+						videoInfo->width = m_stuVideoInfo.width;
+						videoInfo->height = m_stuVideoInfo.height;
+						videoInfo->dataSize = m_stuVideoInfo.width * m_stuVideoInfo.height * 2;
+						videoInfo->yuvData = new uint8_t[m_stuVideoInfo.width * m_stuVideoInfo.height * 2];
+						memcpy(videoInfo->yuvData, yuvFrame->data[0], m_stuVideoInfo.width * m_stuVideoInfo.height * 2);
+						av_freep(yuvFrame->data);
+						av_frame_free(&yuvFrame);
+					}
+
+					// 释放
 					av_frame_free(&swFrame);
-					return;
 				}
-				auto transfer_end = std::chrono::steady_clock::now();
-				// 转换为目标格式
-				if (!swsContext)
+				else
 				{
-					swsContext = sws_getContext(
-						videoCodecContext->width, videoCodecContext->height, (AVPixelFormat)swFrame->format,
-						m_stuVideoInfo.width, m_stuVideoInfo.height, m_stuVideoInfo.videoFormat,
-						SWS_BILINEAR, nullptr, nullptr, nullptr);
-				}
-				{
+					if (!swsContext)
+					{
+						swsContext = sws_getContext(
+							videoCodecContext->width, videoCodecContext->height, (AVPixelFormat)frame->format,
+							m_stuVideoInfo.width, m_stuVideoInfo.height, m_stuVideoInfo.videoFormat,
+							SWS_BILINEAR, nullptr, nullptr, nullptr);
+					}
 					auto convert_start = std::chrono::steady_clock::now();
 					AVFrame* yuvFrame = av_frame_alloc();
 					av_image_alloc(yuvFrame->data, yuvFrame->linesize, m_stuVideoInfo.width, m_stuVideoInfo.height, m_stuVideoInfo.videoFormat, 1);
 
-					sws_scale(swsContext, swFrame->data, swFrame->linesize, 0, videoCodecContext->height, yuvFrame->data, yuvFrame->linesize);
+					sws_scale(swsContext, frame->data, frame->linesize, 0, videoCodecContext->height, yuvFrame->data, yuvFrame->linesize);
 					auto convert_end = std::chrono::steady_clock::now();
-					//printf("decoder time:%lld,transfer time: %lld, convert time: %lld\n", std::chrono::duration_cast<std::chrono::milliseconds>(decode_end-decode_start).count(), std::chrono::duration_cast<std::chrono::milliseconds>(transfer_end - transfer_start).count(), std::chrono::duration_cast<std::chrono::milliseconds>(convert_end - convert_start).count());
+					//printf("decoder time:%lld\n", std::chrono::duration_cast<std::chrono::milliseconds>(convert_end - convert_start).count());
 					videoInfo->videoFormat = m_stuVideoInfo.videoFormat;
 					videoInfo->width = m_stuVideoInfo.width;
 					videoInfo->height = m_stuVideoInfo.height;
@@ -631,125 +704,129 @@ void HardDecoder::decodeVideo(std::shared_ptr<PacketWaitDecoded> packet)
 					av_freep(yuvFrame->data);
 					av_frame_free(&yuvFrame);
 				}
-
-				// 释放
-				av_frame_free(&swFrame);
-			}
-			else
-			{
-				if (!swsContext)
+				for (auto& it : m_vecQueDecodedVideoPacket)
 				{
-					swsContext = sws_getContext(
-						videoCodecContext->width, videoCodecContext->height, (AVPixelFormat)frame->format,
-						m_stuVideoInfo.width, m_stuVideoInfo.height, m_stuVideoInfo.videoFormat,
-						SWS_BILINEAR, nullptr, nullptr, nullptr);
+					decoderCnt++;
+					//qDebug() << "decoder push video pts" << videoInfo->m_dPts << "video size" << it->getSize();
+					it->pushPacket(videoInfo);
 				}
-				auto convert_start = std::chrono::steady_clock::now();
-				AVFrame* yuvFrame = av_frame_alloc();
-				av_image_alloc(yuvFrame->data, yuvFrame->linesize, m_stuVideoInfo.width, m_stuVideoInfo.height, m_stuVideoInfo.videoFormat, 1);
-
-				sws_scale(swsContext, frame->data, frame->linesize, 0, videoCodecContext->height, yuvFrame->data, yuvFrame->linesize);
-				auto convert_end = std::chrono::steady_clock::now();
-				printf("decoder time:%lld\n", std::chrono::duration_cast<std::chrono::milliseconds>(convert_end - convert_start).count());
-				videoInfo->videoFormat = m_stuVideoInfo.videoFormat;
-				videoInfo->width = m_stuVideoInfo.width;
-				videoInfo->height = m_stuVideoInfo.height;
-				videoInfo->dataSize = m_stuVideoInfo.width * m_stuVideoInfo.height * 2;
-				videoInfo->yuvData = new uint8_t[m_stuVideoInfo.width * m_stuVideoInfo.height * 2];
-				memcpy(videoInfo->yuvData, yuvFrame->data[0], m_stuVideoInfo.width * m_stuVideoInfo.height * 2);
-				av_freep(yuvFrame->data);
-				av_frame_free(&yuvFrame);
+				ret = avcodec_receive_frame(videoCodecContext, frame);
 			}
-			for (auto& it : m_vecQueDecodedVideoPacket)
-			{
-				decoderCnt++;
-				//qDebug() << "decoder push video pts" << videoInfo->m_dPts << "video size" << it->getSize();
-				it->pushPacket(videoInfo);
-			}
-			ret = avcodec_receive_frame(videoCodecContext, frame);
 		}
+		else
+		{
+			av_frame_free(&frame);
+			LOG_ERROR("video avcodec_send_packet error");
+			continue;
+		}
+		av_frame_free(&frame);
 	}
-	else
-	{
-		LOG_ERROR("video avcodec_send_packet error");
-	}
-	av_frame_free(&frame);
 }
 
-void HardDecoder::decodeAudio(std::shared_ptr<PacketWaitDecoded> packet)
+void HardDecoder::decodeAudio()
 {
-	AVFrame* frame = av_frame_alloc();
-	int swr_size = 0;
-	int resampled_linesize;
-	int max_resampled_samples = 0;
-	uint8_t** resampled_data = nullptr;
-	if (!packet)
+	if (!m_bInitState)
 	{
 		return;
 	}
-	if (avcodec_send_packet(audioCodecContext, packet->packet) == 0)
+	AVFrame* frame = av_frame_alloc();
+	while (true)
 	{
-		while (avcodec_receive_frame(audioCodecContext, frame) == 0)
+		if (!m_bRunningState)
 		{
-			//std::fstream fs("audio.pcm", std::ios::app | std::ios::binary);
-			////把重采样之前的数据保存本地
-			//fs.write((const char *)frame->data[0], frame->linesize[0]);
-			//fs.close();
-			std::shared_ptr<DecodedAudioInfo> audioInfo = std::make_shared<DecodedAudioInfo>();
-			int resampled_samples = av_rescale_rnd(
-				swr_get_delay(swrContext, audioCodecContext->sample_rate) + frame->nb_samples,
-				m_stuAudioInfo.audioSampleRate, audioCodecContext->sample_rate, AV_ROUND_UP);
-
-			if (resampled_samples > max_resampled_samples)
+			break;
+		}
+		std::shared_ptr<PacketWaitDecoded> packet = nullptr;
+		m_ptrQueNeedDecodedAudioPacket->getPacket(packet);
+		{
+			std::unique_lock<std::mutex> lck(m_PauseMutex);
+			if (m_bPauseState)
 			{
+				m_PauseCV.wait(lck, [this]() {return !m_bRunningState || !m_bPauseState; });
+			}
+		}
+		if (LocalFileSource::getDemuxerFinishState() && 0 == m_ptrQueNeedDecodedVideoPacket->getSize() && 0 == m_ptrQueNeedDecodedAudioPacket)
+		{
+			std::this_thread::sleep_for(std::chrono::milliseconds(100));
+			continue;
+		}
+
+		if (m_ptrQueNeedDecodedAudioPacket)
+		{
+			m_ptrQueNeedDecodedAudioPacket->getPacket(packet);
+		}
+		if (!packet)
+		{
+			continue;
+		}
+		int swr_size = 0;
+		int resampled_linesize;
+		int max_resampled_samples = 0;
+		uint8_t** resampled_data = nullptr;
+		if (avcodec_send_packet(audioCodecContext, packet->packet) == 0)
+		{
+			while (avcodec_receive_frame(audioCodecContext, frame) == 0)
+			{
+				//std::fstream fs("audio.pcm", std::ios::app | std::ios::binary);
+				////把重采样之前的数据保存本地
+				//fs.write((const char *)frame->data[0], frame->linesize[0]);
+				//fs.close();
+				std::shared_ptr<DecodedAudioInfo> audioInfo = std::make_shared<DecodedAudioInfo>();
+				int resampled_samples = av_rescale_rnd(
+					swr_get_delay(swrContext, audioCodecContext->sample_rate) + frame->nb_samples,
+					m_stuAudioInfo.audioSampleRate, audioCodecContext->sample_rate, AV_ROUND_UP);
+
+				if (resampled_samples > max_resampled_samples)
+				{
+					if (resampled_data)
+					{
+						av_freep(&resampled_data[0]);
+					}
+					av_samples_alloc_array_and_samples(&resampled_data, &resampled_linesize,
+						kOutputAudioChannels, resampled_samples,
+						m_stuAudioInfo.audioFormat, 0);
+					max_resampled_samples = resampled_samples;
+				}
+
+				int converted_samples = swr_convert(swrContext, resampled_data, resampled_samples,
+					(const uint8_t**)frame->data, frame->nb_samples);
+
+				int pcmNumber = converted_samples * kOutputAudioChannels * av_get_bytes_per_sample(m_stuAudioInfo.audioFormat);
+
+				//std::fstream fs("audio0.pcm", std::ios::app | std::ios::binary);
+				////把重采样之后的数据保存本地
+				//fs.write((const char*)resampled_data[0], pcmNumber);
+				//fs.close();
+				double audioDts = (frame->pts - m_ulStartTime) * av_q2d(fileFormat->streams[m_iAudioStreamIndex]->time_base);
+				audioInfo->m_dPts = audioDts;
+				audioInfo->m_uiNumberSamples = converted_samples;
+				audioInfo->m_uiChannelCnt = kOutputAudioChannels;
+				audioInfo->m_AudioFormat = m_stuAudioInfo.audioFormat;
+				audioInfo->m_uiPCMLength = pcmNumber;
+				audioInfo->m_ptrPCMData = new uint8_t[pcmNumber]{ 0 };
+				audioInfo->m_uiSampleRate = m_stuAudioInfo.audioSampleRate;
+				memcpy(audioInfo->m_ptrPCMData, resampled_data[0], pcmNumber);
+
+				qDebug() << "audio pts:" << audioDts;
+				//if (!m_bSeekState || ((audioDts - m_dseekDst) / std::max(std::abs(audioDts), std::abs(m_dseekDst)) >= -kdEpsilon))
+				//{
+				//	m_bSeekState = false; // 如果进入了这个分支，说明已经到达了目标点，重置状态
+				//	
+				//}
 				if (resampled_data)
 				{
-					av_freep(&resampled_data[0]);
-				}
-				av_samples_alloc_array_and_samples(&resampled_data, &resampled_linesize,
-					kOutputAudioChannels, resampled_samples,
-					m_stuAudioInfo.audioFormat, 0);
-				max_resampled_samples = resampled_samples;
-			}
-
-			int converted_samples = swr_convert(swrContext, resampled_data, resampled_samples,
-				(const uint8_t**)frame->data, frame->nb_samples);
-
-			int pcmNumber = converted_samples * kOutputAudioChannels * av_get_bytes_per_sample(m_stuAudioInfo.audioFormat);
-
-			std::fstream fs("audio0.pcm", std::ios::app | std::ios::binary);
-			//把重采样之后的数据保存本地
-			fs.write((const char*)resampled_data[0], pcmNumber);
-			fs.close();
-			double audioDts = (frame->pts - m_ulStartTime) * av_q2d(fileFormat->streams[m_iAudioStreamIndex]->time_base);
-			audioInfo->m_dPts = audioDts;
-			audioInfo->m_uiNumberSamples = converted_samples;
-			audioInfo->m_uiChannelCnt = kOutputAudioChannels;
-			audioInfo->m_AudioFormat = m_stuAudioInfo.audioFormat;
-			audioInfo->m_uiPCMLength = pcmNumber;
-			audioInfo->m_ptrPCMData = new uint8_t[pcmNumber]{ 0 };
-			audioInfo->m_uiSampleRate = m_stuAudioInfo.audioSampleRate;
-			memcpy(audioInfo->m_ptrPCMData, resampled_data[0], pcmNumber);
-
-			//qDebug() << "audio pts:" << audioDts;
-			//if (!m_bSeekState || ((audioDts - m_dseekDst) / std::max(std::abs(audioDts), std::abs(m_dseekDst)) >= -kdEpsilon))
-			//{
-			//	m_bSeekState = false; // 如果进入了这个分支，说明已经到达了目标点，重置状态
-			//	
-			//}
-			if (resampled_data)
-			{
-				for (auto& it : m_vecQueueDecodedAudioPacket)
-				{
-					//qDebug() << "decoder push audio pts" << audioInfo->m_dPts << "audio size" << it->getSize();
-					it->pushPacket(audioInfo);
+					for (auto& it : m_vecQueueDecodedAudioPacket)
+					{
+						//qDebug() << "decoder push audio pts" << audioInfo->m_dPts << "audio size" << it->getSize();
+						it->pushPacket(audioInfo);
+					}
 				}
 			}
 		}
+		if (resampled_data)
+		{
+			av_freep(&resampled_data[0]);
+		}
 	}
 	av_frame_free(&frame);
-	if (resampled_data)
-	{
-		av_freep(&resampled_data[0]);
-	}
 }
