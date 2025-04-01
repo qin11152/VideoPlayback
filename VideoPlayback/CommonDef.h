@@ -60,8 +60,8 @@ extern "C"
 
 #define BlackMagicEnabled
 
-constexpr int kOutputVideoWidth = 1920;
-constexpr int kOutputVideoHeight = 1080;
+constexpr int kOutputVideoWidth = 3840;
+constexpr int kOutputVideoHeight = 2160;
 constexpr int kOutputVideoFormat = AV_PIX_FMT_UYVY422;
 constexpr int kOutputAudioChannels = 2;
 constexpr int kAtomOutputAudioChannel = 1;
@@ -70,7 +70,8 @@ constexpr int kOutputAudioSamplePerChannel = 1024;
 constexpr int kOutputAudioBitDepth = 16;
 constexpr int kOutputAudioFormat = AV_SAMPLE_FMT_S16;
 
-constexpr int kSDIOutputFormat = bmdModeHD1080i50;
+//constexpr int kSDIOutputFormat = bmdModeHD1080i50;
+constexpr int kSDIOutputFormat = bmdMode4K2160p25;
 
 constexpr int kBufferWaterLevel = 50;
 constexpr int kAfterDecoderCachedCnt = 50;
@@ -83,7 +84,7 @@ constexpr double kdEpsilon = 1e-9;
 enum class PacketType
 {
 	None = 0,
-	Video = 0,
+	Video,
 	Audio,
 };
 

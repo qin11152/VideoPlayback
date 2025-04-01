@@ -48,6 +48,8 @@ private:
 	bool m_bSeekState{ false };
 	std::atomic<double_t> m_dSeekTime{ 0 };
 
+	double m_dStartTime{ 0 };
+
 	std::shared_ptr < MyPacketQueue<std::shared_ptr<PacketWaitDecoded>>> m_ptrQueNeedDecodedPacket;
 };
 

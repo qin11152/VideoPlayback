@@ -47,7 +47,8 @@ int32_t HardDecoder::initModule(const DecoderInitedInfo& info, DataHandlerInited
 	m_uiReadThreadSleepTime = (kmilliSecondsPerSecond / fps);
 	m_uiPerFrameSampleCnt = m_stuAudioInfo.audioSampleRate / fps;
 	m_dFrameDuration = av_q2d(info.formatContext->streams[m_iVideoStreamIndex]->time_base);
-
+	AVRational tmp = {1, 1000000};
+	m_ulStartTime = av_rescale_q(info.formatContext->start_time, tmp, info.formatContext->streams[m_iVideoStreamIndex]->time_base);
 	dataHandlerInfo.uiNeedSleepTime = m_uiReadThreadSleepTime;
 	dataHandlerInfo.uiPerFrameSampleCnt = m_uiPerFrameSampleCnt;
 
@@ -440,7 +441,6 @@ void HardDecoder::flushDecoder()
 				sws_scale(swsContext, swFrame->data, swFrame->linesize, 0, videoCodecContext->height, yuvFrame->data, yuvFrame->linesize);
 				auto convert_end = std::chrono::steady_clock::now();
 				//printf("decoder time:%lld,transfer time: %lld, convert time: %lld\n", std::chrono::duration_cast<std::chrono::milliseconds>(decode_end-decode_start).count(), std::chrono::duration_cast<std::chrono::milliseconds>(transfer_end - transfer_start).count(), std::chrono::duration_cast<std::chrono::milliseconds>(convert_end - convert_start).count());
-				LOG_INFO("Video Decoder Convert");
 				videoInfo->videoFormat = m_stuVideoInfo.videoFormat;
 				videoInfo->width = m_stuVideoInfo.width;
 				videoInfo->height = m_stuVideoInfo.height;
@@ -470,7 +470,6 @@ void HardDecoder::flushDecoder()
 			sws_scale(swsContext, frame->data, frame->linesize, 0, videoCodecContext->height, yuvFrame->data, yuvFrame->linesize);
 			auto convert_end = std::chrono::steady_clock::now();
 			//printf("decoder time:%lld, convert time: %lld\n", std::chrono::duration_cast<std::chrono::milliseconds>(decode_end - decode_start).count(), std::chrono::duration_cast<std::chrono::milliseconds>(convert_end - convert_start).count());
-			LOG_INFO("Video Decoder Convert");
 			videoInfo->videoFormat = m_stuVideoInfo.videoFormat;
 			videoInfo->width = m_stuVideoInfo.width;
 			videoInfo->height = m_stuVideoInfo.height;
@@ -482,6 +481,7 @@ void HardDecoder::flushDecoder()
 		}
 		for (auto& it : m_vecQueDecodedVideoPacket)
 		{
+			decoderCnt++;
 			it->pushPacket(videoInfo);
 		}
 		// 处理frame
@@ -508,6 +508,7 @@ void HardDecoder::decode()
 	{
 		return;
 	}
+	decoderCnt = 0;
 	while (true)
 	{
 		if (!m_bRunningState)
@@ -532,6 +533,7 @@ void HardDecoder::decode()
 				{
 					m_finishedCallback();
 				}
+				qDebug() << "decoder video cnt:" << decoderCnt;
 			}
 			std::this_thread::sleep_for(std::chrono::milliseconds(100));
 			continue;
@@ -543,7 +545,7 @@ void HardDecoder::decode()
 		}
 		if (packet)
 		{
-			//LOG_INFO("Get One Packet");
+			qDebug() << "decoder type:" << (int)packet->type;
 			switch (packet->type)
 			{
 			case PacketType::Video:
@@ -551,8 +553,7 @@ void HardDecoder::decode()
 				auto start = std::chrono::steady_clock::now();
 				decodeVideo(packet);
 				auto end = std::chrono::steady_clock::now();
-				//printf("decoder time:%lld\n", std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
-				LOG_INFO("Decoder Video Time:{}", std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
+				printf("decoder time:%lld\n", std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
 				break;
 			}
 			case PacketType::Audio:
@@ -564,7 +565,6 @@ void HardDecoder::decode()
 				break;
 			}
 		}
-		LOG_INFO("Decoder End");
 	}
 }
 
@@ -587,7 +587,7 @@ void HardDecoder::decodeVideo(std::shared_ptr<PacketWaitDecoded> packet)
 		}
 		while (ret >= 0)
 		{
-			double pts = frame->pts * m_dFrameDuration;
+			double pts = (frame->pts - m_ulStartTime) * m_dFrameDuration;
 			std::shared_ptr<DecodedImageInfo> videoInfo = std::make_shared<DecodedImageInfo>();
 			videoInfo->width = videoCodecContext->width;
 			videoInfo->height = videoCodecContext->height;
@@ -622,7 +622,6 @@ void HardDecoder::decodeVideo(std::shared_ptr<PacketWaitDecoded> packet)
 					sws_scale(swsContext, swFrame->data, swFrame->linesize, 0, videoCodecContext->height, yuvFrame->data, yuvFrame->linesize);
 					auto convert_end = std::chrono::steady_clock::now();
 					//printf("decoder time:%lld,transfer time: %lld, convert time: %lld\n", std::chrono::duration_cast<std::chrono::milliseconds>(decode_end-decode_start).count(), std::chrono::duration_cast<std::chrono::milliseconds>(transfer_end - transfer_start).count(), std::chrono::duration_cast<std::chrono::milliseconds>(convert_end - convert_start).count());
-					LOG_INFO("Video Decoder Convert");
 					videoInfo->videoFormat = m_stuVideoInfo.videoFormat;
 					videoInfo->width = m_stuVideoInfo.width;
 					videoInfo->height = m_stuVideoInfo.height;
@@ -651,8 +650,7 @@ void HardDecoder::decodeVideo(std::shared_ptr<PacketWaitDecoded> packet)
 
 				sws_scale(swsContext, frame->data, frame->linesize, 0, videoCodecContext->height, yuvFrame->data, yuvFrame->linesize);
 				auto convert_end = std::chrono::steady_clock::now();
-				//printf("decoder time:%lld, convert time: %lld\n", std::chrono::duration_cast<std::chrono::milliseconds>(decode_end - decode_start).count(), std::chrono::duration_cast<std::chrono::milliseconds>(convert_end - convert_start).count());
-				LOG_INFO("Video Decoder Convert");
+				printf("decoder time:%lld\n", std::chrono::duration_cast<std::chrono::milliseconds>(convert_end - convert_start).count());
 				videoInfo->videoFormat = m_stuVideoInfo.videoFormat;
 				videoInfo->width = m_stuVideoInfo.width;
 				videoInfo->height = m_stuVideoInfo.height;
@@ -664,6 +662,7 @@ void HardDecoder::decodeVideo(std::shared_ptr<PacketWaitDecoded> packet)
 			}
 			for (auto& it : m_vecQueDecodedVideoPacket)
 			{
+				decoderCnt++;
 				//qDebug() << "decoder push video pts" << videoInfo->m_dPts << "video size" << it->getSize();
 				it->pushPacket(videoInfo);
 			}
@@ -692,7 +691,6 @@ void HardDecoder::decodeAudio(std::shared_ptr<PacketWaitDecoded> packet)
 	{
 		while (avcodec_receive_frame(audioCodecContext, frame) == 0)
 		{
-			LOG_INFO("Audio Decoder Begin Handle");
 			//std::fstream fs("audio.pcm", std::ios::app | std::ios::binary);
 			////把重采样之前的数据保存本地
 			//fs.write((const char *)frame->data[0], frame->linesize[0]);
@@ -719,11 +717,11 @@ void HardDecoder::decodeAudio(std::shared_ptr<PacketWaitDecoded> packet)
 
 			int pcmNumber = converted_samples * kOutputAudioChannels * av_get_bytes_per_sample(m_stuAudioInfo.audioFormat);
 
-			//std::fstream fs("audio0.pcm", std::ios::app | std::ios::binary);
-			////把重采样之后的数据保存本地
-			//fs.write((const char*)resampled_data[0], pcmNumber);
-			//fs.close();
-			double audioDts = frame->pts * av_q2d(fileFormat->streams[m_iAudioStreamIndex]->time_base);
+			std::fstream fs("audio0.pcm", std::ios::app | std::ios::binary);
+			//把重采样之后的数据保存本地
+			fs.write((const char*)resampled_data[0], pcmNumber);
+			fs.close();
+			double audioDts = (frame->pts - m_ulStartTime) * av_q2d(fileFormat->streams[m_iAudioStreamIndex]->time_base);
 			audioInfo->m_dPts = audioDts;
 			audioInfo->m_uiNumberSamples = converted_samples;
 			audioInfo->m_uiChannelCnt = kOutputAudioChannels;
@@ -743,12 +741,12 @@ void HardDecoder::decodeAudio(std::shared_ptr<PacketWaitDecoded> packet)
 			{
 				for (auto& it : m_vecQueueDecodedAudioPacket)
 				{
+					//qDebug() << "decoder push audio pts" << audioInfo->m_dPts << "audio size" << it->getSize();
 					it->pushPacket(audioInfo);
 				}
 			}
 		}
 	}
-	LOG_INFO("Decoder Audio End");
 	av_frame_free(&frame);
 	if (resampled_data)
 	{

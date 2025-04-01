@@ -30,7 +30,7 @@ std::string umidToString(const mxfUMID* umid)
 	return ss.str();
 }
 #endif
-
+auto curr = std::chrono::system_clock::now();
 #if defined(BlackMagicEnabled)
 IDeckLinkMutableVideoFrame* kDecklinkOutputFrame = nullptr;
 #endif //BlackMagicEnabled
@@ -188,11 +188,13 @@ bool VideoPlayback::initModule()
 
 void VideoPlayback::previewCallback(std::shared_ptr<DecodedImageInfo> videoInfo)
 {
+	static int cnt = 0;
 	// 将YUV数据发送出去
 	if (nullptr == videoInfo->yuvData)
 	{
 		return;
 	}
+	cnt++;
 	VideoInfo video;
 	video.width = videoInfo->width;
 	video.height = videoInfo->height;
@@ -202,6 +204,7 @@ void VideoPlayback::previewCallback(std::shared_ptr<DecodedImageInfo> videoInfo)
 	//qDebug() << "video pts" << videoInfo->m_dPts;
 	updateTimeLabel(videoInfo->m_dPts, m_stuMediaInfo.duration);
 	updateTimeSliderPosition(videoInfo->m_dPts * m_stuMediaInfo.fps);
+	SDIOutputCallback(videoInfo);
 }
 
 void VideoPlayback::audioPlayCallBack(std::shared_ptr<DecodedAudioInfo> audioInfo)
@@ -217,7 +220,7 @@ void VideoPlayback::audioPlayCallBack(std::shared_ptr<DecodedAudioInfo> audioInf
 		uint8_t* destData = nullptr;
 		uint32_t iWritten = 0;
 		std::unique_lock<std::mutex> lck(m_mutex);
-		uint64_t ret = m_ptrSelectedDeckLinkOutput->WriteAudioSamplesSync(audioInfo->m_ptrPCMData, audioInfo->m_uiPCMLength, &iWritten);
+		uint64_t ret = m_ptrSelectedDeckLinkOutput->WriteAudioSamplesSync(audioInfo->m_ptrPCMData, audioInfo->m_uiNumberSamples, &iWritten);
 		lck.unlock();
 		if (ret != S_OK)
 		{
@@ -227,20 +230,21 @@ void VideoPlayback::audioPlayCallBack(std::shared_ptr<DecodedAudioInfo> audioInf
 		{
 			LOG_ERROR("WriteAudioSamplesSync error,iWritten={},dest cnt={}", iWritten, audioInfo->m_uiPCMLength);
 		}
+		curr = std::chrono::system_clock::now();
 	}
 #endif
 }
 
-void VideoPlayback::SDIOutputCallback(const DecodedImageInfo& videoInfo)
+void VideoPlayback::SDIOutputCallback(std::shared_ptr<DecodedImageInfo> videoInfo)
 {
 #if defined(BlackMagicEnabled)
-	if (nullptr == videoInfo.yuvData || nullptr == m_ptrSelectedDeckLinkOutput)
+	if (nullptr == videoInfo->yuvData || nullptr == m_ptrSelectedDeckLinkOutput)
 	{
 		return;
 	}
 	uint8_t* destData = nullptr;
 	kDecklinkOutputFrame->GetBytes((void**)&destData);
-	std::copy(videoInfo.yuvData, videoInfo.yuvData + videoInfo.dataSize, destData);
+	std::copy(videoInfo->yuvData, videoInfo->yuvData + videoInfo->dataSize, destData);
 	std::unique_lock<std::mutex> lck(m_mutex);
 	int ret = m_ptrSelectedDeckLinkOutput->DisplayVideoFrameSync(kDecklinkOutputFrame);
 	lck.unlock();
@@ -370,7 +374,7 @@ QString VideoPlayback::onSignalChooseFileClicked()
 	else
 	{
 		// 打开一个文件选择框，返回选择的文件，只选择mxf，mp4，mov格式的文件
-		QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"), "", tr("Video Files (*.mxf *.mp4 *.mov *.venc *.mkv)"));
+		QString fileName = QFileDialog::getOpenFileName(this, tr("Open File"), "", tr("Video Files (*.mxf *.mp4 *.mov *.venc *.mkv *.mpg)"));
 		if (!fileName.isEmpty())
 		{
 			ui.fileNameLabel->setText(fileName);
@@ -622,7 +626,7 @@ bool VideoPlayback::initAllSubModule()
 		}
 		m_ptrLocalFileSource->m_ptrAudioAndVideoOutput = std::make_shared<AudioAndVideoOutput>();
 
-		m_stuVideoInitedInfo.m_strFileName = m_strChooseFileName.toStdString();
+		m_stuVideoInitedInfo.m_strFileName = m_strChooseFileName.toLocal8Bit().constData();
 		m_stuVideoInitedInfo.m_bAtom = false;
 
 		initLocalFileSource();
@@ -744,6 +748,7 @@ void VideoPlayback::onDecoderFinshed()
 
 void VideoPlayback::onConsumeFinished()
 {
+	return;
 	if (++m_uiConsumeCallbackCnt == m_uiConsumeCnt)
 	{
 		updateTimeLabel(m_stuMediaInfo.duration, m_stuMediaInfo.duration);

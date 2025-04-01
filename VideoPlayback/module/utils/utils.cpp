@@ -61,14 +61,21 @@ namespace utils
 		}
 	}
 
-	void preciseSleep(double milliseconds)
+	void preciseSleep(double milliseconds, bool bPrintTrueSleepTime)
 	{
 		auto duration = std::chrono::duration<double, std::nano>(milliseconds * 1e6);
 		auto start = std::chrono::high_resolution_clock::now();
 
 		// 忙等待，比较纳秒级时间
-		while (std::chrono::high_resolution_clock::now() - start < duration) {
+		while (std::chrono::high_resolution_clock::now() - start < duration) 
+		{
 			// 忙等待循环，避免线程切换
+		}
+		if (bPrintTrueSleepTime)
+		{
+			auto end = std::chrono::high_resolution_clock::now();
+			auto trueSleepTime = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+			//qDebug() << "want sleep time:" << milliseconds << "actual sleep ms time:" << trueSleepTime;
 		}
 	}
 

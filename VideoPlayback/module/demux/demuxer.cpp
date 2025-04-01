@@ -171,6 +171,9 @@ int32_t demuxer::initModule(const VideoReaderInitedInfo& info, DecoderInitedInfo
 	m_bRunningState = true;
 	m_demuxerThread = std::thread(std::bind(&demuxer::demux, this));
 	m_ptrQueNeedDecodedPacket = info.ptrPacketQueue;
+	AVRational tmp = { 1, 1000000 };
+	auto tmpTime = av_rescale_q(formatContext->start_time, tmp, formatContext->streams[m_iVideoStreamIndex]->time_base);
+	m_dStartTime = tmpTime * av_q2d(formatContext->streams[m_iVideoStreamIndex]->time_base);;
 	m_bInitState = true;
 	return (int32_t)ErrorCode::NoError;
 }
@@ -227,8 +230,10 @@ int32_t demuxer::seek(const SeekParams& params)
 	m_bPauseState = true;
 
 	//准备移动操作，计算要移动的位置
+	qDebug() << "seek time:" << m_dSeekTime + m_dStartTime;
 	auto midva = av_q2d(formatContext->streams[m_iVideoStreamIndex]->time_base);
-	long long videoPos = m_dSeekTime / midva;
+	long long videoPos = (m_dSeekTime + m_dStartTime) / midva;
+	qDebug() << "seek to" << videoPos;
 	int ret = av_seek_frame(formatContext, m_iVideoStreamIndex, videoPos, AVSEEK_FLAG_BACKWARD);
 	if (0 != ret)
 	{
@@ -305,6 +310,7 @@ void demuxer::demux()
 			//std::unique_lock <std::mutex> lck(m_ReadFinishedMutex);
 			//int ret = av_seek_frame(formatContext, videoStreamIndex, 0, AVSEEK_FLAG_BACKWARD);
 			//m_ReadFinishedCV.wait(lck, [this] {return !m_bReadFinished || !m_bRunningState; });
+			std::this_thread::sleep_for(std::chrono::milliseconds(10));
 		}
 		//LOG_INFO("Read End");
 	}

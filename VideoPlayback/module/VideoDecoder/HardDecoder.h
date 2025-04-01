@@ -135,12 +135,15 @@ private:
 	std::condition_variable m_PauseCV;
 
 	std::atomic<double_t> m_dSeekTime{ 0 };
+	int decoderCnt{ 0 };
 
 	AudioInfo m_stuAudioInfo;
 	VideoInfo m_stuVideoInfo;
 
 	uint32_t m_uiReadThreadSleepTime{ 0 };
 	uint32_t m_uiPerFrameSampleCnt{ 0 };
+
+	int64_t m_ulStartTime{ 0 };
 
 	//待解码的包队列
 	std::shared_ptr<MyPacketQueue<std::shared_ptr<PacketWaitDecoded>>> m_ptrQueNeedDecodedPacket;
@@ -149,6 +152,10 @@ private:
 	std::mutex m_PcmBufferAddMutex;
 	std::mutex m_VideoQueueAddMutex;
 	std::mutex m_AudioQueueAddMutex;
+
+	MyPacketQueue<std::shared_ptr<PacketWaitDecoded>> m_queNeedDecodedVideoPacket;
+	MyPacketQueue<std::shared_ptr<PacketWaitDecoded>> m_queNeedDecodedAudioPacket;
+
 	std::vector<std::shared_ptr<MyPacketQueue<std::shared_ptr<DecodedAudioInfo>>>> m_vecQueueDecodedAudioPacket;
 	std::vector<std::shared_ptr<Buffer>> m_vecPCMBufferPtr;	//解码后的音频数据队列
 	std::vector<std::shared_ptr <MyPacketQueue<std::shared_ptr<DecodedImageInfo>>>> m_vecQueDecodedVideoPacket;	//解码后的视频数据队列

@@ -10,7 +10,7 @@ namespace utils
 
 	MY_EXPORT void preciseSleep(std::chrono::microseconds duration);
 
-	MY_EXPORT void preciseSleep(double milliseconds);
+	MY_EXPORT void preciseSleep(double milliseconds, bool bPrintTrueSleepTime = false);
 
 #if defined(WIN32)
 	MY_EXPORT std::wstring BSTRToWString(const BSTR bstr);

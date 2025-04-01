@@ -105,7 +105,7 @@ void LocalFileSource::previousFrame()
 	auto curPts = m_ptrAudioAndVideoOutput->getCurrentVideoDts();
 	//计算上一帧时间戳
 	auto prePts = curPts - 1.0 / m_ptrDemuxer->getFrameRate();
-	qDebug() << "current pts" << curPts << "last frame pts" << prePts << ",dst frame pts" << prePts - 0.5;
+	//qDebug() << "current pts" << curPts << "last frame pts" << prePts << ",dst frame pts" << prePts - 0.5;
 	SeekParams params{ prePts - 0.5 , prePts  , -1 , -1 , SeekType::SeekAbsolute };
 	m_ptrDemuxer->seek(params);
 	m_ptrVideoDecoder->seekTo(params.m_dSeekTime);

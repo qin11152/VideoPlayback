@@ -57,7 +57,7 @@ public:
     //************************************
     void audioPlayCallBack(std::shared_ptr<DecodedAudioInfo> audioInfo);
 
-    void SDIOutputCallback(const DecodedImageInfo& videoInfo);
+    void SDIOutputCallback(std::shared_ptr<DecodedImageInfo> videoInfo);
 
     void atomAudioCallback(std::shared_ptr<AudioCallbackInfo> audioInfo);
 

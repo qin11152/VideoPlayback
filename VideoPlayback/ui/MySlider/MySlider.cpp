@@ -33,12 +33,33 @@ void MySlider::mousePressEvent(QMouseEvent *event)
     //设定滑动条位置
     this->setValue(value);
 
-    emit signalSliderValueChanged(value);
+    //emit signalSliderValueChanged(value);
 }
 
 void MySlider::mouseReleaseEvent(QMouseEvent *event)
 {
     m_bPressed=false;
+	if (event->button() != Qt::LeftButton)
+	{
+		return;
+	}
+	qDebug() << "mousePressEvent";
+	m_bPressed = true;
+	int currentX = event->pos().x();
+
+	//获取当前点击的位置占整个Slider的百分比
+	double per = currentX * 1.0 / this->width();
+
+	//利用算得的百分比得到具体数字
+	double value = per * (this->maximum() - this->minimum()) + this->minimum();
+
+	//value转为int，四舍五入
+	value = qRound(value);
+	qDebug() << "set value" << value;
+	//设定滑动条位置
+	this->setValue(value);
+
+	emit signalSliderValueChanged(value);
 }
 
 void MySlider::mouseMoveEvent(QMouseEvent *event)

@@ -19,7 +19,7 @@ class AudioAndVideoOutput
 	using YuvCallBack = std::function<void(std::shared_ptr<DecodedImageInfo> videoInfo)>;
 	using AudioPlayCallback = std::function< void(std::shared_ptr<DecodedAudioInfo> audioInfo)>;
 
-	using YuvFinishedCallback = std::function<void()>;
+	using RenderFinishedCallback = std::function<void()>;
 
 public:
 	AudioAndVideoOutput();
@@ -30,7 +30,7 @@ public:
 
 	void setCallback(YuvCallBack callback) { m_YuvCallback = callback; }
 	void setCallback(AudioPlayCallback callback) { m_AudioCallback = callback; }
-	void setFinishedCallback(YuvFinishedCallback callback) { m_FinishedCallback = callback; }
+	void setFinishedCallback(RenderFinishedCallback callback) { m_FinishedCallback = callback; }
 
 	void pause();
 	void resume();
@@ -51,10 +51,11 @@ private:
 	void audio();
 	void video();
 
+	void consumeFinished();
 private:
 	YuvCallBack m_YuvCallback;
 	AudioPlayCallback m_AudioCallback;
-	YuvFinishedCallback m_FinishedCallback;
+	RenderFinishedCallback m_FinishedCallback;
 
 	bool m_bInitState{ false };
 	bool m_bRunningState{ false };
@@ -82,6 +83,9 @@ private:
 	bool m_bAudioSeekState{ false };
 	double m_dSeekTime{ 0.0 };
 	int direction{ 0 };
+
+	bool m_bVideoConsumeFinished{ false };
+	bool m_bAudioConsumeFinished{ false };
 
 	std::atomic<double> m_dCurrentAduioPts{ 0.0 };
 	std::atomic<double> m_dCurrentVideoPts{ 0.0 };

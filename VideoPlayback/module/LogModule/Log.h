@@ -1,7 +1,7 @@
 #pragma once
 #include <spdlog/spdlog.h>
 #include <spdlog/sinks/rotating_file_sink.h>
-#include<spdlog/async.h>
+#include <spdlog/async.h>
 
 // 日志的配置项
 struct LogConfig {

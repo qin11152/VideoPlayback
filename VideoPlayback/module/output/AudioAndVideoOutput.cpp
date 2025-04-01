@@ -1,6 +1,7 @@
 #include "AudioAndVideoOutput.h"
 
 #include "module/utils/utils.h"
+#include "module/source/LocalFileSource.h"
 
 AudioAndVideoOutput::AudioAndVideoOutput()
 {
@@ -186,6 +187,17 @@ void AudioAndVideoOutput::audio()
 		{
 			break;
 		}
+
+		if (LocalFileSource::getDecoderFinishState() && m_ptrQueueDecodedAudio->getSize() <= 0)
+		{
+			if (!m_bAudioConsumeFinished)
+			{
+				m_bAudioConsumeFinished = true;
+				consumeFinished();
+			}
+			continue;
+		}
+
 		std::shared_ptr<DecodedAudioInfo> audioInfo = nullptr;
 		if (m_ptrQueueDecodedAudio)
 		{
@@ -239,7 +251,7 @@ void AudioAndVideoOutput::audio()
 			m_AudioCallback(audioInfo);
 		}
 		m_stuAudioClock.setClock(audioInfo->m_dPts, audio_callback_time / 1000000.0);
-		utils::preciseSleep(frame_duration_ms);
+		utils::preciseSleep(frame_duration_ms, true);
 	}
 }
 
@@ -271,6 +283,15 @@ void AudioAndVideoOutput::video()
 		{
 			break;
 		}
+		if (LocalFileSource::getDecoderFinishState() && m_ptrQueueDecodedVideo->getSize() <= 0)
+		{
+			if (!m_bVideoConsumeFinished)
+			{
+				m_bVideoConsumeFinished = true;
+				consumeFinished();
+			}
+			continue;
+		}
 		std::shared_ptr<DecodedImageInfo> videoInfo = nullptr;
 		if (m_ptrQueueDecodedVideo)
 		{
@@ -292,6 +313,7 @@ void AudioAndVideoOutput::video()
 		double diff = videoInfo->m_dPts - m_dCurrentAduioPts;
 		if (diff > 0)
 		{
+			//qDebug() << "video pts" << videoInfo->m_dPts << "audio pts" << m_dCurrentAduioPts << "diff" << diff;
 			diff *= 1000;
 			//if (diff > 18)
 			//{
@@ -305,5 +327,18 @@ void AudioAndVideoOutput::video()
 			m_dCurrentVideoPts = videoInfo->m_dPts;
 			m_YuvCallback(videoInfo);
 		}
+	}
+}
+
+
+void AudioAndVideoOutput::consumeFinished()
+{
+	if (!m_bVideoConsumeFinished || !m_bAudioConsumeFinished)
+	{
+		return;
+	}
+	if (m_FinishedCallback)
+	{
+		m_FinishedCallback();
 	}
 }
