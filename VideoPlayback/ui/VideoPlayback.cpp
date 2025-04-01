@@ -558,7 +558,7 @@ bool VideoPlayback::initAllSubModule()
 		VideoReaderInitedInfo info;
 		info.m_bAtom = true;
 		info.m_eDeviceType = m_eDeviceType;
-		info.m_strFileName = m_strChooseFileName.toStdString();
+		info.m_strFileName = m_strChooseFileName.toUtf8().constData();
 		info.outAudioInfo = m_stuAudioInfo;
 		info.outVideoInfo = m_stuVideoInfo;
 		info.ptrPacketQueue = videoWaitDecodedQueue;

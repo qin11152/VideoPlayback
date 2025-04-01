@@ -102,7 +102,7 @@ void AudioAndVideoOutput::nextFrame()
 
 void AudioAndVideoOutput::previousFrame(const SeekParams& params)
 {
-	//直到拿到目标帧
+	//???????
 	while (true)
 	{
 		std::shared_ptr<DecodedImageInfo> videoInfo = nullptr;
@@ -111,7 +111,7 @@ void AudioAndVideoOutput::previousFrame(const SeekParams& params)
 		//if ((videoInfo->m_dPts - params.m_dDstPts) / max(std::abs(videoInfo->m_dPts), std::abs(params.m_dDstPts)) >= -kdEpsilon)
 		if (std::fabs(videoInfo->m_dPts - params.m_dDstPts) <= kdEpsilon)
 		{
-			//处理异常情况，解码器有可能残留之前的帧，此时dts大于目标dts，但是diff很大
+			//??????????????????????dts????dts???diff??
 			//if ((videoInfo->m_dPts - params.m_dDstPts) > 0.5)
 			//{
 			//	continue;
@@ -127,16 +127,16 @@ void AudioAndVideoOutput::previousFrame(const SeekParams& params)
 
 		std::shared_ptr<DecodedAudioInfo> audioInfo = nullptr;
 		m_ptrQueueDecodedAudio->getPacket(audioInfo);
-		//小于时间戳的抛弃
+		//????????
 		qDebug() << "get audio packet pts" << audioInfo->m_dPts;
 		if (audioInfo->m_dPts - params.m_dDstPts > kdEpsilon)
 		{
-			//异常帧抛弃
+			//?????
 			if ((audioInfo->m_dPts - params.m_dDstPts) > 0.1)
 			{
 				continue;
 			}
-			//到了目标，视频还没到，加回去
+			//??????????????
 			m_ptrQueueDecodedAudio->addPacket(audioInfo);
 		}
 	}
@@ -178,14 +178,14 @@ void AudioAndVideoOutput::audio()
 		}
 		{
 			std::unique_lock<std::mutex> lck(m_PauseMutex);
-			//暂停状态，等待解除暂停
+			//???????????
 			if (m_bPauseState)
 			{
 				m_PauseCV.wait(lck, [this]() {return !m_bRunningState || !m_bPauseState; });
 			}
 		}
-		//解码后的视频队列和音频队列都为空，就等待解码线程解码
-		//强制退出
+		//??????????????????????????
+		//????
 		if (!m_bRunningState)
 		{
 			break;
@@ -223,13 +223,13 @@ void AudioAndVideoOutput::audio()
 		{
 			continue;
 		}
-		int frame_size = audioInfo->m_uiNumberSamples; // 每帧样本数
-		int sample_rate = audioInfo->m_uiSampleRate; // 采样率
-		double frame_duration_ms = (frame_size * 1000.0) / sample_rate; // 持续时间（毫秒）
+		int frame_size = audioInfo->m_uiNumberSamples; // ?????
+		int sample_rate = audioInfo->m_uiSampleRate; // ???
+		double frame_duration_ms = (frame_size * 1000.0) / sample_rate; // ????????
 		m_dCurrentAduioPts = audioInfo->m_dPts;
 #if 0
 		if (start_pts == AV_NOPTS_VALUE) {
-			// 初始化起始时间和起始 PTS
+			// ?????????? PTS
 			startTime = std::chrono::high_resolution_clock::now();
 			start_pts = audioInfo->m_dPts;
 		}
@@ -242,7 +242,7 @@ void AudioAndVideoOutput::audio()
 			qDebug() << "target time" << target << ",elapsed time" << elapsed_time << ",sleep time" << ((target - elapsed_time) * 1000);
 		}
 		else {
-			// 如果目标时间已过，说明帧过期，可以选择丢帧
+			// ?????????????????????
 		}
 		if (m_AudioCallback)
 		{
@@ -274,14 +274,14 @@ void AudioAndVideoOutput::video()
 		m_bVideoReady = true;
 		{
 			std::unique_lock<std::mutex> lck(m_PauseMutex);
-			//暂停状态，等待解除暂停
+			//???????????
 			if (m_bPauseState)
 			{
 				m_PauseCV.wait(lck, [this]() {return !m_bRunningState || !m_bPauseState; });
 			}
 		}
-		//解码后的视频队列和音频队列都为空，就等待解码线程解码
-		//强制退出
+		//??????????????????????????
+		//????
 		if (!m_bRunningState)
 		{
 			break;
@@ -327,6 +327,7 @@ void AudioAndVideoOutput::video()
 
 		if (m_YuvCallback)
 		{
+			qDebug() << "render video pts:" << videoInfo->m_dPts;
 			m_dCurrentVideoPts = videoInfo->m_dPts;
 			m_YuvCallback(videoInfo);
 		}
