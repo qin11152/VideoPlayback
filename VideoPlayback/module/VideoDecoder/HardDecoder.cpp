@@ -736,8 +736,6 @@ void HardDecoder::decodeAudio()
 		{
 			break;
 		}
-		std::shared_ptr<PacketWaitDecoded> packet = nullptr;
-		m_ptrQueNeedDecodedAudioPacket->getPacket(packet);
 		{
 			std::unique_lock<std::mutex> lck(m_PauseMutex);
 			if (m_bPauseState)
@@ -750,11 +748,8 @@ void HardDecoder::decodeAudio()
 			std::this_thread::sleep_for(std::chrono::milliseconds(100));
 			continue;
 		}
-
-		if (m_ptrQueNeedDecodedAudioPacket)
-		{
-			m_ptrQueNeedDecodedAudioPacket->getPacket(packet);
-		}
+		std::shared_ptr<PacketWaitDecoded> packet = nullptr;
+		m_ptrQueNeedDecodedAudioPacket->getPacket(packet);
 		if (!packet)
 		{
 			continue;
