@@ -158,7 +158,7 @@ void AudioAndVideoOutput::previousFrame(const SeekParams& params)
 			break;
 		}
 	}
-	qDebug() << "render audio pts:" << m_ptrQueueDecodedAudio->front()->m_dPts;
+
 }
 
 void AudioAndVideoOutput::audio()
@@ -329,7 +329,7 @@ void AudioAndVideoOutput::video()
 
 		if (m_YuvCallback)
 		{
-			qDebug()<<"render video pts:" << videoInfo->m_dPts;
+			qDebug() << "render video pts:" << videoInfo->m_dPts;
 			m_dCurrentVideoPts = videoInfo->m_dPts;
 			m_YuvCallback(videoInfo);
 		}
