@@ -79,6 +79,49 @@ namespace utils
 		}
 	}
 
+	int ConvertToUYVY422(const AVFrame* src_frame, uint8_t* dst_buffer, int dst_stride)
+	{
+		if (!src_frame || !dst_buffer) 
+		{
+			return -1;
+		}
+
+		int width = src_frame->width;
+		int height = src_frame->height;
+
+		// Check source pixel format and perform the conversion
+		switch (src_frame->format) {
+		case AV_PIX_FMT_YUV420P: // Planar YUV420
+			return libyuv::I420ToUYVY(
+				src_frame->data[0], src_frame->linesize[0],  // Y plane
+				src_frame->data[1], src_frame->linesize[1],  // U plane
+				src_frame->data[2], src_frame->linesize[2],  // V plane
+				dst_buffer, dst_stride,                     // Destination UYVY422
+				width, height
+			);
+
+		case AV_PIX_FMT_YUV422P: // Planar YUV422
+			return libyuv::I422ToUYVY(
+				src_frame->data[0], src_frame->linesize[0],  // Y plane
+				src_frame->data[1], src_frame->linesize[1],  // U plane
+				src_frame->data[2], src_frame->linesize[2],  // V plane
+				dst_buffer, dst_stride,                     // Destination UYVY422
+				width, height
+			);
+
+		case AV_PIX_FMT_YUYV422: // Packed YUYV422
+			libyuv::CopyPlane(
+				src_frame->data[0], src_frame->linesize[0],  // Source YUYV422
+				dst_buffer, dst_stride,                     // Destination UYVY422
+				width * 2, height                           // Copy entire buffer
+			);
+			return 0;
+
+		default:
+			return -2; // Unsupported format
+		}
+	}
+
 #if defined(WIN32)
 	std::wstring BSTRToWString(const BSTR bstr)
 	{

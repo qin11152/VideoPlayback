@@ -157,8 +157,8 @@ bool VideoPlayback::initModule()
 	m_ptrQueueDecodedAudioData = std::make_shared<MyPacketQueue<std::shared_ptr<DecodedAudioInfo>>>();
 
 	m_ptrQueuePacketNeededDecoded->initModule();
-	m_ptrQueueAudioPacketNeededDecoded->initModule(1000);
-	m_ptrQueueVideoPacketNeededDecoded->initModule(1000);
+	m_ptrQueueAudioPacketNeededDecoded->initModule(100);
+	m_ptrQueueVideoPacketNeededDecoded->initModule(100);
 
 	m_ptrQueueDecodedImageData->initModule();
 	m_ptrQueueDecodedAudioData->initModule();
@@ -615,8 +615,8 @@ bool VideoPlayback::initAllSubModule()
 		m_ptrQueueDecodedAudioData->clearQueue();
 
 		m_ptrQueuePacketNeededDecoded->initModule();
-	m_ptrQueueAudioPacketNeededDecoded->initModule(1000);
-	m_ptrQueueVideoPacketNeededDecoded->initModule(1000);
+		m_ptrQueueAudioPacketNeededDecoded->initModule(100);
+		m_ptrQueueVideoPacketNeededDecoded->initModule(100);
 
 		m_ptrQueueDecodedImageData->initModule();
 		m_ptrQueueDecodedAudioData->initModule(150);
@@ -631,15 +631,7 @@ bool VideoPlayback::initAllSubModule()
 		m_ptrLocalFileSource->m_vecQueDecodedPacket.push_back(m_ptrQueueDecodedImageData);
 
 		m_ptrLocalFileSource->m_ptrDemuxer = std::make_shared<demuxer>();
-		if (AV_HWDEVICE_TYPE_NONE == m_eDeviceType)
-		{
-			m_ptrLocalFileSource->m_ptrVideoDecoder = std::make_shared<HardDecoder>(m_ptrDemuxer);
-		}
-		else
-		{
-			LOG_INFO("Use Hardware Decoder");
-			m_ptrLocalFileSource->m_ptrVideoDecoder = std::make_shared< HardDecoder>(m_ptrDemuxer);
-		}
+		m_ptrLocalFileSource->m_ptrVideoDecoder = std::make_shared<HardDecoder>(m_ptrDemuxer);
 		m_ptrLocalFileSource->m_ptrAudioAndVideoOutput = std::make_shared<AudioAndVideoOutput>();
 
 		m_stuVideoInitedInfo.m_strFileName = m_strChooseFileName.toUtf8().constData();
@@ -648,6 +640,12 @@ bool VideoPlayback::initAllSubModule()
 		initLocalFileSource();
 
 		m_uiConsumeCnt = 1;
+	}
+	if (nullptr == kDecklinkOutputFrame)
+	{
+		m_ptrSelectedDeckLinkOutput->CreateVideoFrame(kOutputVideoWidth, kOutputVideoHeight, kOutputVideoWidth * 2, bmdFormat8BitYUV, bmdFrameFlagDefault, &kDecklinkOutputFrame);
+		//IDeckLinkVideoFrameMutableMetadataExtensions* metaData=nullptr;
+		//kDecklinkOutputFrame->QueryInterface(IID_IDeckLinkVideoFrameMetadataExtensions, &metaData);
 	}
 	return true;
 }
@@ -689,6 +687,7 @@ bool VideoPlayback::uninitAllSubModule()
 	//	//m_ptrAtomPreviewAndPlay->uninitModule();
 	//	m_ptrAtomPreviewAndPlay = nullptr;
 	//}
+	kDecklinkOutputFrame = nullptr;
 	return 0;
 }
 

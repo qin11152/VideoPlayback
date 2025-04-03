@@ -39,6 +39,8 @@ extern "C"
 	#include "ui/MyTipDialog/MyTipDialog.h"
 #endif
 
+#include "libyuv/libyuv.h"
+
 #include "module/LogModule/Log.h"
 #include "module/ThreadPool/ThreadPool.h"
 #include "module/MyContainer/MyQueue.h"
@@ -115,6 +117,12 @@ struct MediaInfo
 	AVPixelFormat videoFormat{ AV_PIX_FMT_NONE };
 	AVSampleFormat audioFormat{ AV_SAMPLE_FMT_NONE };
 	MediaType mediaType{ MediaType::Invalid };
+
+	//色彩空间相关
+	AVColorSpace colorSpace{ AVColorSpace::AVCOL_SPC_UNSPECIFIED };
+	AVColorRange colorRange{ AVColorRange::AVCOL_RANGE_UNSPECIFIED };
+	AVColorTransferCharacteristic colorTransfer{ AVColorTransferCharacteristic::AVCOL_TRC_BT709 };
+	AVColorPrimaries colorPrimaries{ AVColorPrimaries::AVCOL_PRI_UNSPECIFIED };
 };
 
 /*!
@@ -314,6 +322,12 @@ struct DataHandlerInitedInfo
 {
 	uint32_t uiNeedSleepTime{ 0 };
 	uint32_t uiPerFrameSampleCnt{ 0 };
+};
+
+
+struct DecoderHardwareMapping {
+	const char* decoder_name;
+	AVHWDeviceType hw_device_type;
 };
 
 enum class SeekType

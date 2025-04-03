@@ -12,6 +12,8 @@ namespace utils
 
 	MY_EXPORT void preciseSleep(double milliseconds, bool bPrintTrueSleepTime = false);
 
+	int ConvertToUYVY422(const AVFrame* src_frame, uint8_t* dst_buffer, int dst_stride);
+
 #if defined(WIN32)
 	MY_EXPORT std::wstring BSTRToWString(const BSTR bstr);
 	

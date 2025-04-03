@@ -55,6 +55,10 @@ int32_t VideoInfoAcqure::getVideoInfo(const char* fileName, MediaInfo& mediaInfo
 				AVRational frameRate = formatContext->streams[i]->avg_frame_rate;
 				mediaInfo.fps = av_q2d(frameRate);
 				mediaInfo.duration = formatContext->duration / (double)AV_TIME_BASE;
+				mediaInfo.colorSpace = formatContext->streams[i]->codecpar->color_space;
+				mediaInfo.colorRange = formatContext->streams[i]->codecpar->color_range;
+				mediaInfo.colorPrimaries = formatContext->streams[i]->codecpar->color_primaries;
+				mediaInfo.colorTransfer = formatContext->streams[i]->codecpar->color_trc;
 			}
 		}
 		else if (formatContext->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_AUDIO)
