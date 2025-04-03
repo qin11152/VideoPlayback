@@ -251,6 +251,7 @@ void AudioAndVideoOutput::audio()
 #endif
 		if (m_AudioCallback)
 		{
+			qDebug() << "render audio pts:" << audioInfo->m_dPts;
 			m_AudioCallback(audioInfo);
 		}
 		m_stuAudioClock.setClock(audioInfo->m_dPts, audio_callback_time / 1000000.0);
@@ -299,6 +300,7 @@ void AudioAndVideoOutput::video()
 		if (m_ptrQueueDecodedVideo)
 		{
 			m_ptrQueueDecodedVideo->getPacket(videoInfo);
+			printf("video size:%d\n", m_ptrQueueDecodedVideo->getSize());
 		}
 #ifndef WIN32
 		if (nullptr != videoInfo && (!m_bVideoSeekState || ((videoInfo->m_dPts - m_dSeekTime) / std::max(std::abs(videoInfo->m_dPts), std::abs(m_dSeekTime))) >= -kdEpsilon))
@@ -327,6 +329,7 @@ void AudioAndVideoOutput::video()
 
 		if (m_YuvCallback)
 		{
+			qDebug()<<"render video pts:" << videoInfo->m_dPts;
 			m_dCurrentVideoPts = videoInfo->m_dPts;
 			m_YuvCallback(videoInfo);
 		}

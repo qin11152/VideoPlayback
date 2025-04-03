@@ -666,12 +666,13 @@ void HardDecoder::decodeVideo()
 						sws_scale(swsContext, swFrame->data, swFrame->linesize, 0, videoCodecContext->height, yuvFrame->data, yuvFrame->linesize);
 						auto convert_end = std::chrono::steady_clock::now();
 						//printf("decoder time:%lld,transfer time: %lld, convert time: %lld\n", std::chrono::duration_cast<std::chrono::milliseconds>(decode_end-decode_start).count(), std::chrono::duration_cast<std::chrono::milliseconds>(transfer_end - transfer_start).count(), std::chrono::duration_cast<std::chrono::milliseconds>(convert_end - convert_start).count());
+						int dataSize=av_image_get_buffer_size(m_stuVideoInfo.videoFormat, m_stuVideoInfo.width, m_stuVideoInfo.height, 1);
 						videoInfo->videoFormat = m_stuVideoInfo.videoFormat;
 						videoInfo->width = m_stuVideoInfo.width;
 						videoInfo->height = m_stuVideoInfo.height;
-						videoInfo->dataSize = m_stuVideoInfo.width * m_stuVideoInfo.height * 2;
-						videoInfo->yuvData = new uint8_t[m_stuVideoInfo.width * m_stuVideoInfo.height * 2];
-						memcpy(videoInfo->yuvData, yuvFrame->data[0], m_stuVideoInfo.width * m_stuVideoInfo.height * 2);
+						videoInfo->dataSize = dataSize;
+						videoInfo->yuvData = new uint8_t[dataSize];
+						memcpy(videoInfo->yuvData, yuvFrame->data[0], dataSize);
 						av_freep(yuvFrame->data);
 						av_frame_free(&yuvFrame);
 					}
@@ -695,12 +696,13 @@ void HardDecoder::decodeVideo()
 					sws_scale(swsContext, frame->data, frame->linesize, 0, videoCodecContext->height, yuvFrame->data, yuvFrame->linesize);
 					auto convert_end = std::chrono::steady_clock::now();
 					//printf("decoder time:%lld\n", std::chrono::duration_cast<std::chrono::milliseconds>(convert_end - convert_start).count());
+					int dataSize=av_image_get_buffer_size(m_stuVideoInfo.videoFormat, m_stuVideoInfo.width, m_stuVideoInfo.height, 1);
 					videoInfo->videoFormat = m_stuVideoInfo.videoFormat;
 					videoInfo->width = m_stuVideoInfo.width;
 					videoInfo->height = m_stuVideoInfo.height;
-					videoInfo->dataSize = m_stuVideoInfo.width * m_stuVideoInfo.height * 2;
-					videoInfo->yuvData = new uint8_t[m_stuVideoInfo.width * m_stuVideoInfo.height * 2];
-					memcpy(videoInfo->yuvData, yuvFrame->data[0], m_stuVideoInfo.width * m_stuVideoInfo.height * 2);
+					videoInfo->dataSize = dataSize;
+					videoInfo->yuvData = new uint8_t[dataSize];
+					memcpy(videoInfo->yuvData, yuvFrame->data[0], dataSize);
 					av_freep(yuvFrame->data);
 					av_frame_free(&yuvFrame);
 				}

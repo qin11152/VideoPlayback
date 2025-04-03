@@ -63,7 +63,8 @@ extern "C"
 
 constexpr int kOutputVideoWidth = 3840;
 constexpr int kOutputVideoHeight = 2160;
-constexpr int kOutputVideoFormat = AV_PIX_FMT_UYVY422;
+// constexpr int kOutputVideoFormat = AV_PIX_FMT_UYVY422;
+constexpr int kOutputVideoFormat = AV_PIX_FMT_YUV420P;
 constexpr int kOutputAudioChannels = 2;
 constexpr int kAtomOutputAudioChannel = 1;
 constexpr int kOutputAudioSampleRate = 48000;
